@@ -7,15 +7,15 @@
 
 /* ── CSS VARIABLES ── */
 :root {
-  --gold:        #E6A817;
-  --gold-dark:   #C8910E;
-  --gold-light:  #FFD166;
-  --gold-pale:   #FFF8E6;
-  --gold-dim:    rgba(230, 168, 23, 0.12);
-  --gold-border: rgba(230, 168, 23, 0.3);
-  --navy:        #0F2D5C;
-  --navy-mid:    #1A4080;
-  --navy-light:  #E8F0FB;
+  --gold:        #FFEC00;
+  --gold-dark:   #CCBD00;
+  --gold-light:  #FFF45C;
+  --gold-pale:   #FFFDE6;
+  --gold-dim:    rgba(255, 236, 0, 0.12);
+  --gold-border: rgba(255, 236, 0, 0.3);
+  --navy:        #023341;
+  --navy-mid:    #045161;
+  --navy-light:  #E8F4F6;
   --teal:        #0EA5A0;
   --teal-light:  #E6F7F7;
   --bg:          #FFFFFF;
@@ -182,7 +182,7 @@ select option { background: white; color: var(--text-primary); }
   transition: all var(--transition);
 }
 .navbar.scrolled {
-  background: rgba(13, 37, 74, 0.97);
+  background: rgba(2, 51, 65, 0.97);
   backdrop-filter: blur(24px);
   box-shadow: 0 4px 32px rgba(15,45,92,0.4);
 }
@@ -225,11 +225,11 @@ select option { background: white; color: var(--text-primary); }
   position: relative; overflow: hidden;
   padding: 140px 28px 90px;
   background: linear-gradient(145deg,
-    #071428 0%,
-    #0F2D5C 30%,
-    #1A4080 58%,
-    #1B3A6B 75%,
-    #0D2044 100%
+    #011B24 0%,
+    #023341 30%,
+    #045161 58%,
+    #056173 75%,
+    #022730 100%
   );
   text-align: center;
 }
@@ -445,7 +445,7 @@ select option { background: white; color: var(--text-primary); }
 
 /* ── ACHIEVEMENTS ── */
 .achievements {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #0D3060 100%);
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #056173 100%);
   position: relative; overflow: hidden;
 }
 .achievements-bg {
@@ -595,7 +595,7 @@ select option { background: white; color: var(--text-primary); }
 
 /* ── SIGN UP ── */
 .signup {
-  background: linear-gradient(135deg, var(--navy) 0%, #0A2347 100%);
+  background: linear-gradient(135deg, var(--navy) 0%, #012B36 100%);
   position: relative; overflow: hidden;
 }
 .signup-bg {
@@ -674,7 +674,7 @@ select option { background: white; color: var(--text-primary); }
   .hero-stat { padding: 12px 20px; }
   .nav-links {
     display: none; position: fixed; top: 72px; left: 0; right: 0;
-    background: rgba(13, 37, 74, 0.98);
+    background: rgba(2, 51, 65, 0.98);
     backdrop-filter: blur(24px);
     flex-direction: column; padding: 20px; gap: 4px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
