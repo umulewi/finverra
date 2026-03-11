@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import './App.css'
 
 // Logo component using the uploaded image
@@ -65,7 +66,7 @@ function Navbar() {
               <a href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{l}</a>
             </li>
           ))}
-          <li><a href="#signup" className="nav-cta" onClick={() => setMenuOpen(false)}>Join Now</a></li>
+          <li><Link to="/dashboard" className="nav-cta" onClick={() => setMenuOpen(false)}>Join Now</Link></li>
         </ul>
         <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
           <span /><span /><span />
@@ -96,7 +97,7 @@ function Hero() {
           transparent, and professional ecosystem — built for Africa's future.
         </p>
         <div className="hero-actions">
-          <a href="#signup" className="btn-primary">Get Started <span>→</span></a>
+          <Link to="/dashboard" className="btn-primary">Get Started <span>→</span></Link>
           <a href="#about" className="btn-ghost">Learn More</a>
         </div>
         <div className="hero-stats">
@@ -591,7 +592,7 @@ function Footer() {
             <div className="footer-links">
               <h4>Get Started</h4>
               <ul>
-                <li><a href="#signup">Sign Up</a></li>
+                <li><Link to="/dashboard">Sign Up</Link></li>
                 <li><a href="#contact">Book Appointment</a></li>
                 <li><a href="#team">Our Team</a></li>
                 <li><a href="#">Careers</a></li>
