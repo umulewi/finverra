@@ -4,6 +4,9 @@ import DashboardAuth from './dashboard/DashboardAuth'
 import DashboardChoice from './dashboard/DashboardChoice'
 import ProtectedRoleRoute from './dashboard/ProtectedRoleRoute'
 import AdminDashboard from './dashboard/admin/AdminDashboard'
+import AchievementsPage from './dashboard/admin/AchievementsPage'
+import EventsPage from './dashboard/admin/EventsPage'
+import TeamPage from './dashboard/admin/TeamPage'
 import EntrepreneurDashboard from './dashboard/entrepreneur/EntrepreneurDashboard'
 import InvestorDashboard from './dashboard/investor'
 import PipelinePage from './dashboard/investor/PipelinePage'
@@ -32,6 +35,38 @@ export default function AppRouter() {
           element={(
             <ProtectedRoleRoute role="admin">
               <AdminDashboard />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/services"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/achievements"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <AchievementsPage />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/events"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <EventsPage />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/team"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <TeamPage />
             </ProtectedRoleRoute>
           )}
         />

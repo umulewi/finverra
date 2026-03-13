@@ -697,7 +697,8 @@ select option { background: white; color: var(--text-primary); }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 48px; }
 .footer-brand p { font-size: 0.9rem; color: rgba(255,255,255,0.55); line-height: 1.75; margin-top: 20px; margin-bottom: 24px; max-width: 280px; }
 .footer-socials { display: flex; gap: 12px; flex-wrap: wrap; }
-.footer-socials a { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.5); padding: 7px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; transition: all var(--transition); }
+.footer-socials a { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.5); padding: 7px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; transition: all var(--transition); }
+.footer-socials i { font-size: 0.95rem; line-height: 1; }
 .footer-socials a:hover { color: var(--gold-light); border-color: rgba(230,168,23,0.4); background: rgba(230,168,23,0.07); }
 .footer-links h4, .footer-contact h4 { font-family: var(--font-head); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
 .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }

@@ -574,10 +574,22 @@ function Footer() {
               <Logo />
               <p>Transforming Rwanda's investment ecosystem by connecting entrepreneurs with the capital and expertise they need to grow.</p>
               <div className="footer-socials">
-                <a href="#">LinkedIn</a>
-                <a href="#">Twitter</a>
-                <a href="#">Facebook</a>
-                <a href="#">Instagram</a>
+                <a href="#" aria-label="LinkedIn">
+                  <i className="bi bi-linkedin" aria-hidden="true" />
+
+                </a>
+                <a href="#" aria-label="Twitter">
+                  <i className="bi bi-twitter-x" aria-hidden="true" />
+
+                </a>
+                <a href="#" aria-label="Facebook">
+                  <i className="bi bi-facebook" aria-hidden="true" />
+
+                </a>
+                <a href="#" aria-label="Instagram">
+                  <i className="bi bi-instagram" aria-hidden="true" />
+
+                </a>
               </div>
             </div>
             <div className="footer-links">

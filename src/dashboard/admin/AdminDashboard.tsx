@@ -1,5 +1,5 @@
-import RoleDashboardLayout from '../RoleDashboardLayout'
+import AdminDashboardPage from './index'
 
 export default function AdminDashboard() {
-  return <RoleDashboardLayout role="admin" />
+  return <AdminDashboardPage />
 }
