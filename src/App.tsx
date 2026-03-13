@@ -574,6 +574,7 @@ function Footer() {
               <Logo />
               <p>Transforming Rwanda's investment ecosystem by connecting entrepreneurs with the capital and expertise they need to grow.</p>
               <div className="footer-socials">
+
                 <a href="#" aria-label="LinkedIn">
                   <i className="bi bi-linkedin" aria-hidden="true" />
 
@@ -590,6 +591,12 @@ function Footer() {
                   <i className="bi bi-instagram" aria-hidden="true" />
 
                 </a>
+
+                <a href="#" aria-label="LinkedIn"><i className="bi bi-linkedin" aria-hidden="true" /></a>
+                <a href="#" aria-label="Twitter"><i className="bi bi-twitter-x" aria-hidden="true" /></a>
+                <a href="#" aria-label="Facebook"><i className="bi bi-facebook" aria-hidden="true" /></a>
+                <a href="#" aria-label="Instagram"><i className="bi bi-instagram" aria-hidden="true" /></a>
+ main
               </div>
             </div>
             <div className="footer-links">
@@ -612,12 +619,12 @@ function Footer() {
             </div>
             <div className="footer-contact">
               <h4>Contact</h4>
-              <p>📍 Kigali, Rwanda</p>
-              <p>📧 info@finverra.rw</p>
-              <p>📞 +250 788 000 000</p>
+              <p><i className="bi bi-geo-alt" aria-hidden="true" /> Kigali, Rwanda</p>
+              <p><i className="bi bi-envelope" aria-hidden="true" /> info@finverra.rw</p>
+              <p><i className="bi bi-telephone" aria-hidden="true" /> +250 788 000 000</p>
               <div className="footer-cert">
-                <span>🔐 Secured Platform</span>
-                <span>✅ RDB Registered</span>
+                <span><i className="bi bi-shield-lock" aria-hidden="true" /> Secured Platform</span>
+                <span><i className="bi bi-patch-check" aria-hidden="true" /> RDB Registered</span>
               </div>
             </div>
           </div>
@@ -625,7 +632,7 @@ function Footer() {
       </div>
       <div className="footer-bottom">
         <div className="container">
-          <p>© 2025 FINVERRA Ltd. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+          <p>© 2026 FINVERRA. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
         </div>
       </div>
     </footer>
