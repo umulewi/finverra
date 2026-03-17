@@ -1,24 +1,79 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 type AdminSidebarProps = {
-  activeNav: string
-  onNavigate: (label: string) => void
   onLogout: () => void
 }
 
 type MenuItem = {
   label: string
+  path: string
+  icon: ReactNode
 }
 
 const menuItems: MenuItem[] = [
-  { label: 'Services' },
-  { label: 'Achievements' },
-  { label: 'Events' },
-  { label: 'Team' },
-
+  {
+    label: 'Services',
+    path: '/dashboard/admin/services',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="7" height="7" rx="1.5" />
+        <rect x="15" y="3" width="7" height="7" rx="1.5" />
+        <rect x="2" y="14" width="7" height="7" rx="1.5" />
+        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Partners',
+    path: '/dashboard/admin/partners',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="6" />
+        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
+      </svg>   
+    ),
+  },
+  {
+    label: 'Achievements',
+    path: '/dashboard/admin/achievements',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="6" />
+        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
+      </svg>   
+    ),
+  },
+  {
+    label: 'Events',
+    path: '/dashboard/admin/events',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Team',
+    path: '/dashboard/admin/team',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
 ]
 
-export default function AdminSidebar({ activeNav, onNavigate, onLogout }: AdminSidebarProps) {
+export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
   return (
     <aside style={styles.sidebar}>
       <div style={styles.sidebarBrand}>
@@ -39,14 +94,17 @@ export default function AdminSidebar({ activeNav, onNavigate, onLogout }: AdminS
         <div style={styles.navSection}>
           <span style={styles.navSectionTitle}>Menu</span>
           {menuItems.map((item) => {
-            const isActive = activeNav === item.label
+            const isActive = pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin')
             return (
               <button
                 key={item.label}
                 type="button"
                 style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) }}
-                onClick={() => onNavigate(item.label)}
+                onClick={() => navigate(item.path)}
               >
+                <span style={{ color: isActive ? '#E6A817' : 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {item.icon}
+                </span>
                 <span style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.76)', fontWeight: isActive ? 700 : 500 }}>
                   {item.label}
                 </span>
@@ -58,6 +116,11 @@ export default function AdminSidebar({ activeNav, onNavigate, onLogout }: AdminS
 
       <div style={styles.sidebarFooter}>
         <button type="button" style={styles.logoutBtn} onClick={onLogout}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
           Logout
         </button>
       </div>
@@ -149,5 +212,9 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 12,
     padding: '11px 14px',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 }

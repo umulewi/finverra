@@ -177,37 +177,37 @@ function Services() {
       icon: '🔗',
       title: 'Investment Matching',
       desc: 'Connecting entrepreneurs and SMEs with individual and institutional investors through a structured, transparent platform.',
-      tags: ['Startups', 'SMEs', 'Angel Investors', 'VC']
+
     },
     {
       icon: '🏦',
       title: 'Access to Finance',
       desc: 'Helping businesses obtain investment capital, bank loans, and grant opportunities from national and international organizations.',
-      tags: ['Bank Loans', 'Grants', 'Capital']
+
     },
     {
       icon: '📊',
       title: 'Business Advisory',
       desc: 'Expert guidance in business strategy, investment preparation, financial planning, and sustainable business growth.',
-      tags: ['Strategy', 'Planning', 'Growth']
+  
     },
     {
       icon: '📋',
       title: 'Project Preparation',
       desc: 'Supporting entrepreneurs in preparing business plans, financial statements, and compelling investment proposals.',
-      tags: ['Business Plans', 'Proposals', 'Financials']
+   
     },
     {
       icon: '💻',
       title: 'Financial Management',
       desc: 'Digital tools for financial record keeping, expense tracking, tax monitoring, and business performance analysis.',
-      tags: ['Records', 'Tax', 'Analytics']
+      
     },
     {
       icon: '📈',
       title: 'Investment Monitoring',
       desc: 'Transparent monitoring tools allowing investors to track investments and business performance remotely in real time.',
-      tags: ['Real-time', 'Dashboard', 'Reports']
+      
     },
   ]
   return (
@@ -225,7 +225,7 @@ function Services() {
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
               <div className="service-tags">
-                {s.tags.map(t => <span key={t} className="tag">{t}</span>)}
+
               </div>
               <div className="service-hover-line" />
             </div>

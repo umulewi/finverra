@@ -6,20 +6,12 @@ import AdminHeader from './header'
 import AdminSidebar from './sidebar'
 
 type AdminShellProps = {
-  activeNav: 'Services' | 'Achievements' | 'Events' | 'Team'
   title: string
   subtitle: string
   children: ReactNode
 }
 
-const navPathByLabel: Record<AdminShellProps['activeNav'], string> = {
-  Services: '/dashboard/admin/services',
-  Achievements: '/dashboard/admin/achievements',
-  Events: '/dashboard/admin/events',
-  Team: '/dashboard/admin/team',
-}
-
-export default function AdminShell({ activeNav, title, subtitle, children }: AdminShellProps) {
+export default function AdminShell({ title, subtitle, children }: AdminShellProps) {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
 
@@ -38,18 +30,6 @@ export default function AdminShell({ activeNav, title, subtitle, children }: Adm
     }
   }, [])
 
-  const handleNavigate = (label: string) => {
-    const targetPath = navPathByLabel[label as AdminShellProps['activeNav']]
-
-    if (targetPath) {
-      navigate(targetPath)
-    }
-
-    if (window.innerWidth <= 960) {
-      setSidebarOpen(false)
-    }
-  }
-
   const handleLogout = () => {
     clearAuthSession()
     navigate('/dashboard/admin/login', { replace: true })
@@ -63,7 +43,7 @@ export default function AdminShell({ activeNav, title, subtitle, children }: Adm
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >
-        <AdminSidebar activeNav={activeNav} onNavigate={handleNavigate} onLogout={handleLogout} />
+        <AdminSidebar onLogout={handleLogout} />
       </div>
 
       {sidebarOpen && (
