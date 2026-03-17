@@ -4,7 +4,6 @@ import AdminShell from './AdminShell'
 export default function TeamPage() {
   return (
     <AdminShell
-      activeNav="Team"
       title="Team Management"
       subtitle="Maintain leadership profiles, roles, and support contacts that represent Finverra to the public."
     >

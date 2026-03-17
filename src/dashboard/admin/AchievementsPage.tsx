@@ -4,7 +4,6 @@ import AdminShell from './AdminShell'
 export default function AchievementsPage() {
   return (
     <AdminShell
-      activeNav="Achievements"
       title="Achievements Management"
       subtitle="Track milestones, publish outcomes, and present platform progress in a trusted format."
     >

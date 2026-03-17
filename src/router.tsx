@@ -3,7 +3,10 @@ import App from './App'
 import DashboardAuth from './dashboard/DashboardAuth'
 import DashboardChoice from './dashboard/DashboardChoice'
 import ProtectedRoleRoute from './dashboard/ProtectedRoleRoute'
-import AdminDashboard from './dashboard/admin/AdminDashboard'
+import ServicesPage from './dashboard/admin/ServicesPage'
+import PartnersPage from './dashboard/admin/PartnersPage'
+
+
 import AchievementsPage from './dashboard/admin/AchievementsPage'
 import EventsPage from './dashboard/admin/EventsPage'
 import TeamPage from './dashboard/admin/TeamPage'
@@ -32,17 +35,21 @@ export default function AppRouter() {
         <Route path="/dashboard/admin/signup" element={<DashboardAuth role="admin" mode="signup" />} />
         <Route
           path="/dashboard/admin"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoleRoute>
-          )}
+          element={<Navigate to="/dashboard/admin/services" replace />}
         />
         <Route
           path="/dashboard/admin/services"
           element={(
             <ProtectedRoleRoute role="admin">
-              <AdminDashboard />
+              <ServicesPage />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/partners"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <PartnersPage />
             </ProtectedRoleRoute>
           )}
         />

@@ -4,7 +4,6 @@ import AdminShell from './AdminShell'
 export default function EventsPage() {
   return (
     <AdminShell
-      activeNav="Events"
       title="Events Management"
       subtitle="Plan timelines, publish announcements, and keep campaign events current for users and partners."
     >
