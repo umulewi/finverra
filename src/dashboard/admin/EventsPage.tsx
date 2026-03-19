@@ -31,12 +31,27 @@ const emptyForm: FormState = {
   existingImage: '',
 }
 
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
 function authHeader(): HeadersInit {
   const session = getAuthSession()
   return session ? { Authorization: `Bearer ${(session.payload as { token?: string })?.token ?? ''}` } : {}
 }
 
 export default function EventsPage() {
+  const todayDate = formatDateForInput(new Date())
+  const tomorrowDate = formatDateForInput(addDays(new Date(), 1))
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -86,7 +101,7 @@ export default function EventsPage() {
       title: event.title,
       description: event.description,
       type: event.type,
-      date: event.date,
+      date: todayDate,
       image: null,
       existingImage: event.image,
     })
@@ -135,6 +150,14 @@ export default function EventsPage() {
     }
     if (!form.date) {
       setFormError('Event date is required.')
+      return
+    }
+    if (!editingId && form.date <= todayDate) {
+      setFormError('For new events, select a future date.')
+      return
+    }
+    if (editingId && form.date !== todayDate) {
+      setFormError('When updating, only the current date is allowed.')
       return
     }
     if (!editingId && !form.image) {
@@ -295,6 +318,8 @@ export default function EventsPage() {
                 style={styles.input}
                 value={form.date}
                 onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
+                min={editingId ? todayDate : tomorrowDate}
+                max={editingId ? todayDate : undefined}
                 disabled={submitting}
               />
 

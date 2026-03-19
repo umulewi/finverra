@@ -10,6 +10,14 @@ import PartnersPage from './dashboard/admin/PartnersPage'
 import AchievementsPage from './dashboard/admin/AchievementsPage'
 import EventsPage from './dashboard/admin/EventsPage'
 import TeamPage from './dashboard/admin/TeamPage'
+import Testimonials from './dashboard/admin/TestimonialsPage'
+
+
+
+
+
+
+
 import EntrepreneurDashboard from './dashboard/entrepreneur/EntrepreneurDashboard'
 import InvestorDashboard from './dashboard/investor'
 import PipelinePage from './dashboard/investor/PipelinePage'
@@ -74,6 +82,14 @@ export default function AppRouter() {
           element={(
             <ProtectedRoleRoute role="admin">
               <TeamPage />
+            </ProtectedRoleRoute>
+          )}
+        />
+        <Route
+          path="/dashboard/admin/testimonials"
+          element={(
+            <ProtectedRoleRoute role="admin">
+              <Testimonials />
             </ProtectedRoleRoute>
           )}
         />

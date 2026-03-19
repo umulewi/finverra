@@ -324,10 +324,42 @@ function Events() {
 function Team() {
   const { ref, inView } = useInView()
   const team = [
-    { name: 'Jean-Pierre Mugabo', role: 'CEO & Founder', bio: 'Serial entrepreneur with 15+ years in investment banking and SME development across East Africa.', initial: 'JM', color: '#F5C518' },
-    { name: 'Amina Uwase', role: 'Chief Investment Officer', bio: 'Former investment analyst at BRD with deep expertise in SME financing and impact investing.', initial: 'AU', color: '#2DD4BF' },
-    { name: 'Eric Niyomugabo', role: 'Head of Technology', bio: 'Tech visionary building Africa\'s most trusted digital investment infrastructure.', initial: 'EN', color: '#818CF8' },
-    { name: 'Grace Ishimwe', role: 'Financial Advisory Lead', bio: 'CPA with extensive experience in financial planning, restructuring, and investor relations.', initial: 'GI', color: '#FB923C' },
+    {
+      name: 'Jean-Pierre Mugabo',
+      role: 'CEO & Founder',
+      bio: 'Serial entrepreneur with 15+ years in investment banking and SME development across East Africa.',
+      initial: 'JM',
+      color: '#F5C518',
+      linkedin: 'https://www.linkedin.com/in/jean-pierre-mugabo',
+      email: 'jean-pierre@finverra.com',
+    },
+    {
+      name: 'Amina Uwase',
+      role: 'Chief Investment Officer',
+      bio: 'Former investment analyst at BRD with deep expertise in SME financing and impact investing.',
+      initial: 'AU',
+      color: '#2DD4BF',
+      linkedin: 'https://www.linkedin.com/in/amina-uwase',
+      email: 'amina@finverra.com',
+    },
+    {
+      name: 'Eric Niyomugabo',
+      role: 'Head of Technology',
+      bio: 'Tech visionary building Africa\'s most trusted digital investment infrastructure.',
+      initial: 'EN',
+      color: '#818CF8',
+      linkedin: 'https://www.linkedin.com/in/eric-niyomugabo',
+      email: 'eric@finverra.com',
+    },
+    {
+      name: 'Grace Ishimwe',
+      role: 'Financial Advisory Lead',
+      bio: 'CPA with extensive experience in financial planning, restructuring, and investor relations.',
+      initial: 'GI',
+      color: '#FB923C',
+      linkedin: 'https://www.linkedin.com/in/grace-ishimwe',
+      email: 'grace@finverra.com',
+    },
   ]
   return (
     <section className="team section" id="team" ref={ref}>
@@ -347,8 +379,8 @@ function Team() {
               <div className="team-role" style={{ color: m.color }}>{m.role}</div>
               <p>{m.bio}</p>
               <div className="team-links">
-                <span>LinkedIn</span>
-                <span>Email</span>
+                <a href={m.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
+                <a href={`mailto:${m.email}`}>{m.email}</a>
               </div>
             </div>
           ))}
@@ -712,7 +744,6 @@ export default function App() {
       <Events />
       <Team />
       <Testimonials />
-      <SignUp />
       <Appointment />
       <Footer />
     </div>

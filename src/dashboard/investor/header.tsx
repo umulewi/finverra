@@ -6,7 +6,7 @@ type InvestorHeaderProps = {
 	onSearchChange: (val: string) => void
 }
 
-export default function InvestorHeader({ onToggleSidebar, searchVal, onSearchChange }: InvestorHeaderProps) {
+export default function InvestorHeader({ onToggleSidebar, searchVal: _searchVal, onSearchChange: _onSearchChange }: InvestorHeaderProps) {
 	return (
 		<header style={styles.topbar}>
 			<div style={styles.topbarLeft}>
