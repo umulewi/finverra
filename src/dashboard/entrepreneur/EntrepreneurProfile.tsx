@@ -95,6 +95,20 @@ function toNumber(value: unknown) {
   return null
 }
 
+function resolveImageUrl(value: string) {
+  const text = value.trim()
+
+  if (!text) {
+    return ''
+  }
+
+  if (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('data:')) {
+    return text
+  }
+
+  return buildApiUrl(text)
+}
+
 export default function EntrepreneurProfile() {
   const session = getAuthSession()
   const [loading, setLoading] = useState(true)
@@ -102,6 +116,9 @@ export default function EntrepreneurProfile() {
   const [userId, setUserId] = useState<number | null>(null)
   const [basicInfo, setBasicInfo] = useState<BasicInfo | null>(null)
   const [form, setForm] = useState<CompleteProfile>(emptyProfile)
+  const [existingImage, setExistingImage] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -187,9 +204,14 @@ export default function EntrepreneurProfile() {
             }
           : emptyProfile
 
+        const imageValue = completeRes.ok ? toText(completePayload?.data?.image) : ''
+
         if (isMounted) {
           setBasicInfo(nextBasicInfo)
           setForm(nextForm)
+          setExistingImage(imageValue)
+          setImageFile(null)
+          setImagePreview(resolveImageUrl(imageValue))
 
           if (!basicRes.ok && !completeRes.ok) {
             setError('User ID found, but profile records were not found yet. You can still use this ID.')
@@ -226,13 +248,31 @@ export default function EntrepreneurProfile() {
     setSuccess(null)
 
     try {
+      const formData = new FormData()
+      formData.append('date_of_birth', form.date_of_birth)
+      formData.append('gender', form.gender)
+      formData.append('nationality', form.nationality)
+      formData.append('province', form.province)
+      formData.append('district', form.district)
+      formData.append('sector', form.sector)
+      formData.append('cell', form.cell)
+      formData.append('village', form.village)
+      formData.append('id_type', form.id_type)
+      formData.append('id_number', form.id_number)
+
+      if (imageFile) {
+        formData.append('image', imageFile)
+      } else if (existingImage) {
+        // Keep previously saved image when user does not upload a new one.
+        formData.append('existing_image', existingImage)
+      }
+
       const response = await fetch(buildApiUrl(`/entrepreneurs/complete-profile/${userId}`), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           ...authHeader(),
         },
-        body: JSON.stringify(form),
+        body: formData,
       })
       const payload = await response.json()
 
@@ -245,6 +285,14 @@ export default function EntrepreneurProfile() {
       }
 
       setSuccess(typeof payload?.message === 'string' ? payload.message : 'Profile updated successfully.')
+
+      const savedImage = typeof payload?.data?.image === 'string'
+        ? payload.data.image
+        : existingImage
+
+      setExistingImage(savedImage)
+      setImageFile(null)
+      setImagePreview(resolveImageUrl(savedImage))
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Failed to save entrepreneur profile.')
     } finally {
@@ -257,10 +305,7 @@ export default function EntrepreneurProfile() {
       title="My Profile Management"
       subtitle="Keep your account details current so investors and platform services can trust your profile."
     >
-      <div style={{ ...styles.infoCard, ...styles.userIdCard }}>
-        <strong>User ID from email:</strong> {userId ?? 'Resolving...'}
-      </div>
-
+      
       {loading ? <div style={styles.infoCard}>Loading entrepreneur profile...</div> : null}
       {error ? <div style={{ ...styles.infoCard, ...styles.errorCard }}>{error}</div> : null}
       {success ? <div style={{ ...styles.infoCard, ...styles.successCard }}>{success}</div> : null}
@@ -274,13 +319,53 @@ export default function EntrepreneurProfile() {
             <div style={styles.kvItem}><span style={styles.kvLabel}>First name</span><strong>{basicInfo?.first_name || '-'}</strong></div>
             <div style={styles.kvItem}><span style={styles.kvLabel}>Last name</span><strong>{basicInfo?.last_name || '-'}</strong></div>
             <div style={styles.kvItem}><span style={styles.kvLabel}>Telephone</span><strong>{basicInfo?.telephone || '-'}</strong></div>
-            <div style={styles.kvItem}><span style={styles.kvLabel}>User ID</span><strong>{userId ?? '-'}</strong></div>
+          
           </div>
         </article>
 
         <article style={styles.card}>
           <p style={styles.label}>Complete Profile</p>
           <h3 style={styles.heading}>Personal and identification details</h3>
+
+          <div style={styles.avatarSection}>
+            <div style={styles.avatarCircle}>
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Entrepreneur profile"
+                  style={styles.avatarImage}
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none'
+                  }}
+                />
+              ) : (
+                <span style={styles.avatarPlaceholder}>Add Photo</span>
+              )}
+            </div>
+
+            <label htmlFor="entrepreneur-image-upload" style={styles.uploadLabel}>
+              Upload profile image
+            </label>
+            <input
+              id="entrepreneur-image-upload"
+              style={styles.hiddenInput}
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null
+                setImageFile(file)
+
+                if (!file) {
+                  setImagePreview(resolveImageUrl(existingImage))
+                  return
+                }
+
+                setImagePreview(URL.createObjectURL(file))
+              }}
+              disabled={loading || saving}
+            />
+            <p style={styles.uploadHint}>Use a clear front-facing photo for better profile trust.</p>
+          </div>
 
           <form style={styles.form} onSubmit={handleSubmit}>
             <div style={styles.formGrid}>
@@ -399,6 +484,7 @@ export default function EntrepreneurProfile() {
                   disabled={loading || saving}
                 />
               </label>
+
             </div>
 
             <button type="submit" style={styles.submitBtn} disabled={loading || saving || !userId}>
@@ -459,6 +545,56 @@ const styles: Record<string, CSSProperties> = {
     margin: '8px 0 14px',
     color: '#0f1e35',
     fontSize: 20,
+  },
+  avatarSection: {
+    display: 'grid',
+    justifyItems: 'center',
+    gap: 10,
+    marginBottom: 18,
+    padding: '14px 0 8px',
+  },
+  avatarCircle: {
+    width: 132,
+    height: 132,
+    borderRadius: '50%',
+    border: '3px solid rgba(26, 64, 128, 0.2)',
+    overflow: 'hidden',
+    background: 'linear-gradient(145deg, rgba(26,64,128,0.08), rgba(15,45,92,0.14))',
+    display: 'grid',
+    placeItems: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  avatarPlaceholder: {
+    fontSize: 13,
+    color: '#2b4e84',
+    fontWeight: 700,
+    letterSpacing: 0.3,
+  },
+  uploadLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid rgba(15, 45, 92, 0.18)',
+    borderRadius: 10,
+    padding: '8px 12px',
+    color: '#16376b',
+    background: 'rgba(239, 246, 255, 0.9)',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontSize: 13,
+  },
+  hiddenInput: {
+    display: 'none',
+  },
+  uploadHint: {
+    margin: 0,
+    color: '#4e5c73',
+    fontSize: 12,
   },
   kvWrap: {
     display: 'grid',
