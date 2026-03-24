@@ -21,6 +21,7 @@ import Testimonials from './dashboard/admin/TestimonialsPage'
 import EntrepreneurAuth from './dashboard/entrepreneur/EntrepreneurAuth'
 import EntrepreneurDashboard from './dashboard/entrepreneur/EntrepreneurDashboard'
 import EntrepreneurProfile from './dashboard/entrepreneur/EntrepreneurProfile'
+import BusinessInfo from './dashboard/entrepreneur/BusinessInfo'
 
 
 
@@ -115,6 +116,15 @@ export default function AppRouter() {
           element={(
             <ProtectedRoleRoute role="entrepreneur">
               <EntrepreneurProfile />
+            </ProtectedRoleRoute>
+          )}
+        />
+
+        <Route
+          path="/dashboard/entrepreneur/BusinessInfo"
+          element={(
+            <ProtectedRoleRoute role="entrepreneur">
+              <BusinessInfo />
             </ProtectedRoleRoute>
           )}
         />
