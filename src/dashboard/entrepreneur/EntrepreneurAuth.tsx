@@ -1,22 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import './Dashboard.css'
-import { saveAuthSession } from './authStorage'
-import { fetchAvailableRoles, loginWithRole } from './dashboardApi'
-import type { RoleOption, RoleSlug } from './roles'
-import { getRoleDefinition } from './roles'
+import '../Dashboard.css'
+import { saveAuthSession } from '../authStorage'
+import { fetchAvailableRoles, loginWithRole, signupEntrepreneur } from '../dashboardApi'
+import type { RoleOption } from '../roles'
+import { getRoleDefinition } from '../roles'
 
-type Mode = 'login' | 'signup'
-
-type DashboardAuthProps = {
-  role: RoleSlug
-  mode: Mode
+type EntrepreneurAuthProps = {
+  mode: 'login' | 'signup'
 }
 
-export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
+export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
   const navigate = useNavigate()
-  const roleDefinition = getRoleDefinition(role)
-  const basePath = `/dashboard/${role}`
+  const roleDefinition = getRoleDefinition('entrepreneur')
+  const basePath = '/dashboard/entrepreneur'
   const [roles, setRoles] = useState<RoleOption[]>([])
   const [isLoadingRole, setIsLoadingRole] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,6 +21,9 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
   const [successMessage, setSuccessMessage] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [telephone, setTelephone] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -43,7 +43,7 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
           return
         }
 
-        setErrorMessage(error instanceof Error ? error.message : 'Unable to verify the selected role.')
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to verify entrepreneur role access.')
       } finally {
         if (isMounted) {
           setIsLoadingRole(false)
@@ -59,8 +59,8 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
   }, [])
 
   const currentRole = useMemo(
-    () => roles.find((item) => item.slug === role),
-    [role, roles],
+    () => roles.find((item) => item.slug === 'entrepreneur'),
+    [roles],
   )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -69,18 +69,32 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
     setSuccessMessage('')
 
     if (!currentRole) {
-      setErrorMessage('This role is not currently available from the server.')
-      return
-    }
-
-    if (mode === 'signup') {
-      setSuccessMessage('Signup is ready for this role, but the backend signup endpoint is not connected yet.')
+      setErrorMessage('Entrepreneur role is not currently available from the server.')
       return
     }
 
     setIsSubmitting(true)
 
     try {
+      if (mode === 'signup') {
+        const payload = await signupEntrepreneur({
+          email,
+          password,
+          role: currentRole,
+          firstName,
+          lastName,
+          telephone,
+        })
+
+        setSuccessMessage(
+          payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
+            ? payload.message
+            : 'Signup successful. Please verify your account before login.',
+        )
+        setPassword('')
+        return
+      }
+
       const payload = await loginWithRole({
         email,
         password,
@@ -98,7 +112,7 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
 
       navigate(basePath, { replace: true })
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Login failed.')
+      setErrorMessage(error instanceof Error ? error.message : 'Entrepreneur login failed.')
     } finally {
       setIsSubmitting(false)
     }
@@ -114,24 +128,22 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
         <aside className="account-aside">
           <p className="aside-brand">FINVERRA</p>
           <h1>{roleDefinition.name} Portal</h1>
-          <p>
-            {roleDefinition.loginDescription}
-          </p>
+          <p>{roleDefinition.loginDescription}</p>
           <div className="aside-points">
-            <span>Role based access</span>
-            <span>Private and secure</span>
-            <span>Fast onboarding</span>
+            <span>Startup profile</span>
+            <span>Fundraising goals</span>
+            <span>Investor matching</span>
           </div>
           <Link to="/dashboard" className="aside-link">Change Role</Link>
         </aside>
 
         <section className="account-main auth-main">
-          <p className="dashboard-eyebrow">{roleDefinition.name} Account</p>
-          <h2 className="account-title">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+          <p className="dashboard-eyebrow">Entrepreneur Account</p>
+          <h2 className="account-title">{mode === 'login' ? 'Welcome back founder' : 'Create entrepreneur account'}</h2>
           <p className="dashboard-subtitle">
             {mode === 'login'
-              ? `Use your ${roleDefinition.name.toLowerCase()} credentials to continue.`
-              : `Complete the form below to create your ${roleDefinition.name.toLowerCase()} profile.`}
+              ? 'Sign in to manage your venture profile and fundraising pipeline.'
+              : 'Set up your startup identity and funding focus in one place.'}
           </p>
 
           {isLoadingRole ? <div className="dashboard-status-card">Checking role access...</div> : null}
@@ -139,29 +151,42 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
           {successMessage ? <div className="dashboard-status-card success">{successMessage}</div> : null}
 
           <div className="auth-mode-toggle" role="tablist" aria-label="Auth mode">
-            <Link
-              to={`${basePath}/login`}
-              className={mode === 'login' ? 'active' : ''}
-              aria-current={mode === 'login' ? 'page' : undefined}
-            >
+            <Link to={`${basePath}/login`} className={mode === 'login' ? 'active' : ''} aria-current={mode === 'login' ? 'page' : undefined}>
               Login
             </Link>
-            <Link
-              to={`${basePath}/signup`}
-              className={mode === 'signup' ? 'active' : ''}
-              aria-current={mode === 'signup' ? 'page' : undefined}
-            >
+            <Link to={`${basePath}/signup`} className={mode === 'signup' ? 'active' : ''} aria-current={mode === 'signup' ? 'page' : undefined}>
               Sign Up
             </Link>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === 'signup' && (
-              <div className="auth-row">
-                <input type="text" placeholder="First Name" required />
-                <input type="text" placeholder="Last Name" required />
-                
-              </div>
+              <>
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+                <input
+                  type="tel"
+                  placeholder="Telephone"
+                  value={telephone}
+                  onChange={(event) => setTelephone(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+              </>
             )}
 
             <input
@@ -181,41 +206,12 @@ export default function DashboardAuth({ role, mode }: DashboardAuthProps) {
               disabled={isLoadingRole || isSubmitting}
             />
 
-            {mode === 'signup' && (
-              <>
-                <input
-                  type="text"
-                  placeholder={role === 'investor' ? 'Organization / Fund Name' : 'Business / Startup Name'}
-                  required
-                  disabled={isLoadingRole || isSubmitting}
-                />
-                <select required defaultValue="" disabled={isLoadingRole || isSubmitting}>
-                  <option value="" disabled>Select your focus</option>
-                  {role === 'investor' ? (
-                    <>
-                      <option>Equity Investment</option>
-                      <option>Debt Investment</option>
-                      <option>Impact Investment</option>
-                      <option>Deal Sourcing</option>
-                    </>
-                  ) : (
-                    <>
-                      <option>Seed Funding</option>
-                      <option>Growth Capital</option>
-                      <option>Loan Access</option>
-                      <option>Advisory Support</option>
-                    </>
-                  )}
-                </select>
-              </>
-            )}
-
             <button type="submit" className="auth-submit-btn" disabled={isLoadingRole || isSubmitting || (!currentRole && !errorMessage)}>
               {isSubmitting
                 ? 'Please wait...'
                 : mode === 'login'
-                  ? `Login as ${roleDefinition.name}`
-                  : `Create ${roleDefinition.name} Account`}
+                  ? 'Login as Entrepreneur'
+                  : 'Create Entrepreneur Account'}
             </button>
           </form>
 

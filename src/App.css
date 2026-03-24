@@ -631,12 +631,24 @@ select option { background: white; color: var(--text-primary); }
 .team-card h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--navy); }
 .team-role { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
 .team-card p { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 20px; }
-.team-links { display: flex; gap: 10px; justify-content: center; }
-.team-links span { font-size: 0.76rem; font-weight: 600; color: var(--text-muted); padding: 5px 13px; border: 1.5px solid var(--border); border-radius: 50px; cursor: pointer; transition: all var(--transition); }
-.team-links span:hover { border-color: var(--gold-border); color: var(--gold-dark); background: var(--gold-pale); }
+.team-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.team-links a {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 5px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  transition: all var(--transition);
+  text-decoration: none;
+}
+.team-links a:hover { border-color: var(--gold-border); color: var(--gold-dark); background: var(--gold-pale); }
 
 /* ── TESTIMONIALS ── */
-.testimonials { background: var(--bg); }
+.testimonials {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f9fb 100%);
+  border-top: 1px solid var(--border);
+}
 .testimonial-wrapper { max-width: 800px; margin: 0 auto; }
 .testimonial-main {
   background: linear-gradient(135deg, #023341 0%, #034a5e 100%);
@@ -694,7 +706,10 @@ select option { background: white; color: var(--text-primary); }
 .success-msg p { color: var(--text-secondary); }
 
 /* ── APPOINTMENT ── */
-.appointment { background: var(--bg-2); }
+.appointment {
+  background: #e8f2f5;
+  border-top: 1px solid var(--border);
+}
 .appt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
 .appt-info h3 { font-family: var(--font-head); font-size: 1.3rem; font-weight: 700; margin-bottom: 28px; color: var(--navy); }
 .appt-type { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border); }

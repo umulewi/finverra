@@ -48,13 +48,17 @@ const ROLE_DEFINITIONS: Record<RoleSlug, RoleDefinition> = {
 }
 
 export function normalizeRoleSlug(value: string) {
-  const normalized = value.trim().toLowerCase().replace(/\s+/g, '_')
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_')
 
   if (normalized === 'admin') {
     return 'admin'
   }
 
   if (normalized === 'entrepreneur') {
+    return 'entrepreneur'
+  }
+
+  if (normalized === 'enterpreneur') {
     return 'entrepreneur'
   }
 

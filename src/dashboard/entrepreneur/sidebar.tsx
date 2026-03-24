@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
-type AdminSidebarProps = {
+type EntrepreneurSidebarProps = {
   onLogout: () => void
 }
 
@@ -12,9 +12,13 @@ type MenuItem = {
 }
 
 const menuItems: MenuItem[] = [
+
+    
+
+  
   {
-    label: 'Services',
-    path: '/dashboard/admin/services',
+    label: 'Dashboard',
+    path: '/dashboard/entrepreneur',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="3" width="7" height="7" rx="1.5" />
@@ -25,40 +29,8 @@ const menuItems: MenuItem[] = [
     ),
   },
   {
-    label: 'Partners',
-    path: '/dashboard/admin/partners',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="6" />
-        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
-      </svg>   
-    ),
-  },
-  {
-    label: 'Achievements',
-    path: '/dashboard/admin/achievements',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="6" />
-        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
-      </svg>   
-    ),
-  },
-  {
-    label: 'Events',
-    path: '/dashboard/admin/events',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Team',
-    path: '/dashboard/admin/team',
+    label: 'My Profile',
+    path: '/dashboard/entrepreneur/profile',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -69,8 +41,8 @@ const menuItems: MenuItem[] = [
     ),
   },
   {
-    label: 'Testimonials',
-    path: '/dashboard/admin/testimonials',
+    label: 'Business Info',
+    path: '/dashboard/entrepreneur/BusinessInfo',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -82,7 +54,7 @@ const menuItems: MenuItem[] = [
   },
 ]
 
-export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
+export default function EntrepreneurSidebar({ onLogout }: EntrepreneurSidebarProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
@@ -97,7 +69,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
           </svg>
           <div>
             <span style={styles.brandName}>Finverra</span>
-            <span style={styles.brandTag}>Admin Navigation</span>
+            <span style={styles.brandTag}>Entrepreneur Navigation</span>
           </div>
         </div>
       </div>
@@ -106,7 +78,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
         <div style={styles.navSection}>
           <span style={styles.navSectionTitle}>Menu</span>
           {menuItems.map((item) => {
-            const isActive = pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin')
+            const isActive = pathname === item.path
             return (
               <button
                 key={item.label}

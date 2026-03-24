@@ -64,7 +64,7 @@ export default function DashboardChoice() {
           <p className="dashboard-eyebrow">Continue As</p>
           <h2 className="account-title">Choose your role to get started</h2>
           <p className="dashboard-subtitle">
-            Roles are loaded from the backend at /select_role before the login screen is shown.
+            Roles are loaded from the backend at /select_role and each role opens its own dashboard page.
           </p>
 
           {isLoading ? <div className="dashboard-status-card">Loading available roles...</div> : null}
@@ -73,7 +73,7 @@ export default function DashboardChoice() {
           {!isLoading && !errorMessage ? (
             <div className="dashboard-role-grid">
               {roles.map((role) => (
-                <Link to={`/dashboard/${role.slug}/login`} className="dashboard-role-card" key={role.id}>
+                <Link to={`/dashboard/${role.slug}`} className="dashboard-role-card" key={role.id}>
                   <span className="role-badge">{role.name}</span>
                   <h3>{role.name} Account</h3>
                   <p>{role.shortDescription}</p>

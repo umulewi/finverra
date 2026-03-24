@@ -1,10 +1,10 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactElement } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NavItem = {
 	label: string
-	icon: () => JSX.Element
+	icon: () => ReactElement
 }
 
 type NavSection = {
@@ -21,42 +21,42 @@ type InvestorSidebarProps = {
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-function DashIcon(): JSX.Element {
+function DashIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
 		</svg>
 	)
 }
-function PipeIcon(): JSX.Element {
+function PipeIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />
 		</svg>
 	)
 }
-function PortIcon(): JSX.Element {
+function PortIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
 		</svg>
 	)
 }
-function LoginIcon(): JSX.Element {
+function LoginIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
 		</svg>
 	)
 }
-function RegIcon(): JSX.Element {
+function RegIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 9h6M9 12h6M9 15h4" />
 		</svg>
 	)
 }
-function DocIcon(): JSX.Element {
+function DocIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -66,14 +66,14 @@ function DocIcon(): JSX.Element {
 		</svg>
 	)
 }
-function MsgIcon(): JSX.Element {
+function MsgIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
 		</svg>
 	)
 }
-function RepIcon(): JSX.Element {
+function RepIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<line x1="18" y1="20" x2="18" y2="10" />
@@ -82,7 +82,7 @@ function RepIcon(): JSX.Element {
 		</svg>
 	)
 }
-function BellIcon(): JSX.Element {
+function BellIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -90,7 +90,7 @@ function BellIcon(): JSX.Element {
 		</svg>
 	)
 }
-function SetIcon(): JSX.Element {
+function SetIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<circle cx="12" cy="12" r="3" />
@@ -136,7 +136,7 @@ const navSections: NavSection[] = [
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function InvestorSidebar({ email, activeNav, onNavigate, onLogout }: InvestorSidebarProps): JSX.Element {
+export default function InvestorSidebar({ email: _email, activeNav, onNavigate, onLogout }: InvestorSidebarProps): ReactElement {
 	return (
 		<aside style={styles.sidebar}>
 			<div style={styles.sidebarBrand}>
