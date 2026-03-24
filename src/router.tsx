@@ -40,6 +40,7 @@ import SettingsPage from './dashboard/investor/SettingsPage'
 
 
 import InvestorEditProfile from './dashboard/investor/InvestorEditProfile'
+import ApplicationInfo from './dashboard/entrepreneur/ApplicationInfo'
 
 export default function AppRouter() {
   return (
@@ -116,6 +117,13 @@ export default function AppRouter() {
           element={(
             <ProtectedRoleRoute role="entrepreneur">
               <EntrepreneurProfile />
+            </ProtectedRoleRoute>
+          )}
+        /><Route
+          path="/dashboard/entrepreneur/ApplicationInfo"
+          element={(
+            <ProtectedRoleRoute role="entrepreneur">
+              <ApplicationInfo />
             </ProtectedRoleRoute>
           )}
         />

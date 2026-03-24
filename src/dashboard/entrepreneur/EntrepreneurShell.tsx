@@ -9,9 +9,10 @@ type EntrepreneurShellProps = {
   title: string
   subtitle: string
   children: ReactNode
+  showHero?: boolean
 }
 
-export default function EntrepreneurShell({ title, subtitle, children }: EntrepreneurShellProps) {
+export default function EntrepreneurShell({ title, subtitle, children, showHero = true }: EntrepreneurShellProps) {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
 
@@ -58,13 +59,15 @@ export default function EntrepreneurShell({ title, subtitle, children }: Entrepr
       >
         <EntrepreneurHeader onToggleSidebar={() => setSidebarOpen((open) => !open)} />
 
-        <section style={styles.heroBanner}>
-          <div>
-            <span style={styles.heroKicker}>Entrepreneur workspace</span>
-            <h2 style={styles.pageTitle}>{title}</h2>
-            <p style={styles.heroCopy}>{subtitle}</p>
-          </div>
-        </section>
+        {showHero ? (
+          <section style={styles.heroBanner}>
+            <div>
+              <span style={styles.heroKicker}>Entrepreneur workspace</span>
+              <h2 style={styles.pageTitle}>{title}</h2>
+              <p style={styles.heroCopy}>{subtitle}</p>
+            </div>
+          </section>
+        ) : null}
 
         <section style={styles.contentWrap}>{children}</section>
       </div>
