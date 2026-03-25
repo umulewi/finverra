@@ -81,8 +81,10 @@ function Hero() {
   return (
     <section className="hero" id="home">
       <div className="hero-bg">
-        <div className="hero-image" style={{ backgroundImage: 'url(/images/kigali_business.png)' }} />
-        <div className="hero-overlay" />
+        <div className="hero-orb orb1" />
+        <div className="hero-orb orb2" />
+        <div className="hero-orb orb3" />
+        <div className="hero-grid" />
       </div>
       <div className="hero-content">
         <div className="hero-badge">🌍 Rwanda's Premier Investment Platform</div>
@@ -96,7 +98,7 @@ function Hero() {
         </p>
         <div className="hero-actions">
           <Link to="/dashboard" className="btn-primary">Get Started <span>→</span></Link>
-          <a href="#about" className="btn-ghost" style={{ color: 'white', borderColor: 'rgba(255,255,255,0.4)' }}>Learn More</a>
+          <a href="#about" className="btn-ghost">Learn More</a>
         </div>
         <div className="hero-stats">
           {[['500+', 'Entrepreneurs'], ['120+', 'Investors'], ['80+', 'Active Projects'], ['RWF 2B+', 'Facilitated']].map(([val, label]) => (
@@ -118,6 +120,12 @@ function Hero() {
 // ABOUT
 function About() {
   const { ref, inView } = useInView()
+  const pillars = [
+    { icon: '🌱', title: 'Sustainable Growth', desc: 'Building long-term economic value for Rwanda and Africa' },
+    { icon: '🤝', title: 'Financial Inclusion', desc: 'Making finance accessible to every entrepreneur' },
+    { icon: '💡', title: 'Innovation', desc: 'Technology-driven solutions for modern business challenges' },
+    { icon: '👥', title: 'Job Creation', desc: 'Empowering businesses that drive employment' },
+  ]
   return (
     <section className="about section" id="about" ref={ref}>
       <div className="container">
@@ -146,14 +154,14 @@ function About() {
               </div>
             </div>
           </div>
-          <div className="about-visual">
-            <div className="about-image-wrapper">
-              <img src="/images/corporate_meeting.png" alt="Corporate Meeting" className="about-main-img" />
-              <div className="about-exp-badge">
-                <span className="exp-num">10+</span>
-                <span className="exp-text">Years of<br/>Expertise</span>
+          <div className="about-pillars">
+            {pillars.map((p, i) => (
+              <div className="pillar-card" key={p.title} style={{ animationDelay: `${i * 0.1}s` }}>
+                <div className="pillar-icon">{p.icon}</div>
+                <h4>{p.title}</h4>
+                <p>{p.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -166,34 +174,40 @@ function Services() {
   const { ref, inView } = useInView()
   const services = [
     {
-      icon: 'bi-link-45deg',
+      icon: '🔗',
       title: 'Investment Matching',
       desc: 'Connecting entrepreneurs and SMEs with individual and institutional investors through a structured, transparent platform.',
+
     },
     {
-      icon: 'bi-bank',
+      icon: '🏦',
       title: 'Access to Finance',
       desc: 'Helping businesses obtain investment capital, bank loans, and grant opportunities from national and international organizations.',
+
     },
     {
-      icon: 'bi-graph-up-arrow',
+      icon: '📊',
       title: 'Business Advisory',
       desc: 'Expert guidance in business strategy, investment preparation, financial planning, and sustainable business growth.',
+  
     },
     {
-      icon: 'bi-file-earmark-text',
+      icon: '📋',
       title: 'Project Preparation',
       desc: 'Supporting entrepreneurs in preparing business plans, financial statements, and compelling investment proposals.',
+   
     },
     {
-      icon: 'bi-laptop',
+      icon: '💻',
       title: 'Financial Management',
       desc: 'Digital tools for financial record keeping, expense tracking, tax monitoring, and business performance analysis.',
+      
     },
     {
-      icon: 'bi-eye',
+      icon: '📈',
       title: 'Investment Monitoring',
       desc: 'Transparent monitoring tools allowing investors to track investments and business performance remotely in real time.',
+      
     },
   ]
   return (
@@ -207,9 +221,12 @@ function Services() {
         <div className={`services-grid ${inView ? 'animate-in' : ''}`}>
           {services.map((s, i) => (
             <div className="service-card" key={s.title} style={{ animationDelay: `${i * 0.08}s` }}>
-              <div className="service-icon"><i className={`bi ${s.icon}`}></i></div>
+              <div className="service-icon">{s.icon}</div>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
+              <div className="service-tags">
+
+              </div>
               <div className="service-hover-line" />
             </div>
           ))}
@@ -270,32 +287,32 @@ function Events() {
           <h2 className="section-title">Connect, Learn & Grow</h2>
           <p className="section-subtitle">Join our vibrant community events and be part of Rwanda's investment revolution</p>
         </div>
-        <div className={`events-split ${inView ? 'animate-in' : ''}`}>
-          <div className="events-list slide-in-left">
-            {upcoming.map((ev, i) => (
-              <div className="event-card" key={ev.title} style={{ animationDelay: `${i * 0.12}s` }}>
-                <div className="event-date">
-                  <span className="event-day">{ev.date.split(' ')[1]}</span>
-                  <span className="event-month">{ev.date.split(' ')[0]}</span>
-                  <span className="event-year">{ev.year}</span>
-                </div>
-                <div className="event-info">
-                  <span className="event-type">{ev.type}</span>
-                  <h3>{ev.title}</h3>
-                  <p>{ev.desc}</p>
-                  <a href="#contact" className="event-register">Register →</a>
-                </div>
+        <div className={`events-grid ${inView ? 'animate-in' : ''}`}>
+          {upcoming.map((ev, i) => (
+            <div className="event-card" key={ev.title} style={{ animationDelay: `${i * 0.12}s` }}>
+              <div className="event-date">
+                <span className="event-day">{ev.date.split(' ')[1]}</span>
+                <span className="event-month">{ev.date.split(' ')[0]}</span>
+                <span className="event-year">{ev.year}</span>
               </div>
-            ))}
-          </div>
-          <div className="events-visual slide-in-right">
-            <div className="events-image-wrapper">
-              <img src="/images/business_event.png" alt="Networking Event" className="events-main-img" />
-              <div className="events-img-overlay">
-                <div className="play-btn">▶</div>
-                <span style={{ fontWeight: 600, letterSpacing: '1px' }}>Watch Event Highlights</span>
+              <div className="event-info">
+                <span className="event-type">{ev.type}</span>
+                <h3>{ev.title}</h3>
+                <p>{ev.desc}</p>
+                <a href="#contact" className="event-register">Register →</a>
               </div>
             </div>
+          ))}
+        </div>
+        <div className="gallery-placeholder">
+          <div className="gallery-label">📸 Event Gallery — Coming Soon</div>
+          <div className="gallery-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div className="gallery-item" key={i}>
+                <div className="gallery-shimmer" />
+                <div className="gallery-overlay">FINVERRA Events</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -383,37 +400,34 @@ function Testimonials() {
     { name: 'Sophie Niyonzima', role: 'Investor, Kigali Capital Partners', text: 'As an investor, I value the due diligence FINVERRA does before presenting opportunities. Every project I\'ve reviewed has been thoroughly vetted and professionally prepared.', rating: 5 },
   ]
   useEffect(() => {
-    const timer = setInterval(() => setActive(a => (a + 1) % testimonials.length), 6000)
+    const timer = setInterval(() => setActive(a => (a + 1) % testimonials.length), 5000)
     return () => clearInterval(timer)
   }, [])
   const t = testimonials[active]
   return (
     <section className="testimonials section" id="testimonials" ref={ref}>
       <div className="container">
-        <div className={`testimonial-split ${inView ? 'animate-in' : ''}`}>
-          <div className="testimonial-image-side slide-in-left">
-             <img src="/images/happy_entrepreneur.png" alt="Successful Entrepreneur" className="testimonial-img" />
-          </div>
-          <div className="testimonial-content-side slide-in-right">
-            <div className="section-label">Testimonials</div>
-            <h2 className="section-title">Voices of Trust</h2>
-            <div className="testimonial-main">
-              <div className="quote-mark">"</div>
-              <p className="testimonial-text">{t.text}</p>
-              <div className="testimonial-author">
-                <div className="author-avatar">{t.name.split(' ').map(n => n[0]).join('')}</div>
-                <div>
-                  <div className="author-name">{t.name}</div>
-                  <div className="author-role">{t.role}</div>
-                </div>
-                <div className="stars">{'★'.repeat(t.rating)}</div>
+        <div className="section-header">
+          <div className="section-label">Testimonials</div>
+          <h2 className="section-title">Voices of Trust</h2>
+        </div>
+        <div className={`testimonial-wrapper ${inView ? 'animate-in' : ''}`}>
+          <div className="testimonial-main">
+            <div className="quote-mark">"</div>
+            <p className="testimonial-text">{t.text}</p>
+            <div className="testimonial-author">
+              <div className="author-avatar">{t.name.split(' ').map(n => n[0]).join('')}</div>
+              <div>
+                <div className="author-name">{t.name}</div>
+                <div className="author-role">{t.role}</div>
               </div>
+              <div className="stars">{'★'.repeat(t.rating)}</div>
             </div>
-            <div className="testimonial-dots">
-              {testimonials.map((_, i) => (
-                <button key={i} className={`dot ${i === active ? 'active' : ''}`} onClick={() => setActive(i)} />
-              ))}
-            </div>
+          </div>
+          <div className="testimonial-dots">
+            {testimonials.map((_, i) => (
+              <button key={i} className={`dot ${i === active ? 'active' : ''}`} onClick={() => setActive(i)} />
+            ))}
           </div>
         </div>
       </div>
