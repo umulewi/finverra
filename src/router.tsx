@@ -1,212 +1,232 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import App from './App'
-import DashboardChoice from './dashboard/DashboardChoice'
 import ProtectedRoleRoute from './dashboard/ProtectedRoleRoute'
-import AdminAuth from './dashboard/admin/AdminAuth'
-import ServicesPage from './dashboard/admin/ServicesPage'
-import PartnersPage from './dashboard/admin/PartnersPage'
 
+const PartnershipArticlePage = lazy(() => import('./showcase/PartnershipArticlePage'))
+const HowItWorksPage = lazy(() => import('./showcase/HowItWorksPage'))
+const ProgramsPage = lazy(() => import('./showcase/ProgramsPage'))
+const ShowcaseServicesPage = lazy(() => import('./showcase/ServicesPage'))
+const ShowcaseEventsPage = lazy(() => import('./showcase/EventsGalleryPage'))
+const TeamStructurePage = lazy(() => import('./showcase/TeamStructurePage'))
+const DashboardChoice = lazy(() => import('./dashboard/DashboardChoice'))
+const AdminAuth = lazy(() => import('./dashboard/admin/AdminAuth'))
+const ServicesPage = lazy(() => import('./dashboard/admin/ServicesPage'))
+const PartnersPage = lazy(() => import('./dashboard/admin/PartnersPage'))
+const AchievementsPage = lazy(() => import('./dashboard/admin/AchievementsPage'))
+const EventsPage = lazy(() => import('./dashboard/admin/EventsPage'))
+const TeamPage = lazy(() => import('./dashboard/admin/TeamPage'))
+const Testimonials = lazy(() => import('./dashboard/admin/TestimonialsPage'))
 
-import AchievementsPage from './dashboard/admin/AchievementsPage'
-import EventsPage from './dashboard/admin/EventsPage'
-import TeamPage from './dashboard/admin/TeamPage'
-import Testimonials from './dashboard/admin/TestimonialsPage'
+const EntrepreneurAuth = lazy(() => import('./dashboard/entrepreneur/EntrepreneurAuth'))
+const EntrepreneurDashboard = lazy(() => import('./dashboard/entrepreneur/EntrepreneurDashboard'))
+const EntrepreneurProfile = lazy(() => import('./dashboard/entrepreneur/EntrepreneurProfile'))
+const ApplicationInfo = lazy(() => import('./dashboard/entrepreneur/ApplicationInfo'))
+const BusinessInfo = lazy(() => import('./dashboard/entrepreneur/BusinessInfo'))
 
-
-
-
-
-
-//Entrepreneur Pages
-import EntrepreneurAuth from './dashboard/entrepreneur/EntrepreneurAuth'
-import EntrepreneurDashboard from './dashboard/entrepreneur/EntrepreneurDashboard'
-import EntrepreneurProfile from './dashboard/entrepreneur/EntrepreneurProfile'
-import BusinessInfo from './dashboard/entrepreneur/BusinessInfo'
-
-
-
-
-import InvestorDashboard from './dashboard/investor'
-import InvestorAuth from './dashboard/investor/InvestorAuth'
-import PipelinePage from './dashboard/investor/PipelinePage'
-import PortfolioPage from './dashboard/investor/PortfolioPage'
-import DocumentsPage from './dashboard/investor/DocumentsPage'
-import MessagesPage from './dashboard/investor/MessagesPage'
-import ReportsPage from './dashboard/investor/ReportsPage'
-import NotificationsPage from './dashboard/investor/NotificationsPage'
-import SettingsPage from './dashboard/investor/SettingsPage'
-
-
-
-
-import InvestorEditProfile from './dashboard/investor/InvestorEditProfile'
+const InvestorDashboard = lazy(() => import('./dashboard/investor'))
+const InvestorAuth = lazy(() => import('./dashboard/investor/InvestorAuth'))
+const PipelinePage = lazy(() => import('./dashboard/investor/PipelinePage'))
+const PortfolioPage = lazy(() => import('./dashboard/investor/PortfolioPage'))
+const DocumentsPage = lazy(() => import('./dashboard/investor/DocumentsPage'))
+const MessagesPage = lazy(() => import('./dashboard/investor/MessagesPage'))
+const ReportsPage = lazy(() => import('./dashboard/investor/ReportsPage'))
+const NotificationsPage = lazy(() => import('./dashboard/investor/NotificationsPage'))
+const SettingsPage = lazy(() => import('./dashboard/investor/SettingsPage'))
+const InvestorEditProfile = lazy(() => import('./dashboard/investor/InvestorEditProfile'))
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/dashboard" element={<DashboardChoice />} />
-        <Route path="/dashboard/admin/login" element={<AdminAuth mode="login" />} />
-        <Route path="/dashboard/admin/signup" element={<AdminAuth mode="signup" />} />
-        <Route
-          path="/dashboard/admin"
-          element={<Navigate to="/dashboard/admin/services" replace />}
-        />
-        <Route
-          path="/dashboard/admin/services"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <ServicesPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/admin/partners"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <PartnersPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/admin/achievements"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <AchievementsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/admin/events"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <EventsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/admin/team"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <TeamPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/admin/testimonials"
-          element={(
-            <ProtectedRoleRoute role="admin">
-              <Testimonials />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route path="/dashboard/entrepreneur/login" element={<EntrepreneurAuth mode="login" />} />
-        <Route path="/dashboard/entrepreneur/signup" element={<EntrepreneurAuth mode="signup" />} />
-        <Route
-          path="/dashboard/entrepreneur"
-          element={(
-            <ProtectedRoleRoute role="entrepreneur">
-              <EntrepreneurDashboard />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/entrepreneur/profile"
-          element={(
-            <ProtectedRoleRoute role="entrepreneur">
-              <EntrepreneurProfile />
-            </ProtectedRoleRoute>
-          )}
-        />
+      <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route
+            path="/partnerships/strategic-partnerships"
+            element={<PartnershipArticlePage forcedSlug="strategic-partnerships" />}
+          />
+          <Route
+            path="/partnerships/collaborative-innovation"
+            element={<PartnershipArticlePage forcedSlug="collaborative-innovation" />}
+          />
+          <Route
+            path="/partnerships/expert-leadership"
+            element={<PartnershipArticlePage forcedSlug="expert-leadership" />}
+          />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/programs" element={<ProgramsPage />} />
+          <Route path="/services" element={<ShowcaseServicesPage />} />
+          <Route path="/events" element={<ShowcaseEventsPage />} />
+          <Route path="/team" element={<TeamStructurePage />} />
+          <Route path="/partnerships/:slug" element={<PartnershipArticlePage />} />
+          <Route path="/dashboard" element={<DashboardChoice />} />
+          <Route path="/dashboard/admin/login" element={<AdminAuth mode="login" />} />
+          <Route path="/dashboard/admin/signup" element={<AdminAuth mode="signup" />} />
+          <Route
+            path="/dashboard/admin"
+            element={<Navigate to="/dashboard/admin/services" replace />}
+          />
+          <Route
+            path="/dashboard/admin/services"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <ServicesPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/partners"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <PartnersPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/achievements"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <AchievementsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/events"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <EventsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/team"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <TeamPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/testimonials"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <Testimonials />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route path="/dashboard/entrepreneur/login" element={<EntrepreneurAuth mode="login" />} />
+          <Route path="/dashboard/entrepreneur/signup" element={<EntrepreneurAuth mode="signup" />} />
+          <Route
+            path="/dashboard/entrepreneur"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <EntrepreneurDashboard />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/entrepreneur/profile"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <EntrepreneurProfile />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/entrepreneur/ApplicationInfo"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <ApplicationInfo />
+              </ProtectedRoleRoute>
+            )}
+          />
 
-        <Route
-          path="/dashboard/entrepreneur/BusinessInfo"
-          element={(
-            <ProtectedRoleRoute role="entrepreneur">
-              <BusinessInfo />
-            </ProtectedRoleRoute>
-          )}
-        />
+          <Route
+            path="/dashboard/entrepreneur/BusinessInfo"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <BusinessInfo />
+              </ProtectedRoleRoute>
+            )}
+          />
 
-
-
-        <Route path="/dashboard/investor/login" element={<InvestorAuth mode="login" />} />
-        <Route path="/dashboard/investor/signup" element={<InvestorAuth mode="signup" />} />
-        <Route
-          path="/dashboard/investor"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <InvestorDashboard />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/pipeline"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <PipelinePage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/portfolio"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <PortfolioPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/documents"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <DocumentsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/messages"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <MessagesPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/reports"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <ReportsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/notifications"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <NotificationsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/dashboard/investor/settings"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <SettingsPage />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route
-          path="/edit-profile"
-          element={(
-            <ProtectedRoleRoute role="investor">
-              <InvestorEditProfile />
-            </ProtectedRoleRoute>
-          )}
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="/dashboard/investor/login" element={<InvestorAuth mode="login" />} />
+          <Route path="/dashboard/investor/signup" element={<InvestorAuth mode="signup" />} />
+          <Route
+            path="/dashboard/investor"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorDashboard />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/pipeline"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <PipelinePage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/portfolio"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <PortfolioPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/documents"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <DocumentsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/messages"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <MessagesPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/reports"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <ReportsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/notifications"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <NotificationsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/settings"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <SettingsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/edit-profile"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorEditProfile />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

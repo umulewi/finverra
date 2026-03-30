@@ -9,7 +9,7 @@ export default function EntrepreneurHeader({ onToggleSidebar }: EntrepreneurHead
     <header style={styles.topbar}>
       <div style={styles.leftWrap}>
         <button type="button" style={styles.hamburger} onClick={onToggleSidebar} aria-label="Toggle menu">
-          <svg width="18" height="18" fill="none" stroke="#0f1e35" strokeWidth="2" viewBox="0 0 24 24">
+          <svg width="18" height="18" fill="none" stroke="#023341" strokeWidth="2" viewBox="0 0 24 24">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -72,7 +72,7 @@ const styles: Record<string, CSSProperties> = {
   title: {
     margin: '2px 0 0',
     fontSize: 18,
-    color: '#0f1e35',
+    color: '#023341',
     fontWeight: 700,
   },
   avatarWrap: {

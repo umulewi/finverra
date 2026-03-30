@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+.services-page {
+  --services-bg: #f4f8fc;
+  --services-ink: #0a2f47;
+  --services-accent: #023341;
+  background: radial-gradient(circle at 8% 10%, #dff1ff 0, transparent 36%),
+    radial-gradient(circle at 90% 18%, #fff2d6 0, transparent 30%),
+    var(--services-bg);
+  color: var(--services-ink);
+  font-family: 'Manrope', sans-serif;
+}
+
+.services-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 128px 0 82px;
+}
+
+.services-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(125deg, #01262f 0%, #023341 55%, #035067 100%),
+    repeating-linear-gradient(
+      -36deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.08) 4px,
+      transparent 4px,
+      transparent 22px
+    );
+}
+
+.services-hero-content {
+  color: #ffffff;
+  max-width: 860px;
+}
+
+.services-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #d6f4ff;
+  margin-bottom: 14px;
+}
+
+.services-hero-content h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.07;
+  margin-bottom: 16px;
+}
+
+.services-hero-content p {
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.75;
+}
+
+.services-hero-actions {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.services-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.services-btn:hover {
+  transform: translateY(-2px);
+}
+
+.services-btn-primary {
+  background: linear-gradient(125deg, #ffd89f, #f3b340);
+  color: #4e3300;
+}
+
+.services-btn-secondary {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 768px) {
+  .services-hero {
+    padding-top: 116px;
+  }
+}

@@ -325,6 +325,7 @@ export default function BusinessInfo() {
     <EntrepreneurShell
       title="Business Information"
       subtitle="Register your venture profile details and ownership structure in one guided flow."
+      heroBackground="linear-gradient(135deg, #01262f 0%, #023341 55%, #045161 100%)"
     >
       {isLoadingUser ? <div style={styles.info}>Resolving users_id from your entrepreneur email...</div> : null}
       {isLoadingBusiness ? <div style={styles.info}>Loading existing business info...</div> : null}
