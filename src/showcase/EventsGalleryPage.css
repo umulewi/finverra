@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+.events-page {
+  --events-bg: #f4f8fc;
+  --events-ink: #0a2f47;
+  background: radial-gradient(circle at 8% 10%, #dff1ff 0, transparent 36%),
+    radial-gradient(circle at 90% 18%, #fff2d6 0, transparent 30%),
+    var(--events-bg);
+  color: var(--events-ink);
+  font-family: 'Manrope', sans-serif;
+}
+
+.events-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 128px 0 82px;
+}
+
+.events-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(125deg, #01262f 0%, #023341 55%, #035067 100%),
+    repeating-linear-gradient(
+      -36deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.08) 4px,
+      transparent 4px,
+      transparent 22px
+    );
+}
+
+.events-hero-content {
+  color: #ffffff;
+  max-width: 860px;
+}
+
+.events-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #d6f4ff;
+  margin-bottom: 14px;
+}
+
+.events-hero-content h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.07;
+  margin-bottom: 16px;
+}
+
+.events-hero-content p {
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.75;
+}
+
+.events-hero-actions {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.events-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.events-btn:hover {
+  transform: translateY(-2px);
+}
+
+.events-btn-primary {
+  background: linear-gradient(125deg, #ffd89f, #f3b340);
+  color: #4e3300;
+}
+
+.events-btn-secondary {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 768px) {
+  .events-hero {
+    padding-top: 116px;
+  }
+}
+
+.events-modern-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.events-list-modern {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(10,47,71,0.08);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.event-card-modern {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(10,47,71,0.06);
+  padding: 24px 20px 20px 20px;
+  margin-bottom: 18px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.event-date-modern {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #023341;
+  margin-bottom: 8px;
+}
+
+.event-day-modern {
+  font-size: 2.2rem;
+  color: #f3b340;
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+.event-month-modern {
+  font-size: 1.1rem;
+  color: #023341;
+  font-weight: 700;
+}
+
+.event-year-modern {
+  font-size: 1rem;
+  color: #446073;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.event-type-modern {
+  display: inline-block;
+  background: #eaf6fa;
+  color: #0e7abf;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 2px 10px;
+  margin-bottom: 6px;
+}
+
+.event-info-modern h3 {
+  font-size: 1.25rem;
+  color: #0a2f47;
+  margin: 0 0 6px 0;
+}
+
+.event-info-modern p {
+  color: #446073;
+  font-size: 1.05rem;
+  margin: 0 0 4px 0;
+}
+
+.events-hero-white-bg {
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(10,47,71,0.06);
+  border-radius: 0 0 32px 32px;
+  padding-bottom: 0;
+}
+
+.events-hero-white-bg .events-hero-overlay {
+  display: none;
+}
+
+.events-hero-white-bg .events-hero-content {
+  color: #023341;
+}
+
+.events-hero-white-bg .events-eyebrow {
+  color: #0a2f47;
+}
+
+.events-hero-white-bg .events-hero-content p {
+  color: #446073;
+}
+
+.events-hero-white-bg .events-btn-secondary {
+  color: #023341;
+  border: 1px solid #e0e0e0;
+  background: #f7f7f7;
+}
+
+.events-hero-white-bg .events-btn-primary {
+  background: linear-gradient(125deg, #ffd89f, #f3b340);
+  color: #4e3300;
+}
+
+/* Optionally, remove extra bottom padding from .events-hero if needed */
+.events-hero-white-bg .events-hero {
+  padding-bottom: 82px;
+}

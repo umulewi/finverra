@@ -409,6 +409,7 @@ export default function EntrepreneurProfile() {
     <EntrepreneurShell
       title="My Profile Management"
       subtitle="Keep your account details current so investors and platform services can trust your profile."
+      heroBackground="linear-gradient(135deg, #01262f 0%, #023341 55%, #045161 100%)"
     >
       
       {loading ? <div style={styles.infoCard}>Loading entrepreneur profile...</div> : null}
@@ -639,14 +640,14 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 14,
     border: '1px solid rgba(15, 30, 53, 0.08)',
     background: '#ffffff',
-    color: '#1e2e46',
+    color: '#023341',
     padding: '12px 14px',
     marginBottom: 12,
   },
   userIdCard: {
     borderColor: 'rgba(26, 64, 128, 0.24)',
     background: 'rgba(239, 246, 255, 0.9)',
-    color: '#1e3a8a',
+    color: '#023341',
   },
   errorCard: {
     borderColor: 'rgba(220, 38, 38, 0.28)',

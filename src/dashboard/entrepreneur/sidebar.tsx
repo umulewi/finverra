@@ -128,7 +128,7 @@ const styles: Record<string, CSSProperties> = {
   sidebar: {
     width: 280,
     height: '100%',
-    background: 'linear-gradient(180deg, #0d2345 0%, #11315f 52%, #0b2444 100%)',
+    background: 'linear-gradient(180deg, #023341 0%, #023341 52%, #023341 100%)',
     borderRight: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     flexDirection: 'column',
