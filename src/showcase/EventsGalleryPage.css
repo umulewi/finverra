@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @media (max-width: 600px) {
   .events-modern-grid {
     display: block !important;
@@ -60,7 +63,6 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(10,47,71,0.04);
 }
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 .events-page {
   --events-bg: #f4f8fc;

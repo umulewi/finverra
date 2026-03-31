@@ -1,3 +1,5 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 /* Ensure anchor targets are visible below fixed header/navbar */
 [id] {
   scroll-margin-top: 120px; /* Increased for tall/fixed headers */
@@ -6,8 +8,6 @@
    FINVERRA — Finance with Trust
    LIGHT THEME — Clean, Vibrant, Professional
    ============================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
 /* ── CSS VARIABLES ── */
 :root {
