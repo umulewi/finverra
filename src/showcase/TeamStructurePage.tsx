@@ -108,7 +108,7 @@ export default function TeamStructurePage() {
             <p>Strategic leadership and governance for sustainable growth.</p>
           </div>
           <div className="team-members-grid">
-            {boardMembers.map((m, i) => (
+              {boardMembers.map((m) => (
               <div className="team-member-card" key={m.name}>
                 <div className="team-member-image">
                   <img src={m.image} alt={m.name} />
@@ -132,7 +132,7 @@ export default function TeamStructurePage() {
             <p>Operational leadership and day-to-day management.</p>
           </div>
           <div className="team-members-grid">
-            {execMembers.map((m, i) => (
+              {execMembers.map((m) => (
               <div className="team-member-card" key={m.name}>
                 <div className="team-member-image">
                   <img src={m.image} alt={m.name} />
