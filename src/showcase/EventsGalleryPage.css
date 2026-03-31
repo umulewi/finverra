@@ -1,3 +1,65 @@
+@media (max-width: 600px) {
+  .events-modern-grid {
+    display: block !important;
+  }
+  .events-list-modern,
+  .events-feature-media {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 18px auto !important;
+    display: block !important;
+  }
+  .events-feature-media {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .events-feature-image {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    border-radius: 10px !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+}
+@media (max-width: 600px) {
+  .events-modern-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .events-list-modern {
+    width: 100%;
+  }
+  .events-feature-media {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 0;
+    justify-content: flex-start;
+  }
+  .events-feature-image {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    border-radius: 10px;
+  }
+}
+/* Minimize the event image size for small card layout */
+.events-feature-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.events-feature-image {
+  width: 1200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(10,47,71,0.04);
+}
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 .events-page {
@@ -104,77 +166,77 @@
 
 .events-list-modern {
   background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(10,47,71,0.08);
-  padding: 32px 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(10,47,71,0.06);
+  padding: 14px 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
 }
 
 .event-card-modern {
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(10,47,71,0.06);
-  padding: 24px 20px 20px 20px;
-  margin-bottom: 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(10,47,71,0.04);
+  padding: 10px 10px 8px 10px;
+  margin-bottom: 10px;
   width: 100%;
-  max-width: 420px;
+  max-width: 340px;
 }
 
 .event-date-modern {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 6px;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #023341;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .event-day-modern {
-  font-size: 2.2rem;
+  font-size: 1.4rem;
   color: #f3b340;
   font-weight: 800;
   margin-right: 2px;
 }
 
 .event-month-modern {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #023341;
   font-weight: 700;
 }
 
 .event-year-modern {
-  font-size: 1rem;
+  font-size: 0.8rem;
   color: #446073;
   font-weight: 500;
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .event-type-modern {
   display: inline-block;
   background: #eaf6fa;
   color: #0e7abf;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  border-radius: 8px;
-  padding: 2px 10px;
-  margin-bottom: 6px;
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-bottom: 3px;
 }
 
 .event-info-modern h3 {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   color: #0a2f47;
-  margin: 0 0 6px 0;
+  margin: 0 0 3px 0;
 }
 
 .event-info-modern p {
   color: #446073;
-  font-size: 1.05rem;
-  margin: 0 0 4px 0;
+  font-size: 0.92rem;
+  margin: 0 0 2px 0;
 }
 
 .events-hero-white-bg {

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import ServicesSection from './components/ServicesSection'
 import EventsSection from './components/EventsSection'
 import './App.css'
+import ScrollToTop from './components/ScrollToTop'
 
 // Image imports from assets
 import logoFinverraWhite from './assets/logo-finverra-white.png'
@@ -645,7 +646,7 @@ export function Footer() {
               <ul>
                 <li><Link to="/dashboard">Sign Up</Link></li>
                 <li><a href={sectionHref('contact')}>Book Appointment</a></li>
-                <li><a href={sectionHref('team')}>Our Team</a></li>
+                <li><Link to="/team">Our Team</Link></li>
                 <li><a href="#">Careers</a></li>
               </ul>
             </div>
@@ -763,7 +764,8 @@ export default function App() {
   }, [location]);
 
   return (
-    <div className="app">
+    <>
+      <ScrollToTop />
       <Navbar />
       <Hero />
 
@@ -773,6 +775,6 @@ export default function App() {
       <Testimonials />
       <Appointment />
       <Footer />
-    </div>
+    </>
   )
 }

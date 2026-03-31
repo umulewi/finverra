@@ -19,7 +19,7 @@ export default function ServicesPage() {
           </p>
           <div className="services-hero-actions">
             <Link to="/dashboard" className="services-btn services-btn-primary">Work With FinVerra</Link>
-            <Link to="/" className="services-btn services-btn-secondary">Back to Home</Link>
+            
           </div>
         </div>
       </section>

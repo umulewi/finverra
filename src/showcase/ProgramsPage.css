@@ -158,19 +158,20 @@
   gap: 16px;
 }
 
-.program-summary-card {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 1px solid rgba(7, 71, 68, 0.15);
-  border-radius: 18px;
-  padding: 18px;
-  text-decoration: none;
-  color: inherit;
-  background: linear-gradient(155deg, #fcfffd, #f5faf8);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
+  .program-summary-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 1px solid rgba(7, 71, 68, 0.15);
+    border-radius: 18px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: inherit;
+    background: linear-gradient(155deg, #fcfffd, #f5faf8);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    min-height: 0;
+  }
 
 .program-summary-card:hover {
   transform: translateY(-2px);
@@ -191,17 +192,17 @@
   margin-bottom: 10px;
 }
 
-.program-summary-card h3 {
-  font-family: 'Outfit', sans-serif;
-  margin-bottom: 8px;
-  font-size: 1.2rem;
-}
+  .program-summary-card h3 {
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 4px;
+    font-size: 1.1rem;
+  }
 
-.program-summary-card p {
-  color: var(--program-muted);
-  margin-bottom: 12px;
-  line-height: 1.6;
-}
+  .program-summary-card p {
+    color: var(--program-muted);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
 
 .program-summary-meta {
   display: flex;
@@ -218,13 +219,14 @@
   padding: 4px 10px;
 }
 
-.program-card {
-  background: var(--program-card);
-  border: 1px solid var(--program-border);
-  border-radius: 24px;
-  padding: 28px;
-  box-shadow: var(--program-shadow);
-}
+  .program-card {
+    background: var(--program-card);
+    border: 1px solid var(--program-border);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: var(--program-shadow);
+    min-height: 0;
+  }
 
 .program-empty-state {
   border: 1px dashed rgba(7, 71, 68, 0.3);
@@ -286,31 +288,31 @@
   border: 1px solid rgba(27, 93, 167, 0.26);
 }
 
-.program-card-header h2 {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.4rem, 2.7vw, 2rem);
-  margin-bottom: 10px;
-}
+  .program-card-header h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    margin-bottom: 6px;
+  }
 
-.program-card-header p {
-  color: var(--program-muted);
-  line-height: 1.7;
-  margin-bottom: 22px;
-}
+  .program-card-header p {
+    color: var(--program-muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
 
-.program-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
-}
+  .program-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
 
-.program-meta-item {
-  border: 1px solid rgba(7, 71, 68, 0.13);
-  border-radius: 14px;
-  padding: 14px;
-  background: linear-gradient(160deg, #f7fcfa, #ffffff);
-}
+  .program-meta-item {
+    border: 1px solid rgba(7, 71, 68, 0.13);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: linear-gradient(160deg, #f7fcfa, #ffffff);
+  }
 
 .program-meta-item h3 {
   font-size: 0.92rem;

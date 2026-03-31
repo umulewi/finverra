@@ -58,7 +58,7 @@ export default function ProgramsPage() {
           </p>
           <div className="programs-actions">
             <Link to="/dashboard" className="programs-btn programs-btn-primary">Join the Journey</Link>
-            <Link to="/" className="programs-btn programs-btn-secondary">Back Home</Link>
+            
           </div>
         </div>
       </section>
