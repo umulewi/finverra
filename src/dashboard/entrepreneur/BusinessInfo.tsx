@@ -15,6 +15,7 @@ type BusinessForm = {
   business_name: string
   registration_status: string
   establishment_year: string
+  business_sector: string
   province: string
   district: string
   sector: string
@@ -29,6 +30,7 @@ const initialForm: BusinessForm = {
   business_name: '',
   registration_status: '',
   establishment_year: '',
+  business_sector: '',
   province: '',
   district: '',
   sector: '',
@@ -60,6 +62,17 @@ function currentYear() {
   return new Date().getFullYear()
 }
 
+function getEstablishmentYears(startYear = 1900) {
+  const endYear = currentYear()
+  const years: number[] = []
+
+  for (let year = endYear; year >= startYear; year -= 1) {
+    years.push(year)
+  }
+
+  return years
+}
+
 function toText(value: unknown) {
   return typeof value === 'string' ? value : value == null ? '' : String(value)
 }
@@ -78,6 +91,7 @@ export default function BusinessInfo() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const establishmentYears = useMemo(() => getEstablishmentYears(), [])
 
   const email = useMemo(
     () => (session && typeof session.email === 'string' ? session.email : ''),
@@ -241,6 +255,7 @@ export default function BusinessInfo() {
           business_name: toText(data?.business_name),
           registration_status: toText(data?.registration_status),
           establishment_year: toText(data?.establishment_year),
+          business_sector: toText(data?.business_sector),
           province: toText(data?.province),
           district: toText(data?.district),
           sector: toText(data?.sector),
@@ -296,6 +311,7 @@ export default function BusinessInfo() {
           business_name: form.business_name,
           registration_status: form.registration_status,
           establishment_year: form.establishment_year,
+          business_sector: form.business_sector,
           province: form.province,
           district: form.district,
           sector: form.sector,
@@ -370,15 +386,35 @@ export default function BusinessInfo() {
 
             <label style={styles.field}>
               Year of Establishment
-              <input
+              <select
                 style={styles.input}
-                type="number"
-                min={1900}
-                max={currentYear()}
                 value={form.establishment_year}
                 onChange={(event) => setForm((prev) => ({ ...prev, establishment_year: event.target.value }))}
                 required
-              />
+              >
+                <option value="">Select year</option>
+                {establishmentYears.map((year) => (
+                  <option key={year} value={String(year)}>{year}</option>
+                ))}
+              </select>
+            </label>
+
+            <label style={styles.field}>
+              Business Sector
+              <select
+                style={styles.input}
+                value={form.business_sector}
+                onChange={(event) => setForm((prev) => ({ ...prev, business_sector: event.target.value }))}
+                required
+              >
+                <option value="">Select business sector</option>
+                <option value="Agriculture">Agriculture</option>
+                <option value="Technology">Technology</option>
+                <option value="Retail">Retail</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Services">Services</option>
+                <option value="Other">Other</option>
+              </select>
             </label>
 
             <label style={styles.field}>

@@ -118,6 +118,7 @@ function resolveImageUrl(value: string) {
 
 export default function investorProfile() {
   const session = getAuthSession()
+  const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
@@ -230,6 +231,13 @@ export default function investorProfile() {
     }))
     setVillages(nextVillages)
   }
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -405,6 +413,67 @@ export default function investorProfile() {
     }
   }
 
+  const isPhone = viewportWidth <= 640
+  const isTablet = viewportWidth <= 960
+
+  const responsiveGridStyle: CSSProperties = {
+    ...styles.grid,
+    gridTemplateColumns: isPhone ? '1fr' : styles.grid.gridTemplateColumns,
+    gap: isPhone ? 12 : 16,
+  }
+
+  const responsiveCardStyle: CSSProperties = {
+    ...styles.card,
+    padding: isPhone ? 14 : isTablet ? 16 : 20,
+    borderRadius: isPhone ? 14 : 20,
+  }
+
+  const responsiveHeadingStyle: CSSProperties = {
+    ...styles.heading,
+    fontSize: isPhone ? 18 : 20,
+    margin: isPhone ? '6px 0 12px' : '8px 0 14px',
+  }
+
+  const responsiveKvItemStyle: CSSProperties = {
+    ...styles.kvItem,
+    flexDirection: isPhone ? 'column' : 'row',
+    alignItems: isPhone ? 'flex-start' : 'center',
+  }
+
+  const responsiveAvatarCircleStyle: CSSProperties = {
+    ...styles.avatarCircle,
+    width: isPhone ? 108 : 132,
+    height: isPhone ? 108 : 132,
+  }
+
+  const responsiveFormGridStyle: CSSProperties = {
+    ...styles.formGrid,
+    gridTemplateColumns: isPhone
+      ? '1fr'
+      : isTablet
+        ? 'repeat(2, minmax(0, 1fr))'
+        : 'repeat(auto-fit, minmax(180px, 1fr))',
+  }
+
+  const responsiveFieldLabelStyle: CSSProperties = {
+    ...styles.fieldLabel,
+    fontSize: isPhone ? 11 : 12,
+    letterSpacing: isPhone ? 0.5 : 0.7,
+  }
+
+  const responsiveInputStyle: CSSProperties = {
+    ...styles.input,
+    width: '100%',
+    minHeight: isPhone ? 40 : undefined,
+    fontSize: isPhone ? 14 : undefined,
+  }
+
+  const responsiveSubmitBtnStyle: CSSProperties = {
+    ...styles.submitBtn,
+    width: isPhone ? '100%' : undefined,
+    justifySelf: isPhone ? 'stretch' : 'start',
+  }
+
   return (
     <InvestorLayout>
       
@@ -412,25 +481,25 @@ export default function investorProfile() {
       {error ? <div style={{ ...styles.infoCard, ...styles.errorCard }}>{error}</div> : null}
       {success ? <div style={{ ...styles.infoCard, ...styles.successCard }}>{success}</div> : null}
 
-      <section style={styles.grid}>
-        <article style={styles.card}>
+      <section style={responsiveGridStyle}>
+        <article style={responsiveCardStyle}>
           <p style={styles.label}>Basic Information</p>
-          <h3 style={styles.heading}>Account details from registration</h3>
+          <h3 style={responsiveHeadingStyle}>Account details from registration</h3>
           <div style={styles.kvWrap}>
-            <div style={styles.kvItem}><span style={styles.kvLabel}>Email</span><strong>{basicInfo?.email || email || '-'}</strong></div>
-            <div style={styles.kvItem}><span style={styles.kvLabel}>First name</span><strong>{basicInfo?.first_name || '-'}</strong></div>
-            <div style={styles.kvItem}><span style={styles.kvLabel}>Last name</span><strong>{basicInfo?.last_name || '-'}</strong></div>
-            <div style={styles.kvItem}><span style={styles.kvLabel}>Telephone</span><strong>{basicInfo?.telephone || '-'}</strong></div>
+            <div style={responsiveKvItemStyle}><span style={styles.kvLabel}>Email</span><strong>{basicInfo?.email || email || '-'}</strong></div>
+            <div style={responsiveKvItemStyle}><span style={styles.kvLabel}>First name</span><strong>{basicInfo?.first_name || '-'}</strong></div>
+            <div style={responsiveKvItemStyle}><span style={styles.kvLabel}>Last name</span><strong>{basicInfo?.last_name || '-'}</strong></div>
+            <div style={responsiveKvItemStyle}><span style={styles.kvLabel}>Telephone</span><strong>{basicInfo?.telephone || '-'}</strong></div>
           
           </div>
         </article>
 
-        <article style={styles.card}>
+        <article style={responsiveCardStyle}>
           <p style={styles.label}>Complete Profile</p>
-          <h3 style={styles.heading}>Personal and identification details</h3>
+          <h3 style={responsiveHeadingStyle}>Personal and identification details</h3>
 
           <div style={styles.avatarSection}>
-            <div style={styles.avatarCircle}>
+            <div style={responsiveAvatarCircleStyle}>
               {imagePreview ? (
                 <img
                   src={imagePreview}
@@ -470,11 +539,11 @@ export default function investorProfile() {
           </div>
 
           <form style={styles.form} onSubmit={handleSubmit}>
-            <div style={styles.formGrid}>
-              <label style={styles.fieldLabel}>
+            <div style={responsiveFormGridStyle}>
+              <label style={responsiveFieldLabelStyle}>
                 Date of birth
                 <input
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   type="date"
                   value={form.date_of_birth}
                   onChange={(event) => setForm((prev) => ({ ...prev, date_of_birth: event.target.value }))}
@@ -482,10 +551,10 @@ export default function investorProfile() {
                 />
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Gender
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.gender}
                   onChange={(event) => setForm((prev) => ({ ...prev, gender: event.target.value }))}
                   disabled={loading || saving}
@@ -496,10 +565,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Nationality
                 <input
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   type="text"
                   value={form.nationality}
                   onChange={(event) => setForm((prev) => ({ ...prev, nationality: event.target.value }))}
@@ -507,10 +576,10 @@ export default function investorProfile() {
                 />
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Province
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.province}
                   onChange={(event) => handleProvinceChange(event.target.value)}
                   disabled={loading || saving}
@@ -522,10 +591,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 District
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.district}
                   onChange={(event) => handleDistrictChange(event.target.value)}
                   disabled={loading || saving || !form.province}
@@ -537,10 +606,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Sector
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.sector}
                   onChange={(event) => handleSectorChange(event.target.value)}
                   disabled={loading || saving || !form.district}
@@ -552,10 +621,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Cell
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.cell}
                   onChange={(event) => handleCellChange(event.target.value)}
                   disabled={loading || saving || !form.sector}
@@ -567,10 +636,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 Village
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.village}
                   onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
                   disabled={loading || saving || !form.cell}
@@ -582,10 +651,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 ID type
                 <select
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   value={form.id_type}
                   onChange={(event) => setForm((prev) => ({ ...prev, id_type: event.target.value }))}
                   disabled={loading || saving}
@@ -596,10 +665,10 @@ export default function investorProfile() {
                 </select>
               </label>
 
-              <label style={styles.fieldLabel}>
+              <label style={responsiveFieldLabelStyle}>
                 ID number
                 <input
-                  style={styles.input}
+                  style={responsiveInputStyle}
                   type="text"
                   value={form.id_number}
                   onChange={(event) => setForm((prev) => ({ ...prev, id_number: event.target.value }))}
@@ -609,7 +678,7 @@ export default function investorProfile() {
 
             </div>
 
-            <button type="submit" style={styles.submitBtn} disabled={loading || saving || !userId}>
+            <button type="submit" style={responsiveSubmitBtnStyle} disabled={loading || saving || !userId}>
               {saving ? 'Saving profile...' : 'Save Complete Profile'}
             </button>
           </form>

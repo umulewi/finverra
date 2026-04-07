@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import ServicesSection from './components/ServicesSection'
-import EventsSection from './components/EventsSection'
+
 import './App.css'
 import ScrollToTop from './components/ScrollToTop'
 
@@ -62,8 +61,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeLink, setActiveLink] = useState('')
-  const location = useLocation()
-  const sectionHref = (section: string) => (location.pathname === '/' ? `#${section}` : `/#${section}`)
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40)
@@ -207,57 +204,6 @@ function Hero() {
   )
 }
 
-// ABOUT
-function About() {
-  const { ref, inView } = useInView()
-  const aboutFeatureImage = corporateMeeting
-
-  return (
-    <section className="about section" id="about" ref={ref}>
-      <div className="container">
-        <div className={`about-grid about-grid-modern ${inView ? 'animate-in' : ''}`}>
-          <div className="about-text">
-            <div className="section-label">Who We Are</div>
-            <h2 className="section-title about-title-highlight">
-              <span>Transforming Rwanda's</span>
-              <span>Investment Ecosystem</span>
-            </h2>
-            <p className="about-lead">
-              FINVERRA  is a Rwandan private company dedicated to bridging the gap between
-              ambitious entrepreneurs and the capital they need to thrive.
-            </p>
-            <p className="about-body">
-              Our platform provides a secure, transparent, and professional environment where
-              entrepreneurs prepare investment-ready projects and gain access to investors,
-              commercial banks, and development partners. Beyond finance, we deliver continuous
-              financial advisory, business consulting, and project support for long-term success.
-            </p>
-            <div className="about-vision about-vision-modern">
-              <div className="vision-box modern-card">
-                <h4>Our Vision</h4>
-                <p>To become a leading digital investment connectivity platform in Africa, enabling entrepreneurs to access finance and empowering investors to discover credible opportunities.</p>
-              </div>
-              <div className="vision-box modern-card">
-                <h4>Our Mission</h4>
-                <p>To connect entrepreneurs and SMEs with investors and financial partners through a secure, transparent platform, supported by continuous advisory and business development services.</p>
-              </div>
-            </div>
-          </div>
-          <div className="about-media-panel">
-            <div className="about-image-ring" />
-            <div className="about-feature-image-wrap about-feature-large">
-              <img src={aboutFeatureImage} alt="Strategic business discussion" className="about-feature-image" loading="lazy" decoding="async" />
-              <div className="about-media-caption">
-                <span>Built in Rwanda. Designed for Africa.</span>
-                <strong>Trusted investment connections</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 // ACHIEVEMENTS
 function AchievementCounter({ target, suffix = '', label }: { target: number; suffix?: string; label: string }) {
@@ -330,6 +276,48 @@ function BusinessShowcase() {
   return (
     <section className="showcase section" id="showcase" ref={ref}>
       <div className="container">
+        <div className={`showcase-about about-grid about-grid-modern ${inView ? 'animate-in' : ''}`} id="about">
+          <div className="about-text">
+            <div className="section-label">Who We Are</div>
+            <h2 className="section-title about-title-highlight">
+              <span>Transforming Rwanda&apos;s</span>
+              <span>Investment Ecosystem</span>
+            </h2>
+            <p className="about-lead">
+              FINVERRA is a Rwandan private company dedicated to bridging the gap between ambitious entrepreneurs and the capital they need to thrive.
+            </p>
+            <p className="about-body">
+              Our platform provides a secure, transparent, and professional environment where entrepreneurs prepare investment-ready projects and gain access to investors,
+              commercial banks, and development partners. Beyond finance, we deliver continuous financial advisory, business consulting, and project support for long-term success.
+            </p>
+            <div className="about-vision-modern">
+              <div className="vision-box modern-card">
+                <h4>Our Vision</h4>
+                <p>
+                  To be a leading digital investment platform in Africa, empowering entrepreneurs with access to finance and enabling investors to unlock credible opportunities.
+                </p>
+              </div>
+              <div className="vision-box modern-card">
+                <h4>Our Mission</h4>
+                <p>
+                  To connect entrepreneurs and SMEs with investors and financial partners through a secure, transparent platform, supported by continuous advisory and business development services.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="about-media-panel">
+            <div className="about-feature-image-wrap about-feature-large">
+              <img src={corporateMeeting} alt="FINVERRA team meeting with investors" className="about-feature-image" loading="lazy" decoding="async" />
+              <div className="about-image-ring" />
+              <div className="about-media-caption">
+                <span>Built in Rwanda. Designed for Africa.</span>
+                <strong>Investment Facilitation Company</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="section-header">
           <div className="section-label">Success Stories</div>
           <h2 className="section-title">Partnerships That Matter</h2>
@@ -399,74 +387,6 @@ function Achievements() {
   )
 }
 
-// TEAM
-function Team() {
-  const { ref, inView } = useInView()
-  const team = [
-    {
-      name: 'Ishimwe Rodrigue',
-      role: 'CEO & Founder',
-      bio: 'Leads FINVERRA\'s strategic direction, investor partnerships, and platform growth across Rwanda\'s entrepreneurship ecosystem.',
-      image: sample,
-      email: 'mailto:rodrigue.ishimwe@finverra.rw',
-      linkedin: 'https://www.linkedin.com/in/rodrigue-ishimwe',
-    },
-    {
-      name: 'Aline Uwase',
-      role: 'Head of Investment Advisory',
-      bio: 'Guides entrepreneurs to become investment-ready through financial modeling, due diligence preparation, and deal structuring support.',
-      image: sample,
-      email: 'mailto:aline.uwase@finverra.rw',
-      linkedin: 'https://www.linkedin.com/in/aline-uwase',
-    },
-    {
-      name: 'Patrick Ndayisaba',
-      role: 'Partnerships & Ecosystem Lead',
-      bio: 'Builds collaboration with banks, development partners, and institutions to unlock practical financing pathways for SMEs.',
-      image: sample,
-      email: 'mailto:patrick.ndayisaba@finverra.rw',
-      linkedin: 'https://www.linkedin.com/in/patrick-ndayisaba',
-    },
-    {
-      name: 'Jeanne Mukamana',
-      role: 'Operations & Client Success Manager',
-      bio: 'Ensures founders and investors receive responsive support, smooth onboarding, and consistent progress across every engagement.',
-      image: sample,
-      email: 'mailto:jeanne.mukamana@finverra.rw',
-      linkedin: 'https://www.linkedin.com/in/jeanne-mukamana',
-    },
-    
-    
-  ]
-  return (
-    <section className="team team-modern section" id="team" ref={ref}>
-      <div className="container">
-        <div className="section-header team-header-modern">
-          <h2 className="section-title">Our Team</h2>
-          <p className="section-subtitle">Explore the full team powering FINVERRA with technology, strategy, and investor-first execution.</p>
-        </div>
-        <div className={`team-grid-modern ${inView ? 'animate-in' : ''}`}>
-          {team.map((m, i) => (
-            <article className="team-card-modern" key={`${m.name}-${i}`} style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="team-photo-wrap">
-                <img src={m.image} alt={m.name} className="team-photo" loading="lazy" decoding="async" />
-              </div>
-              <div className="team-content-modern">
-                <h3>{m.name}</h3>
-                <div className="team-role-modern">{m.role}</div>
-                <p>{m.bio}</p>
-                <div className="team-social-modern">
-                  <a href={m.email} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} Email`}><i className="bi bi-envelope" aria-hidden="true" /></a>
-                  <a href={m.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${m.name} LinkedIn`}><i className="bi bi-linkedin" aria-hidden="true" /></a>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
 
 // TESTIMONIALS
 function Testimonials() {

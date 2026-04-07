@@ -1024,6 +1024,10 @@ select option { background: white; color: var(--text-primary); }
   border-bottom: 1px solid var(--border);
 }
 
+.showcase-about {
+  margin-bottom: 68px;
+}
+
 .showcase-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

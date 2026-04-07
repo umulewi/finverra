@@ -101,7 +101,7 @@ export default function TeamStructurePage() {
         </div>
       </section>
 
-      <section className="team section">
+      <section className="team team-board-section section">
         <div className="container">
           <div className="team-header">
             <h2>Board of Directors</h2>
@@ -119,13 +119,24 @@ export default function TeamStructurePage() {
               </div>
             ))}
           </div>
-          <div className="team-contact-note">
-            For inquiries or to contact a member of our Board, please reach us at <a href="tel:+250781681561">+250 781 681 561</a> or via email at <a href="mailto:info@finverra.co">info@finverra.co</a>
+          <div className="team-contact-note" aria-label="Board contact information">
+            <p className="team-contact-title">Need to reach a member of our Board?</p>
+            <div className="team-contact-links">
+              <a className="team-contact-chip" href="tel:+250781681561">
+                <span>Phone</span>
+                <strong>+250 781 681 561</strong>
+              </a>
+              <a className="team-contact-chip" href="mailto:info@finverra.co">
+                <span>Email</span>
+                <strong>info@finverra.co</strong>
+              </a>
+            </div>
+            <p className="team-contact-copy">We’re happy to help with board-related inquiries during business hours.</p>
           </div>
         </div>
       </section>
 
-      <section className="team section">
+      <section className="team team-exec-section section">
         <div className="container">
           <div className="team-header">
             <h2>Executive Management Team </h2>

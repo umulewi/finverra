@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import '../Dashboard.css'
 import { saveAuthSession } from '../authStorage'
-import { fetchAvailableRoles, loginWithRole } from '../dashboardApi'
+import { fetchAvailableRoles, loginWithRole, signupInvestor } from '../dashboardApi'
 import type { RoleOption } from '../roles'
 import { getRoleDefinition } from '../roles'
 
@@ -21,6 +21,12 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
   const [successMessage, setSuccessMessage] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [telephone, setTelephone] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -70,14 +76,37 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
       return
     }
 
-    if (mode === 'signup') {
-      setSuccessMessage('Investor signup form is ready. Connect your investor registration endpoint to activate account creation.')
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
+      if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          setErrorMessage('Password and confirm password do not match.')
+          return
+        }
+
+        const payload = await signupInvestor({
+          email,
+          password,
+          role: currentRole,
+          firstName,
+          lastName,
+          telephone,
+        })
+
+        setSuccessMessage(
+          payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
+            ? payload.message
+            : 'Signup successful. Verification token sent to your email.',
+        )
+        setPassword('')
+        setConfirmPassword('')
+        window.setTimeout(() => {
+          navigate(`/dashboard/investor/verify-otp?email=${encodeURIComponent(email)}`, { replace: true })
+        }, 700)
+        return
+      }
+
       const payload = await loginWithRole({
         email,
         password,
@@ -145,26 +174,30 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === 'signup' && (
               <>
-                <div className="auth-row">
-                  <input type="text" placeholder="First Name" required />
-                  <input type="text" placeholder="Last Name" required />
-                </div>
-                <input type="text" placeholder="Fund / Organization Name" required />
-                <select required defaultValue="">
-                  <option value="" disabled>Investor type</option>
-                  <option>Angel Investor</option>
-                  <option>VC Fund</option>
-                  <option>Family Office</option>
-                  <option>Impact Fund</option>
-                </select>
-                <select required defaultValue="">
-                  <option value="" disabled>Typical ticket size</option>
-                  <option>10K - 50K USD</option>
-                  <option>50K - 250K USD</option>
-                  <option>250K - 1M USD</option>
-                  <option>1M+ USD</option>
-                </select>
-                <input type="text" placeholder="Primary Geography" required />
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+                <input
+                  type="tel"
+                  placeholder="Telephone"
+                  value={telephone}
+                  onChange={(event) => setTelephone(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
               </>
             )}
 
@@ -176,14 +209,76 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
               required
               disabled={isLoadingRole || isSubmitting}
             />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              disabled={isLoadingRole || isSubmitting}
-            />
+            <div className="password-field">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                disabled={isLoadingRole || isSubmitting}
+              />
+              <button
+                type="button"
+                className="password-toggle-button"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                disabled={isLoadingRole || isSubmitting}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  {showPassword ? (
+                    <>
+                      <path d="M3 3l18 18" />
+                      <path d="M10.58 10.58a2 2 0 1 0 2.83 2.83" />
+                      <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 10 7 10 7a18.15 18.15 0 0 1-4.23 5.48" />
+                      <path d="M6.11 6.11A16.53 16.53 0 0 0 2 12s3 7 10 7a10.62 10.62 0 0 0 4.14-.83" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </div>
+            {mode === 'signup' && (
+              <div className="password-field">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  disabled={isLoadingRole || isSubmitting}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-button"
+                  onClick={() => setShowConfirmPassword((current) => !current)}
+                  aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  aria-pressed={showConfirmPassword}
+                  disabled={isLoadingRole || isSubmitting}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    {showConfirmPassword ? (
+                      <>
+                        <path d="M3 3l18 18" />
+                        <path d="M10.58 10.58a2 2 0 1 0 2.83 2.83" />
+                        <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 10 7 10 7a18.15 18.15 0 0 1-4.23 5.48" />
+                        <path d="M6.11 6.11A16.53 16.53 0 0 0 2 12s3 7 10 7a10.62 10.62 0 0 0 4.14-.83" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+              </div>
+            )}
 
             <button type="submit" className="auth-submit-btn" disabled={isLoadingRole || isSubmitting || (!currentRole && !errorMessage)}>
               {isSubmitting
@@ -195,6 +290,8 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
           </form>
 
           <div className="auth-links-row">
+            {mode === 'login' ? <Link to="/dashboard/investor/forgot-password">Forgot password?</Link> : null}
+            {mode === 'signup' ? <Link to={`/dashboard/investor/verify-otp?email=${encodeURIComponent(email)}`}>Verify account</Link> : null}
             <Link to="/">Back to Home</Link>
           </div>
         </section>

@@ -24,15 +24,21 @@ const EntrepreneurProfile = lazy(() => import('./dashboard/entrepreneur/Entrepre
 const ApplicationInfo = lazy(() => import('./dashboard/entrepreneur/ApplicationInfo'))
 const BusinessInfo = lazy(() => import('./dashboard/entrepreneur/BusinessInfo'))
 
+
+
 const InvestorDashboard = lazy(() => import('./dashboard/investor'))
 const InvestorAuth = lazy(() => import('./dashboard/investor/InvestorAuth'))
+const InvestorVerifyOtp = lazy(() => import('./dashboard/investor/InvestorVerifyOtp'))
+const InvestorForgotPassword = lazy(() => import('./dashboard/investor/InvestorForgotPassword'))
+const InvestorResetPassword = lazy(() => import('./dashboard/investor/InvestorResetPassword'))
+const InvestorApplicationForm = lazy(() => import('./dashboard/investor/InvestorApplicationForm'))
+
+
 const PipelinePage = lazy(() => import('./dashboard/investor/PipelinePage'))
-const PortfolioPage = lazy(() => import('./dashboard/investor/PortfolioPage'))
+
 const DocumentsPage = lazy(() => import('./dashboard/investor/DocumentsPage'))
-const MessagesPage = lazy(() => import('./dashboard/investor/MessagesPage'))
-const ReportsPage = lazy(() => import('./dashboard/investor/ReportsPage'))
-const NotificationsPage = lazy(() => import('./dashboard/investor/NotificationsPage'))
-const SettingsPage = lazy(() => import('./dashboard/investor/SettingsPage'))
+
+
 const InvestorEditProfile = lazy(() => import('./dashboard/investor/InvestorEditProfile'))
 
 export default function AppRouter() {
@@ -150,8 +156,12 @@ export default function AppRouter() {
             )}
           />
 
+          
           <Route path="/dashboard/investor/login" element={<InvestorAuth mode="login" />} />
           <Route path="/dashboard/investor/signup" element={<InvestorAuth mode="signup" />} />
+          <Route path="/dashboard/investor/verify-otp" element={<InvestorVerifyOtp />} />
+          <Route path="/dashboard/investor/forgot-password" element={<InvestorForgotPassword />} />
+          <Route path="/dashboard/investor/reset-password" element={<InvestorResetPassword />} />
           <Route
             path="/dashboard/investor"
             element={(
@@ -168,14 +178,25 @@ export default function AppRouter() {
               </ProtectedRoleRoute>
             )}
           />
+
           <Route
-            path="/dashboard/investor/portfolio"
+            path="/dashboard/investor/InvestorApplicationForm"
             element={(
               <ProtectedRoleRoute role="investor">
-                <PortfolioPage />
+                <InvestorApplicationForm />
               </ProtectedRoleRoute>
             )}
           />
+
+          <Route
+            path="/dashboard/investor/application-form"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorApplicationForm />
+              </ProtectedRoleRoute>
+            )}
+          />
+          
           <Route
             path="/dashboard/investor/documents"
             element={(
@@ -184,40 +205,11 @@ export default function AppRouter() {
               </ProtectedRoleRoute>
             )}
           />
+          
+          
+          
           <Route
-            path="/dashboard/investor/messages"
-            element={(
-              <ProtectedRoleRoute role="investor">
-                <MessagesPage />
-              </ProtectedRoleRoute>
-            )}
-          />
-          <Route
-            path="/dashboard/investor/reports"
-            element={(
-              <ProtectedRoleRoute role="investor">
-                <ReportsPage />
-              </ProtectedRoleRoute>
-            )}
-          />
-          <Route
-            path="/dashboard/investor/notifications"
-            element={(
-              <ProtectedRoleRoute role="investor">
-                <NotificationsPage />
-              </ProtectedRoleRoute>
-            )}
-          />
-          <Route
-            path="/dashboard/investor/settings"
-            element={(
-              <ProtectedRoleRoute role="investor">
-                <SettingsPage />
-              </ProtectedRoleRoute>
-            )}
-          />
-          <Route
-            path="/edit-profile"
+            path="/dashboard/investor/edit-profile"
             element={(
               <ProtectedRoleRoute role="investor">
                 <InvestorEditProfile />

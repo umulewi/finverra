@@ -10,16 +10,10 @@ type InvestorLayoutProps = {
 
 const navPathByLabel: Record<string, string> = {
   Dashboard: '/dashboard/investor',
-  'Edit Profile': '/edit-profile',
-  Pipeline: '/dashboard/investor/pipeline',
-  Portfolio: '/dashboard/investor/portfolio',
-  Login: '/dashboard/investor/login',
-  Register: '/dashboard/investor/signup',
-  Documents: '/dashboard/investor/documents',
-  Messages: '/dashboard/investor/messages',
-  Reports: '/dashboard/investor/reports',
-  Notifications: '/dashboard/investor/notifications',
-  Settings: '/dashboard/investor/settings',
+  'Edit Profile': '/dashboard/investor/edit-profile',
+  'Application Form': '/dashboard/investor/application-form',
+  'My Application': '/dashboard/investor/application-form',
+  
 }
 
 const labelByPath: Record<string, string> = Object.fromEntries(
@@ -40,6 +34,7 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
   const session = getAuthSession()
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
   const [searchVal, setSearchVal] = useState('')
   const [activeNav, setActiveNav] = useState('Dashboard')
 
@@ -49,6 +44,7 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
 
   useEffect(() => {
     const handleResize = () => {
+      setViewportWidth(window.innerWidth)
       if (window.innerWidth <= 960) {
         setSidebarOpen(false)
       }
@@ -105,7 +101,7 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
       <div
         style={{
           ...styles.main,
-          marginLeft: sidebarOpen ? '280px' : '0',
+          marginLeft: sidebarOpen && viewportWidth > 960 ? '280px' : '0',
         }}
       >
         <InvestorHeader
@@ -114,7 +110,14 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
           onSearchChange={setSearchVal}
         />
 
-        <div style={styles.body}>{children}</div>
+        <div
+          style={{
+            ...styles.body,
+            padding: viewportWidth <= 640 ? 12 : viewportWidth <= 960 ? 16 : 24,
+          }}
+        >
+          {children}
+        </div>
       </div>
     </main>
   )

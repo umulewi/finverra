@@ -7,6 +7,7 @@ import EntrepreneurShell from './EntrepreneurShell'
 type ApplicationForm = {
   support_needed: string
   urgency_level: string
+  industry_sector: string
   problem_faced: string
   experience: string
   opportunity: string
@@ -50,6 +51,7 @@ type ExistingFiles = {
 const initialForm: ApplicationForm = {
   support_needed: '',
   urgency_level: '',
+  industry_sector: '',
   problem_faced: '',
   experience: '',
   opportunity: '',
@@ -88,6 +90,18 @@ const initialFiles: ExistingFiles = {
   financial_records: '',
   registration_certificate: '',
   photo_of_business: '',
+}
+
+type BusinessSnapshot = {
+  business_name: string
+  establishment_year: string
+  business_sector: string
+}
+
+const initialBusinessSnapshot: BusinessSnapshot = {
+  business_name: '',
+  establishment_year: '',
+  business_sector: '',
 }
 
 function toText(value: unknown) {
@@ -227,6 +241,7 @@ export default function ApplicationInfo() {
   const session = getAuthSession()
   const [form, setForm] = useState<ApplicationForm>(initialForm)
   const [existingFiles, setExistingFiles] = useState<ExistingFiles>(initialFiles)
+  const [businessSnapshot, setBusinessSnapshot] = useState<BusinessSnapshot>(initialBusinessSnapshot)
   const [businessPlanFile, setBusinessPlanFile] = useState<File | null>(null)
   const [pitchDeckFile, setPitchDeckFile] = useState<File | null>(null)
   const [financialRecordsFile, setFinancialRecordsFile] = useState<File | null>(null)
@@ -236,6 +251,7 @@ export default function ApplicationInfo() {
   const [hasExistingApplication, setHasExistingApplication] = useState<boolean | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [isLoadingApplication, setIsLoadingApplication] = useState(false)
+  const [isLoadingBusinessSnapshot, setIsLoadingBusinessSnapshot] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -274,6 +290,7 @@ export default function ApplicationInfo() {
     if (step === 0) {
       requireText('support_needed', 'Type of support needed')
       requireText('urgency_level', 'Urgency level')
+      requireText('industry_sector', 'Industry / Sector')
       requireText('experience', 'Business stage')
       requireText('business_idea', 'One-line business pitch')
     }
@@ -421,6 +438,7 @@ export default function ApplicationInfo() {
           setHasExistingApplication(true)
           setForm({
             support_needed: toText(d?.support_needed), urgency_level: toText(d?.urgency_level),
+            industry_sector: toText(d?.industry_sector),
             problem_faced: toText(d?.problem_faced), experience: toText(d?.experience),
             opportunity: toText(d?.opportunity), product_offers: toText(d?.product_offers),
             how_it_works: toText(d?.how_it_works), what_makes_unique: toText(d?.what_makes_unique),
@@ -451,6 +469,59 @@ export default function ApplicationInfo() {
     }
     void loadExistingApplication()
     return () => { mounted = false }
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+
+    let mounted = true
+
+    async function loadBusinessSnapshot() {
+      setIsLoadingBusinessSnapshot(true)
+
+      try {
+        const res = await fetch(buildApiUrl(`/entrepreneurs/business-info/${userId}`), { headers: authHeader() })
+        const payload = await parseResponseBody(res)
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            if (mounted) {
+              setBusinessSnapshot(initialBusinessSnapshot)
+              setForm((prev) => ({ ...prev, industry_sector: '' }))
+            }
+            return
+          }
+
+          throw new Error(getErrorMessage(payload, 'Failed to fetch business snapshot.'))
+        }
+
+        const data = payload?.data
+        if (mounted) {
+          const fetchedSector = toText(data?.business_sector)
+          setBusinessSnapshot({
+            business_name: toText(data?.business_name),
+            establishment_year: toText(data?.establishment_year),
+            business_sector: fetchedSector,
+          })
+          setForm((prev) => ({ ...prev, industry_sector: fetchedSector }))
+        }
+      } catch (err) {
+        if (mounted) {
+          setBusinessSnapshot(initialBusinessSnapshot)
+          setForm((prev) => ({ ...prev, industry_sector: '' }))
+        }
+      } finally {
+        if (mounted) {
+          setIsLoadingBusinessSnapshot(false)
+        }
+      }
+    }
+
+    void loadBusinessSnapshot()
+
+    return () => {
+      mounted = false
+    }
   }, [userId])
 
   function createRequestBody() {
@@ -510,6 +581,32 @@ export default function ApplicationInfo() {
     >
       <style>{injectStyles}</style>
 
+      {error ? (
+        <div
+          style={s.errorModalBackdrop}
+          role="presentation"
+          onClick={() => setError(null)}
+        >
+          <div
+            style={s.errorModal}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="application-error-title"
+            aria-describedby="application-error-message"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={s.errorModalBadge}>Error</div>
+            <h3 id="application-error-title" style={s.errorModalTitle}>Something needs attention</h3>
+            <p id="application-error-message" style={s.errorModalText}>{error}</p>
+            <div style={s.errorModalActions}>
+              <button type="button" style={s.errorModalButton} onClick={() => setError(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <form style={s.formShell} onSubmit={handleSubmit}>
 
         {/* ── Step Navigator ─────────────────────────────────────────── */}
@@ -546,7 +643,6 @@ export default function ApplicationInfo() {
           </p>
         </div>
 
-        {error ? <div style={{ ...s.notice, ...s.noticeError }}>{error}</div> : null}
         {success ? <div style={{ ...s.notice, ...s.noticeSuccess }}>{success}</div> : null}
 
         {/* ── STEP 0: Vision ──────────────────────────────────────────── */}
@@ -577,15 +673,27 @@ export default function ApplicationInfo() {
             <SectionCard badge="02" title="Business Snapshot" subtitle="High-level information about your venture.">
               <Field>
                 <FieldLabel>Business Name</FieldLabel>
-                <StyledInput value="Auto-filled from Business Info" readOnly />
+                <StyledInput
+                  value={isLoadingBusinessSnapshot ? 'Loading business info...' : businessSnapshot.business_name}
+                  placeholder="Business name will appear here"
+                  readOnly
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Establishment Year</FieldLabel>
+                <StyledInput
+                  value={isLoadingBusinessSnapshot ? 'Loading business info...' : businessSnapshot.establishment_year}
+                  placeholder="Establishment year will appear here"
+                  readOnly
+                />
               </Field>
               <Field>
                 <FieldLabel>Industry / Sector</FieldLabel>
-                <StyledInput value="Auto-filled from Business Info" readOnly />
-              </Field>
-              <Field>
-                <FieldLabel>Years in Operation</FieldLabel>
-                <StyledInput value="Auto-filled from Business Info" readOnly />
+                <StyledInput
+                  value={isLoadingBusinessSnapshot ? 'Loading business info...' : businessSnapshot.business_sector}
+                  placeholder="Business sector will appear here"
+                  readOnly
+                />
               </Field>
               <Field>
                 <FieldLabel>Business Stage</FieldLabel>
@@ -983,6 +1091,67 @@ const BASE_FONT = "'Sora', sans-serif"
 const MONO_FONT = "'DM Mono', monospace"
 
 const s: Record<string, CSSProperties> = {
+  errorModalBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 80,
+    background: 'rgba(15, 23, 42, 0.58)',
+    backdropFilter: 'blur(6px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  errorModal: {
+    width: 'min(100%, 520px)',
+    borderRadius: 20,
+    background: '#FFFFFF',
+    border: '1px solid rgba(239, 68, 68, 0.16)',
+    boxShadow: '0 28px 80px rgba(15,23,42,0.28)',
+    padding: '24px 22px 20px',
+    textAlign: 'center',
+    fontFamily: BASE_FONT,
+  },
+  errorModalBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '5px 12px',
+    borderRadius: 999,
+    background: '#FEF2F2',
+    color: '#B91C1C',
+    border: '1px solid #FECACA',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+    marginBottom: 12,
+  },
+  errorModalTitle: {
+    margin: '0 0 10px',
+    color: '#0F172A',
+    fontSize: 20,
+  },
+  errorModalText: {
+    margin: 0,
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  errorModalActions: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: 18,
+  },
+  errorModalButton: {
+    border: 'none',
+    borderRadius: 12,
+    padding: '10px 18px',
+    cursor: 'pointer',
+    fontWeight: 700,
+    color: '#FFFFFF',
+    background: 'linear-gradient(140deg, #0F2D5C, #1A4080)',
+  },
   notice: {
     border: '1px solid',
     borderRadius: 10,

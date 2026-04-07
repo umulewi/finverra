@@ -122,6 +122,14 @@
 	margin: 0 auto;
 }
 
+.team-board-section {
+	padding-bottom: 56px;
+}
+
+.team-exec-section {
+	padding-top: 56px;
+}
+
 .team-members-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -183,13 +191,17 @@
 
 .team-contact-note {
 	margin-top: 40px;
-	border: 1px solid rgba(243, 179, 64, 0.35);
-	background: #fff8ea;
-	border-radius: 14px;
-	padding: 16px;
+	border: 1px solid var(--team-border);
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbfe 100%);
+	border-radius: 18px;
+	padding: 20px;
+	box-shadow: 0 10px 24px rgba(10, 47, 71, 0.06);
 	text-align: center;
 	color: var(--team-muted);
-	line-height: 1.6;
+	line-height: 1.65;
+	display: grid;
+	gap: 14px;
+	justify-items: center;
 }
 
 .team-contact-note a {
@@ -200,6 +212,62 @@
 
 .team-contact-note a:hover {
 	text-decoration: underline;
+}
+
+.team-contact-title {
+	margin: 0;
+	font-family: 'Space Grotesk', sans-serif;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--team-ink);
+}
+
+.team-contact-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+}
+
+.team-contact-chip {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 220px;
+	padding: 12px 14px;
+	border-radius: 14px;
+	border: 1px solid rgba(10, 47, 71, 0.12);
+	background: #ffffff;
+	box-shadow: 0 6px 16px rgba(10, 47, 71, 0.04);
+	text-decoration: none;
+	transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-contact-chip span {
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--team-muted);
+}
+
+.team-contact-chip strong {
+	font-size: 1rem;
+	color: var(--team-ink);
+	font-weight: 700;
+}
+
+.team-contact-chip:hover {
+	transform: translateY(-2px);
+	border-color: rgba(14, 122, 191, 0.3);
+	box-shadow: 0 10px 20px rgba(10, 47, 71, 0.08);
+	text-decoration: none;
+}
+
+.team-contact-copy {
+	margin: 0;
+	font-size: 0.95rem;
+	color: var(--team-muted);
 }
 
 .manager-grid-layout {
@@ -256,6 +324,22 @@
 	
 	.team-header {
 		margin-bottom: 36px;
+	}
+
+	.team-board-section {
+		padding-bottom: 40px;
+	}
+
+	.team-exec-section {
+		padding-top: 40px;
+	}
+
+	.team-contact-note {
+		padding: 16px;
+	}
+
+	.team-contact-chip {
+		min-width: 100%;
 	}
 }
 
