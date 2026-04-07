@@ -1,3 +1,11 @@
+.dashboard-page,
+.dashboard-page button,
+.dashboard-page input,
+.dashboard-page select,
+.dashboard-page textarea {
+  font-family: 'Sora', sans-serif;
+}
+
 .dashboard-page {
   min-height: 100vh;
   padding: 30px;

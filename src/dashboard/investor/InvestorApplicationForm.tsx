@@ -1472,7 +1472,8 @@ export default function ApplicationFoam() {
 const injectStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
-  input::placeholder, textarea::placeholder { color: #94A3B8; font-style: italic; }
+  input::placeholder, textarea::placeholder { color: #94A3B8; font-style: "DM Sans", sans-serif
+; }
   select option { color: #0F172A; }
 `
 

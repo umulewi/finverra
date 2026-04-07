@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import '../Dashboard.css'
+import './InvestorAuth.css'
 import { resendInvestorOtp, verifyInvestorOtp } from '../dashboardApi'
 
 export default function InvestorVerifyOtp() {
@@ -31,7 +31,7 @@ export default function InvestorVerifyOtp() {
       setSuccessMessage(
         payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
           ? payload.message
-          : 'Email verified successfully. Redirecting to login...',
+          : 'Email verified successfully. Redirecting to login…',
       )
       window.setTimeout(() => {
         navigate('/dashboard/investor/login', { replace: true })
@@ -69,56 +69,134 @@ export default function InvestorVerifyOtp() {
   }
 
   return (
-    <main className="dashboard-page">
-      <div className="account-layout auth-layout">
-        <aside className="account-aside">
-          <p className="aside-brand">FINVERRA</p>
-          <h1>Verify Your Email</h1>
-          <p>Enter the OTP sent to your email to complete investor account verification.</p>
-          <div className="aside-points">
-            <span>OTP required</span>
-            <span>Valid for limited time</span>
-            <span>Secure account activation</span>
+    <main className="fv-auth-root">
+      {/* Left aside */}
+      <aside className="fv-aside">
+        <div className="fv-aside-inner">
+          <Link to="/dashboard" className="fv-logo">
+            <span className="fv-logo-mark">F</span>
+            <span className="fv-logo-name">FINVERRA</span>
+          </Link>
+
+          <div className="fv-aside-content">
+            <p className="fv-aside-eyebrow">Account Verification</p>
+            <h1 className="fv-aside-headline">
+              One step away<br />from investing.
+            </h1>
+            <p className="fv-aside-desc">
+              Enter the verification code sent to your email to activate your investor account.
+            </p>
+
+            <div className="fv-aside-features">
+              <div className="fv-feature">
+                <span className="fv-feature-dot" />
+                <span>OTP required</span>
+              </div>
+              <div className="fv-feature">
+                <span className="fv-feature-dot" />
+                <span>Code valid for limited time</span>
+              </div>
+              <div className="fv-feature">
+                <span className="fv-feature-dot" />
+                <span>Secure account activation</span>
+              </div>
+            </div>
           </div>
-        </aside>
 
-        <section className="account-main auth-main">
-          <p className="dashboard-eyebrow">Investor Verification</p>
-          <h2 className="account-title">Enter verification code</h2>
-          <p className="dashboard-subtitle">
-            {email ? `Code sent to ${email}` : 'No email found. Please restart signup.'}
-          </p>
+          <div className="fv-aside-footer">
+            <Link to="/dashboard/investor/signup" className="fv-role-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+              </svg>
+              Back to signup
+            </Link>
+          </div>
+        </div>
+      </aside>
 
-          {errorMessage ? <div className="dashboard-status-card error">{errorMessage}</div> : null}
-          {successMessage ? <div className="dashboard-status-card success">{successMessage}</div> : null}
+      {/* Right main */}
+      <section className="fv-main">
+        <div className="fv-main-inner">
 
-          <form className="auth-form" onSubmit={handleVerify}>
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(event) => setOtp(event.target.value)}
-              required
-              disabled={isSubmitting || isResending}
-            />
-            <button type="submit" className="auth-submit-btn" disabled={isSubmitting || isResending || !email}>
-              {isSubmitting ? 'Verifying...' : 'Verify OTP'}
+          <div className="fv-page-badge">
+            <span className="fv-page-badge-dot" />
+            Investor verification
+          </div>
+
+          <div className="fv-form-header">
+            <h2 className="fv-form-title">Enter verification code</h2>
+            <p className="fv-form-subtitle">
+              {email
+                ? 'We sent a code to your email address. Enter it below to complete verification.'
+                : 'No email found. Please restart signup to receive a new code.'}
+            </p>
+            {email && (
+              <div className="fv-email-chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                {email}
+              </div>
+            )}
+          </div>
+
+          {errorMessage && (
+            <div className="fv-status fv-status--error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {errorMessage}
+            </div>
+          )}
+          {successMessage && (
+            <div className="fv-status fv-status--success">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+              {successMessage}
+            </div>
+          )}
+
+          <form className="fv-form" onSubmit={handleVerify} noValidate>
+            <div className="fv-field">
+              <label className="fv-label" htmlFor="vo-otp">Verification code</label>
+              <input
+                id="vo-otp"
+                className="fv-input"
+                type="text"
+                placeholder="Enter your code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+                disabled={isSubmitting || isResending}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                style={{ letterSpacing: otp ? '0.25em' : undefined, fontWeight: otp ? 500 : undefined }}
+              />
+              <p className="fv-otp-hint">Didn't receive it? Check your spam folder or resend below.</p>
+            </div>
+
+            <button
+              type="submit"
+              className="fv-btn-primary"
+              disabled={isSubmitting || isResending || !email}
+            >
+              {isSubmitting
+                ? <><span className="fv-spinner fv-spinner--light" /> Verifying…</>
+                : 'Verify account'}
             </button>
           </form>
 
-          <div className="auth-links-row">
+          <div className="fv-links-row">
             <button
               type="button"
-              className="auth-link-button"
+              className="fv-btn-secondary"
               onClick={handleResend}
               disabled={isSubmitting || isResending || !email}
             >
-              {isResending ? 'Resending...' : 'Resend OTP'}
+              {isResending ? <><span className="fv-spinner" /> Resending…</> : 'Resend code'}
             </button>
-            <Link to="/dashboard/investor/login">Back to login</Link>
+            <Link to="/dashboard/investor/login" className="fv-text-link fv-text-link--muted">
+              Back to login
+            </Link>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   )
 }
