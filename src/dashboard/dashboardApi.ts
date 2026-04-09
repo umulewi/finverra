@@ -515,3 +515,183 @@ export async function resetInvestorPassword({ email, newPassword }: InvestorPass
 
   return payload
 }
+
+export type AdminInvestor = {
+  id: number
+  users_id: number
+  email: string
+  first_name: string
+  last_name: string
+  telephone: string
+  date_of_birth: string | null
+  gender: string | null
+  nationality: string | null
+  province: string | null
+  district: string | null
+  sector: string | null
+  cell: string | null
+  village: string | null
+  id_type: string | null
+  id_number: string | null
+  image: string | null
+  created_at: string
+}
+
+type AdminInvestorListPayload = {
+  success: boolean
+  investors?: AdminInvestor[]
+  message?: string
+}
+
+type AdminInvestorDetailPayload = {
+  success: boolean
+  investor?: AdminInvestor
+  message?: string
+}
+
+type AdminInvestorUpdatePayload = {
+  users_id: number
+  first_name: string
+  last_name: string
+  telephone: string
+  date_of_birth?: string
+  gender?: string
+  nationality?: string
+  province?: string
+  district?: string
+  sector?: string
+  cell?: string
+  village?: string
+  id_type?: string
+  id_number?: string
+  image?: string
+  imageFile?: File | null
+}
+
+type AdminInvestorMutationPayload = {
+  success: boolean
+  message?: string
+}
+
+function buildAdminAuthHeader(accessToken: string) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+  }
+}
+
+export async function fetchAdminInvestors(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/investors'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investors server at ${buildConfiguredApiUrl('/admin/investors')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorListPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load investors.'))
+  }
+
+  return Array.isArray(payload?.investors) ? payload.investors : []
+}
+
+export async function fetchAdminInvestorById(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investors/${id}`), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor detail server at ${buildConfiguredApiUrl(`/admin/investors/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorDetailPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load investor details.'))
+  }
+
+  if (!payload?.investor) {
+    throw new Error('Investor detail payload is missing.')
+  }
+
+  return payload.investor
+}
+
+export async function updateAdminInvestor(id: number, data: AdminInvestorUpdatePayload, accessToken: string) {
+  const formData = new FormData()
+  formData.append('users_id', String(data.users_id))
+  formData.append('first_name', data.first_name)
+  formData.append('last_name', data.last_name)
+  formData.append('telephone', data.telephone)
+  formData.append('date_of_birth', data.date_of_birth ?? '')
+  formData.append('gender', data.gender ?? '')
+  formData.append('nationality', data.nationality ?? '')
+  formData.append('province', data.province ?? '')
+  formData.append('district', data.district ?? '')
+  formData.append('sector', data.sector ?? '')
+  formData.append('cell', data.cell ?? '')
+  formData.append('village', data.village ?? '')
+  formData.append('id_type', data.id_type ?? '')
+  formData.append('id_number', data.id_number ?? '')
+
+  if (data.imageFile) {
+    formData.append('image', data.imageFile)
+  } else if (data.image) {
+    formData.append('image', data.image)
+  }
+
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investors/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+      body: formData,
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor update server at ${buildConfiguredApiUrl(`/admin/investors/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to update investor.'))
+  }
+
+  return payload
+}
+
+export async function deleteAdminInvestor(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investors/${id}`), {
+      method: 'DELETE',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor delete server at ${buildConfiguredApiUrl(`/admin/investors/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to delete investor.'))
+  }
+
+  return payload
+}

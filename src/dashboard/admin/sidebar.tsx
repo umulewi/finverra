@@ -12,6 +12,57 @@ type MenuItem = {
 }
 
 const menuItems: MenuItem[] = [
+
+{
+    label: 'Investors',
+    path: '/dashboard/admin/investors',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="7" height="7" rx="1.5" />
+        <rect x="15" y="3" width="7" height="7" rx="1.5" />
+        <rect x="2" y="14" width="7" height="7" rx="1.5" />
+        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Entrepreneurs',
+    path: '/dashboard/admin/entrepreneurs',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="7" height="7" rx="1.5" />
+        <rect x="15" y="3" width="7" height="7" rx="1.5" />
+        <rect x="2" y="14" width="7" height="7" rx="1.5" />
+        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Investor applications',
+    path: '/dashboard/admin/investor-applications',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="7" height="7" rx="1.5" />
+        <rect x="15" y="3" width="7" height="7" rx="1.5" />
+        <rect x="2" y="14" width="7" height="7" rx="1.5" />
+        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Entrepreneur applications',
+    path: '/dashboard/admin/entrepreneur-applications',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="7" height="7" rx="1.5" />
+        <rect x="15" y="3" width="7" height="7" rx="1.5" />
+        <rect x="2" y="14" width="7" height="7" rx="1.5" />
+        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+
+
   {
     label: 'Services',
     path: '/dashboard/admin/services',

@@ -12,6 +12,10 @@ const TeamStructurePage = lazy(() => import('./showcase/TeamStructurePage'))
 const DashboardChoice = lazy(() => import('./dashboard/DashboardChoice'))
 const AdminAuth = lazy(() => import('./dashboard/admin/AdminAuth'))
 const ServicesPage = lazy(() => import('./dashboard/admin/ServicesPage'))
+const InvestorsPage = lazy(() => import('./dashboard/admin/InvestorsPage'))
+const EntrepreneursPage = lazy(() => import('./dashboard/admin/EntrepreneursPage'))
+const InvestorApplicationsPage = lazy(() => import('./dashboard/admin/InvestorApplicationsPage'))
+const EntrepreneurApplicationsPage = lazy(() => import('./dashboard/admin/EntrepreneurApplicationsPage'))
 const PartnersPage = lazy(() => import('./dashboard/admin/PartnersPage'))
 const AchievementsPage = lazy(() => import('./dashboard/admin/AchievementsPage'))
 const EventsPage = lazy(() => import('./dashboard/admin/EventsPage'))
@@ -79,6 +83,38 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="admin">
                 <ServicesPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/investors"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <InvestorsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/entrepreneurs"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <EntrepreneursPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/investor-applications"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <InvestorApplicationsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/entrepreneur-applications"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <EntrepreneurApplicationsPage />
               </ProtectedRoleRoute>
             )}
           />

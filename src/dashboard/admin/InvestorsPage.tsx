@@ -1,0 +1,762 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ChangeEvent, CSSProperties, FormEvent } from 'react'
+import AdminShell from './AdminShell'
+import { getAuthSession } from '../authStorage'
+import {
+  deleteAdminInvestor,
+  fetchAdminInvestorById,
+  fetchAdminInvestors,
+  type AdminInvestor,
+  updateAdminInvestor,
+} from '../dashboardApi'
+import { buildApiUrl } from '../../config/api'
+
+type InvestorFormState = {
+  users_id: string
+  first_name: string
+  last_name: string
+  telephone: string
+  date_of_birth: string
+  gender: string
+  nationality: string
+  province: string
+  district: string
+  sector: string
+  cell: string
+  village: string
+  id_type: string
+  id_number: string
+  image: string
+  imageFile: File | null
+}
+
+const emptyForm: InvestorFormState = {
+  users_id: '',
+  first_name: '',
+  last_name: '',
+  telephone: '',
+  date_of_birth: '',
+  gender: '',
+  nationality: '',
+  province: '',
+  district: '',
+  sector: '',
+  cell: '',
+  village: '',
+  id_type: '',
+  id_number: '',
+  image: '',
+  imageFile: null,
+}
+
+function getAccessToken() {
+  const session = getAuthSession()
+  return session ? (session.payload as { token?: string })?.token ?? '' : ''
+}
+
+function toDateInputValue(value: string | null) {
+  if (!value) {
+    return ''
+  }
+
+  const matchedDate = value.match(/^(\d{4}-\d{2}-\d{2})/)
+  return matchedDate ? matchedDate[1] : ''
+}
+
+function toImageUrl(value: string) {
+  const text = value.trim()
+
+  if (!text) {
+    return ''
+  }
+
+  if (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('data:')) {
+    return text
+  }
+
+  return buildApiUrl(text)
+}
+
+export default function InvestorsPage() {
+  const [investors, setInvestors] = useState<AdminInvestor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState<InvestorFormState>(emptyForm)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const accessToken = getAccessToken()
+
+  const computedMetrics = useMemo(() => {
+    const total = investors.length
+    const activeProfiles = investors.filter((item) => Boolean(item.first_name && item.last_name && item.telephone)).length
+    const pendingReviews = investors.filter((item) => !item.id_number || !item.id_type).length
+
+    return [
+      { label: 'Total Investors', value: String(total) },
+      { label: 'Active Profiles', value: String(activeProfiles) },
+      { label: 'Pending Reviews', value: String(pendingReviews) },
+    ]
+  }, [investors])
+
+  async function loadInvestors() {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const rows = await fetchAdminInvestors(accessToken)
+      setInvestors(rows)
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load investors.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadInvestors()
+  }, [])
+
+  function closeForm() {
+    setShowForm(false)
+    setActiveId(null)
+    setForm(emptyForm)
+    setFormError(null)
+    if (fileRef.current) {
+      fileRef.current.value = ''
+    }
+  }
+
+  async function openEdit(investorId: number) {
+    setFormError(null)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const investor = await fetchAdminInvestorById(investorId, accessToken)
+      setActiveId(investor.id)
+      setForm({
+        users_id: String(investor.users_id ?? ''),
+        first_name: investor.first_name ?? '',
+        last_name: investor.last_name ?? '',
+        telephone: investor.telephone ?? '',
+        date_of_birth: toDateInputValue(investor.date_of_birth),
+        gender: investor.gender ?? '',
+        nationality: investor.nationality ?? '',
+        province: investor.province ?? '',
+        district: investor.district ?? '',
+        sector: investor.sector ?? '',
+        cell: investor.cell ?? '',
+        village: investor.village ?? '',
+        id_type: investor.id_type ?? '',
+        id_number: investor.id_number ?? '',
+        image: investor.image ?? '',
+        imageFile: null,
+      })
+      setShowForm(true)
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load investor details.')
+    }
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+    setForm((prev) => ({ ...prev, imageFile: file }))
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setFormError(null)
+    setSuccess(null)
+
+    if (!activeId) {
+      setFormError('No investor is selected for update.')
+      return
+    }
+
+    const parsedUserId = Number(form.users_id)
+    if (!Number.isFinite(parsedUserId)) {
+      setFormError('users_id must be a valid number.')
+      return
+    }
+
+    if (!form.first_name.trim() || !form.last_name.trim() || !form.telephone.trim()) {
+      setFormError('first_name, last_name, and telephone are required.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const payload = await updateAdminInvestor(
+        activeId,
+        {
+          users_id: parsedUserId,
+          first_name: form.first_name.trim(),
+          last_name: form.last_name.trim(),
+          telephone: form.telephone.trim(),
+          date_of_birth: form.date_of_birth.trim(),
+          gender: form.gender.trim(),
+          nationality: form.nationality.trim(),
+          province: form.province.trim(),
+          district: form.district.trim(),
+          sector: form.sector.trim(),
+          cell: form.cell.trim(),
+          village: form.village.trim(),
+          id_type: form.id_type.trim(),
+          id_number: form.id_number.trim(),
+          image: form.image.trim(),
+          imageFile: form.imageFile,
+        },
+        accessToken,
+      )
+
+      setSuccess(payload.message ?? 'Investor updated successfully.')
+      closeForm()
+      await loadInvestors()
+    } catch (saveError) {
+      setFormError(saveError instanceof Error ? saveError.message : 'Failed to update investor.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(investorId: number) {
+    setConfirmDeleteId(null)
+    setDeletingId(investorId)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const payload = await deleteAdminInvestor(investorId, accessToken)
+      setInvestors((prev) => prev.filter((item) => item.id !== investorId))
+      setSuccess(payload.message ?? 'Investor deleted successfully.')
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Failed to delete investor.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <AdminShell
+      title="Investors"
+      subtitle="View and manage investor records, profile status, and engagement details."
+    >
+      <section style={styles.grid}>
+        {computedMetrics.map((metric) => (
+          <article key={metric.label} style={styles.card}>
+            <p style={styles.metricLabel}>{metric.label}</p>
+            <p style={styles.metricValue}>{metric.value}</p>
+          </article>
+        ))}
+      </section>
+
+      {error ? <p style={styles.errorBanner}>{error}</p> : null}
+      {success ? <p style={styles.successBanner}>{success}</p> : null}
+
+      {confirmDeleteId !== null ? (
+        <div style={styles.overlay} onClick={() => setConfirmDeleteId(null)}>
+          <div style={styles.confirmModal} onClick={(event) => event.stopPropagation()}>
+            <h3 style={styles.confirmTitle}>Delete Investor?</h3>
+            <p style={styles.confirmText}>This action cannot be undone.</p>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.cancelBtn} onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.deleteBtn}
+                disabled={deletingId === confirmDeleteId}
+                onClick={() => handleDelete(confirmDeleteId)}
+              >
+                {deletingId === confirmDeleteId ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showForm ? (
+        <div style={styles.overlay} onClick={closeForm}>
+          <div style={styles.modal} onClick={(event) => event.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Edit Investor</h3>
+              <button type="button" style={styles.closeBtn} onClick={closeForm}>x</button>
+            </div>
+
+            <form style={styles.form} onSubmit={handleSubmit}>
+              {formError ? <p style={styles.formError}>{formError}</p> : null}
+
+              <div style={styles.formGrid}>
+                <label style={styles.field}>
+                  <span>users_id *</span>
+                  <input
+                    type="number"
+                    value={form.users_id}
+                    onChange={(event) => setForm((prev) => ({ ...prev, users_id: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>First Name *</span>
+                  <input
+                    type="text"
+                    value={form.first_name}
+                    onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Last Name *</span>
+                  <input
+                    type="text"
+                    value={form.last_name}
+                    onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Telephone *</span>
+                  <input
+                    type="text"
+                    value={form.telephone}
+                    onChange={(event) => setForm((prev) => ({ ...prev, telephone: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Date Of Birth</span>
+                  <input
+                    type="date"
+                    value={form.date_of_birth}
+                    onChange={(event) => setForm((prev) => ({ ...prev, date_of_birth: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Gender</span>
+                  <input
+                    type="text"
+                    value={form.gender}
+                    onChange={(event) => setForm((prev) => ({ ...prev, gender: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Nationality</span>
+                  <input
+                    type="text"
+                    value={form.nationality}
+                    onChange={(event) => setForm((prev) => ({ ...prev, nationality: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Province</span>
+                  <input
+                    type="text"
+                    value={form.province}
+                    onChange={(event) => setForm((prev) => ({ ...prev, province: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>District</span>
+                  <input
+                    type="text"
+                    value={form.district}
+                    onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Sector</span>
+                  <input
+                    type="text"
+                    value={form.sector}
+                    onChange={(event) => setForm((prev) => ({ ...prev, sector: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Cell</span>
+                  <input
+                    type="text"
+                    value={form.cell}
+                    onChange={(event) => setForm((prev) => ({ ...prev, cell: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>Village</span>
+                  <input
+                    type="text"
+                    value={form.village}
+                    onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>ID Type</span>
+                  <input
+                    type="text"
+                    value={form.id_type}
+                    onChange={(event) => setForm((prev) => ({ ...prev, id_type: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+                <label style={styles.field}>
+                  <span>ID Number</span>
+                  <input
+                    type="text"
+                    value={form.id_number}
+                    onChange={(event) => setForm((prev) => ({ ...prev, id_number: event.target.value }))}
+                    style={styles.input}
+                    disabled={saving}
+                  />
+                </label>
+              </div>
+
+              <label style={styles.field}>
+                <span>Existing Image Path</span>
+                <input
+                  type="text"
+                  value={form.image}
+                  onChange={(event) => setForm((prev) => ({ ...prev, image: event.target.value }))}
+                  style={styles.input}
+                  disabled={saving}
+                />
+              </label>
+
+              <label style={styles.field}>
+                <span>Upload New Image</span>
+                <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={styles.input} disabled={saving} />
+              </label>
+
+              <div style={styles.formActions}>
+                <button type="button" style={styles.cancelBtn} onClick={closeForm} disabled={saving}>
+                  Cancel
+                </button>
+                <button type="submit" style={styles.primaryBtn} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      <section style={styles.panel}>
+        <h3 style={styles.panelTitle}>Investor Directory</h3>
+
+        {loading ? <p style={styles.panelText}>Loading investors...</p> : null}
+
+        {!loading && investors.length === 0 ? (
+          <p style={styles.panelText}>No investors found.</p>
+        ) : null}
+
+        {!loading && investors.length > 0 ? (
+          <div style={styles.tableWrap}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>ID</th>
+                  <th style={styles.th}>Name</th>
+                  <th style={styles.th}>Email</th>
+                  <th style={styles.th}>Telephone</th>
+                  <th style={styles.th}>Nationality</th>
+                  <th style={styles.th}>Image</th>
+                  <th style={styles.th}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {investors.map((item) => (
+                  <tr key={item.id}>
+                    <td style={styles.td}>{item.id}</td>
+                    <td style={styles.td}>{item.first_name} {item.last_name}</td>
+                    <td style={styles.td}>{item.email}</td>
+                    <td style={styles.td}>{item.telephone}</td>
+                    <td style={styles.td}>{item.nationality ?? '-'}</td>
+                    <td style={styles.td}>
+                      {item.image ? (
+                        <img src={toImageUrl(item.image)} alt={`${item.first_name} ${item.last_name}`} style={styles.avatar} />
+                      ) : '-'}
+                    </td>
+                    <td style={styles.td}>
+                      <div style={styles.actions}>
+                        <button type="button" style={styles.secondaryBtn} onClick={() => openEdit(item.id)}>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          style={styles.deleteBtn}
+                          onClick={() => setConfirmDeleteId(item.id)}
+                          disabled={deletingId === item.id}
+                        >
+                          {deletingId === item.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+    </AdminShell>
+  )
+}
+
+const styles: Record<string, CSSProperties> = {
+  grid: {
+    display: 'grid',
+    gap: 14,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  },
+  card: {
+    background: '#ffffff',
+    border: '1px solid #e4eaf3',
+    borderRadius: 14,
+    padding: '16px 18px',
+    boxShadow: '0 10px 25px rgba(15, 30, 53, 0.06)',
+  },
+  metricLabel: {
+    margin: 0,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    color: '#4c6483',
+    fontWeight: 700,
+  },
+  metricValue: {
+    margin: '8px 0 0',
+    fontSize: 26,
+    color: '#0e2a4f',
+    fontWeight: 800,
+  },
+  panel: {
+    marginTop: 16,
+    background: '#ffffff',
+    border: '1px solid #e4eaf3',
+    borderRadius: 14,
+    padding: '20px',
+  },
+  panelTitle: {
+    margin: 0,
+    color: '#0e2a4f',
+    fontSize: 18,
+  },
+  panelText: {
+    margin: '10px 0 0',
+    color: '#4c6483',
+    lineHeight: 1.6,
+  },
+  errorBanner: {
+    marginTop: 14,
+    padding: '12px 14px',
+    borderRadius: 10,
+    border: '1px solid #f4c2c2',
+    background: '#fff1f1',
+    color: '#8d1e1e',
+  },
+  successBanner: {
+    marginTop: 14,
+    padding: '12px 14px',
+    borderRadius: 10,
+    border: '1px solid #c4e9cf',
+    background: '#f2fff5',
+    color: '#155e30',
+  },
+  tableWrap: {
+    marginTop: 14,
+    overflowX: 'auto',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    minWidth: 900,
+  },
+  th: {
+    textAlign: 'left',
+    padding: '10px 8px',
+    fontSize: 12,
+    color: '#4c6483',
+    borderBottom: '1px solid #e4eaf3',
+  },
+  td: {
+    padding: '12px 8px',
+    borderBottom: '1px solid #eef2f8',
+    color: '#143a64',
+    fontSize: 14,
+    verticalAlign: 'middle',
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '1px solid #d7e1f0',
+  },
+  actions: {
+    display: 'flex',
+    gap: 8,
+  },
+  primaryBtn: {
+    border: 'none',
+    borderRadius: 8,
+    padding: '9px 12px',
+    cursor: 'pointer',
+    background: '#0e2a4f',
+    color: '#fff',
+    fontWeight: 700,
+  },
+  secondaryBtn: {
+    border: '1px solid #d9e2ef',
+    borderRadius: 8,
+    padding: '8px 12px',
+    cursor: 'pointer',
+    background: '#fff',
+    color: '#0e2a4f',
+    fontWeight: 700,
+  },
+  deleteBtn: {
+    border: '1px solid #f3c8c8',
+    borderRadius: 8,
+    padding: '8px 12px',
+    cursor: 'pointer',
+    background: '#fff5f5',
+    color: '#a32828',
+    fontWeight: 700,
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(8, 20, 38, 0.45)',
+    display: 'grid',
+    placeItems: 'center',
+    zIndex: 99,
+    padding: 16,
+  },
+  modal: {
+    width: 'min(900px, 100%)',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    background: '#fff',
+    borderRadius: 14,
+    border: '1px solid #e4eaf3',
+    boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
+  },
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '14px 16px',
+    borderBottom: '1px solid #ecf1f7',
+  },
+  modalTitle: {
+    margin: 0,
+    color: '#0e2a4f',
+    fontSize: 18,
+  },
+  closeBtn: {
+    border: '1px solid #dbe3ef',
+    borderRadius: 8,
+    background: '#fff',
+    color: '#234b78',
+    width: 30,
+    height: 30,
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  form: {
+    padding: 16,
+    display: 'grid',
+    gap: 12,
+  },
+  formError: {
+    margin: 0,
+    color: '#a32828',
+    background: '#fff3f3',
+    border: '1px solid #f3d0d0',
+    borderRadius: 8,
+    padding: '10px 12px',
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 10,
+  },
+  field: {
+    display: 'grid',
+    gap: 6,
+    color: '#334f71',
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  input: {
+    border: '1px solid #d8e3f0',
+    borderRadius: 9,
+    padding: '9px 10px',
+    fontSize: 14,
+    color: '#0e2a4f',
+    background: '#fff',
+  },
+  formActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 6,
+  },
+  cancelBtn: {
+    border: '1px solid #d9e2ef',
+    borderRadius: 8,
+    padding: '9px 12px',
+    cursor: 'pointer',
+    background: '#fff',
+    color: '#1e4878',
+    fontWeight: 700,
+  },
+  confirmModal: {
+    width: 'min(420px, 100%)',
+    background: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    border: '1px solid #e4eaf3',
+    boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
+  },
+  confirmTitle: {
+    margin: '0 0 8px',
+    color: '#0e2a4f',
+    fontSize: 18,
+  },
+  confirmText: {
+    margin: 0,
+    color: '#4c6483',
+  },
+  confirmActions: {
+    marginTop: 14,
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+}
