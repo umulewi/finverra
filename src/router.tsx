@@ -19,6 +19,8 @@ const TeamPage = lazy(() => import('./dashboard/admin/TeamPage'))
 const Testimonials = lazy(() => import('./dashboard/admin/TestimonialsPage'))
 
 const EntrepreneurAuth = lazy(() => import('./dashboard/entrepreneur/EntrepreneurAuth'))
+const EntrepreneurForgotPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurForgotPassword'))
+const EntrepreneurResetPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurResetPassword'))
 const EntrepreneurDashboard = lazy(() => import('./dashboard/entrepreneur/EntrepreneurDashboard'))
 const EntrepreneurProfile = lazy(() => import('./dashboard/entrepreneur/EntrepreneurProfile'))
 const ApplicationInfo = lazy(() => import('./dashboard/entrepreneur/ApplicationInfo'))
@@ -66,8 +68,8 @@ export default function AppRouter() {
           <Route path="/team" element={<TeamStructurePage />} />
           <Route path="/partnerships/:slug" element={<PartnershipArticlePage />} />
           <Route path="/dashboard" element={<DashboardChoice />} />
-          <Route path="/dashboard/admin/login" element={<AdminAuth mode="login" />} />
-          <Route path="/dashboard/admin/signup" element={<AdminAuth mode="signup" />} />
+          <Route path="/admin" element={<AdminAuth />} />
+          <Route path="/dashboard/admin/login" element={<AdminAuth />} />
           <Route
             path="/dashboard/admin"
             element={<Navigate to="/dashboard/admin/services" replace />}
@@ -122,6 +124,8 @@ export default function AppRouter() {
           />
           <Route path="/dashboard/entrepreneur/login" element={<EntrepreneurAuth mode="login" />} />
           <Route path="/dashboard/entrepreneur/signup" element={<EntrepreneurAuth mode="signup" />} />
+          <Route path="/dashboard/entrepreneur/forgot-password" element={<EntrepreneurForgotPassword />} />
+          <Route path="/dashboard/entrepreneur/reset-password" element={<EntrepreneurResetPassword />} />
           <Route
             path="/dashboard/entrepreneur"
             element={(

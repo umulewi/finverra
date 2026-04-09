@@ -81,6 +81,11 @@ export type EntrepreneurSignupPayload = {
   telephone: string
 }
 
+export type EntrepreneurVerifyOtpPayload = {
+  email: string
+  otp: string
+}
+
 export type InvestorSignupPayload = {
   email: string
   password: string
@@ -168,6 +173,112 @@ export async function signupEntrepreneur({
 
   if (!response.ok) {
     throw new Error(getErrorMessage(payload, 'Entrepreneur signup failed. Please verify your details and try again.'))
+  }
+
+  return payload
+}
+
+export async function forgotEntrepreneurPassword(email: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/enterpreneur/forgot-password'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    })
+  } catch {
+    throw new Error(`Unable to reach the forgot password server at ${buildConfiguredApiUrl('/enterpreneur/forgot-password')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to send OTP to the provided email.'))
+  }
+
+  return payload
+}
+
+export async function verifyEntrepreneurForgotOtp({ email, otp }: EntrepreneurVerifyOtpPayload) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/enterpreneur/verify-forgot-otp'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        otp,
+      }),
+    })
+  } catch {
+    throw new Error(`Unable to reach the forgot OTP verification server at ${buildConfiguredApiUrl('/enterpreneur/verify-forgot-otp')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Forgot-password OTP verification failed.'))
+  }
+
+  return payload
+}
+
+export async function resendEntrepreneurForgotOtp(email: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/enterpreneur/resend-otp'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+      }),
+    })
+  } catch {
+    throw new Error(`Unable to reach the forgot OTP resend server at ${buildConfiguredApiUrl('/enterpreneur/resend-otp')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to resend forgot-password OTP.'))
+  }
+
+  return payload
+}
+
+export async function resetEntrepreneurPassword({ email, newPassword }: InvestorPasswordResetPayload) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/enterpreneur/password-change'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        newPassword,
+      }),
+    })
+  } catch {
+    throw new Error(`Unable to reach the password reset server at ${buildConfiguredApiUrl('/enterpreneur/password-change')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Password reset failed.'))
   }
 
   return payload

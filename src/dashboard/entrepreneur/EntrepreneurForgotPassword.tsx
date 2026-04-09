@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import './InvestorAuth.css'
-import { forgotInvestorPassword, resendInvestorForgotOtp, verifyInvestorForgotOtp } from '../dashboardApi'
+import '../investor/Investorauth.css'
+import { forgotEntrepreneurPassword, resendEntrepreneurForgotOtp, verifyEntrepreneurForgotOtp } from '../dashboardApi'
 
-export default function InvestorForgotPassword() {
+export default function EntrepreneurForgotPassword() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const emailFromQuery = useMemo(() => searchParams.get('email')?.trim() ?? '', [searchParams])
@@ -23,7 +23,7 @@ export default function InvestorForgotPassword() {
     setIsSubmitting(true)
 
     try {
-      const payload = await forgotInvestorPassword(email)
+      const payload = await forgotEntrepreneurPassword(email)
       setOtpSent(true)
       setSuccessMessage(
         payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
@@ -44,13 +44,13 @@ export default function InvestorForgotPassword() {
     setIsSubmitting(true)
 
     try {
-      const payload = await verifyInvestorForgotOtp({ email, otp })
+      const payload = await verifyEntrepreneurForgotOtp({ email, otp })
       setSuccessMessage(
         payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
           ? payload.message
           : 'OTP verified successfully.',
       )
-      navigate(`/dashboard/investor/reset-password?email=${encodeURIComponent(email)}`)
+      navigate(`/dashboard/entrepreneur/reset-password?email=${encodeURIComponent(email)}`)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'OTP verification failed.')
     } finally {
@@ -64,7 +64,7 @@ export default function InvestorForgotPassword() {
     setIsResending(true)
 
     try {
-      const payload = await resendInvestorForgotOtp(email)
+      const payload = await resendEntrepreneurForgotOtp(email)
       setSuccessMessage(
         payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
           ? payload.message
@@ -79,7 +79,6 @@ export default function InvestorForgotPassword() {
 
   return (
     <main className="fv-auth-root">
-      {/* Left aside */}
       <aside className="fv-aside">
         <div className="fv-aside-inner">
           <Link to="/dashboard" className="fv-logo">
@@ -89,10 +88,10 @@ export default function InvestorForgotPassword() {
           <div className="fv-aside-content">
             <p className="fv-aside-eyebrow">Account Recovery</p>
             <h1 className="fv-aside-headline">
-              Regain access<br />to your portfolio.
+              Regain access<br />to your venture.
             </h1>
             <p className="fv-aside-desc">
-              Request a one-time code using your investor email, then verify it to set a new password.
+              Request a one-time code using your entrepreneur email, then verify it to set a new password.
             </p>
 
             <div className="fv-aside-features">
@@ -112,9 +111,9 @@ export default function InvestorForgotPassword() {
           </div>
 
           <div className="fv-aside-footer">
-            <Link to="/dashboard/investor/login" className="fv-role-link">
+            <Link to="/dashboard/entrepreneur/login" className="fv-role-link">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 5l-7 7 7 7"/>
+                <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
               Back to login
             </Link>
@@ -122,18 +121,11 @@ export default function InvestorForgotPassword() {
         </div>
       </aside>
 
-      {/* Right main */}
       <section className="fv-main">
         <div className="fv-main-inner">
-
-          {/* Step indicator */}
           <div className="fv-steps">
             <div className={`fv-step ${!otpSent ? 'fv-step--active' : 'fv-step--done'}`}>
-              <span className="fv-step-num">
-                {otpSent ? (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                ) : '1'}
-              </span>
+              <span className="fv-step-num">{otpSent ? '✓' : '1'}</span>
               <span>Email</span>
             </div>
             <div className="fv-step-connector" />
@@ -149,34 +141,32 @@ export default function InvestorForgotPassword() {
           </div>
 
           <div className="fv-form-header">
-            <h2 className="fv-form-title">
-              {!otpSent ? 'Forgot your password?' : 'Enter your code'}
-            </h2>
+            <h2 className="fv-form-title">{!otpSent ? 'Forgot your password?' : 'Enter your code'}</h2>
             <p className="fv-form-subtitle">
               {!otpSent
-                ? 'Enter the email associated with your investor account and we\'ll send you a one-time code.'
+                ? 'Enter the email associated with your entrepreneur account and we\'ll send you a one-time code.'
                 : 'We sent a verification code to your email. Enter it below to continue.'}
             </p>
             {otpSent && email && (
               <div className="fv-email-chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 7L2 7" /></svg>
                 {email}
               </div>
             )}
           </div>
 
-          {errorMessage && (
+          {errorMessage ? (
             <div className="fv-status fv-status--error">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               {errorMessage}
             </div>
-          )}
-          {successMessage && (
+          ) : null}
+          {successMessage ? (
             <div className="fv-status fv-status--success">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
               {successMessage}
             </div>
-          )}
+          ) : null}
 
           {!otpSent ? (
             <form className="fv-form" onSubmit={handleSendOtp} noValidate>
@@ -188,7 +178,7 @@ export default function InvestorForgotPassword() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   disabled={isSubmitting}
                 />
@@ -207,7 +197,7 @@ export default function InvestorForgotPassword() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   disabled={isSubmitting || isResending}
                 />
@@ -218,37 +208,26 @@ export default function InvestorForgotPassword() {
                   id="fp-otp"
                   className="fv-input"
                   type="text"
-                  placeholder="Enter 6-digit code"
+                  placeholder="Enter OTP"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(event) => setOtp(event.target.value)}
                   required
                   disabled={isSubmitting || isResending}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={8}
                 />
-                <p className="fv-otp-hint">Check your inbox — the code expires shortly.</p>
               </div>
               <button type="submit" className="fv-btn-primary" disabled={isSubmitting || isResending}>
-                {isSubmitting ? <><span className="fv-spinner fv-spinner--light" /> Verifying…</> : 'Verify & continue'}
+                {isSubmitting ? <><span className="fv-spinner fv-spinner--light" /> Verifying…</> : 'Verify OTP'}
               </button>
             </form>
           )}
 
-          <div className="fv-links-row">
-            {otpSent && (
-              <button
-                type="button"
-                className="fv-btn-secondary"
-                onClick={handleResend}
-                disabled={isSubmitting || isResending}
-              >
-                {isResending ? <><span className="fv-spinner" /> Resending…</> : 'Resend code'}
+          <div className="fv-form-footer">
+            {otpSent ? (
+              <button type="button" className="fv-btn-secondary" onClick={handleResend} disabled={isSubmitting || isResending}>
+                {isResending ? 'Resending...' : 'Resend OTP'}
               </button>
-            )}
-            <Link to="/dashboard/investor/login" className="fv-text-link fv-text-link--muted">
-              Back to login
-            </Link>
+            ) : null}
+            <Link to="/dashboard/entrepreneur/login" className="fv-text-link fv-text-link--muted">Back to login</Link>
           </div>
         </div>
       </section>

@@ -70,8 +70,7 @@ export default function InvestorResetPassword() {
       <aside className="fv-aside">
         <div className="fv-aside-inner">
           <Link to="/dashboard" className="fv-logo">
-            <span className="fv-logo-mark">F</span>
-            <span className="fv-logo-name">FINVERRA</span>
+            <img src="/logo-finverra-white.png" alt="Finverra" className="fv-logo-image" />
           </Link>
 
           <div className="fv-aside-content">

@@ -19,9 +19,10 @@ export default function DashboardChoice() {
         if (!isMounted) {
           return
         }
+        const visibleRoles = nextRoles.filter((role) => role.slug !== 'admin')
 
-        setRoles(nextRoles)
-        setErrorMessage(nextRoles.length === 0 ? 'No supported roles are available from the server yet.' : '')
+        setRoles(visibleRoles)
+        setErrorMessage(visibleRoles.length === 0 ? 'No supported roles are available from the server yet.' : '')
       } catch (error) {
         if (!isMounted) {
           return
@@ -34,7 +35,6 @@ export default function DashboardChoice() {
         }
       }
     }
-
     void loadRoles()
 
     return () => {

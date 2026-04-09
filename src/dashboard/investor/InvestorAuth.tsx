@@ -117,8 +117,7 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
       <aside className="fv-aside">
         <div className="fv-aside-inner">
           <Link to="/dashboard" className="fv-logo">
-            <span className="fv-logo-mark">F</span>
-            <span className="fv-logo-name">FINVERRA</span>
+            <img src="/logo-finverra-white.png" alt="Finverra" className="fv-logo-image" />
           </Link>
 
           <div className="fv-aside-content">
@@ -145,7 +144,7 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
           </div>
 
           <div className="fv-aside-footer">
-            <Link to="/dashboard" className="fv-role-link">
+            <Link to="/dashboard" className="fv-role-link" style={{ marginTop: '-203px' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 5l-7 7 7 7"/>
               </svg>
@@ -158,23 +157,6 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
       {/* Right panel */}
       <section className="fv-main">
         <div className="fv-main-inner">
-          <div className="fv-mode-toggle" role="tablist">
-            <Link
-              to={`${basePath}/login`}
-              className={`fv-tab${mode === 'login' ? ' fv-tab--active' : ''}`}
-              aria-current={mode === 'login' ? 'page' : undefined}
-            >
-              Sign In
-            </Link>
-            <Link
-              to={`${basePath}/signup`}
-              className={`fv-tab${mode === 'signup' ? ' fv-tab--active' : ''}`}
-              aria-current={mode === 'signup' ? 'page' : undefined}
-            >
-              Create Account
-            </Link>
-          </div>
-
           <div className="fv-form-header">
             <h2 className="fv-form-title">
               {mode === 'login' ? 'Welcome back' : 'Join Finverra'}
@@ -324,9 +306,12 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
             )}
 
             {mode === 'login' && (
-              <div className="fv-form-meta">
+              <div className="fv-form-meta fv-form-meta--between">
                 <Link to="/dashboard/investor/forgot-password" className="fv-text-link">
                   Forgot password?
+                </Link>
+                <Link to="/dashboard/investor/signup" className="fv-text-link">
+                  Create Account
                 </Link>
               </div>
             )}

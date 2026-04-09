@@ -67,15 +67,8 @@ const navSections: NavSection[] = [
 
 		],
 	},
-	{
-		title: 'Account',
-		items: [
-			{ label: 'Logout', icon: LoginIcon },
-
-		],
-	},
 	
-	
+		
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────

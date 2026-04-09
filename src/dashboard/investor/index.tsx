@@ -8,6 +8,7 @@ import InvestorSidebar from './sidebar'
 const navPathByLabel: Record<string, string> = {
 	Dashboard: '/dashboard/investor',
 	'Edit Profile': '/dashboard/investor/edit-profile',
+	'My Application': '/dashboard/investor/application-form',
 	Pipeline: '/dashboard/investor/pipeline',
 	Portfolio: '/dashboard/investor/portfolio',
 	Login: '/dashboard/investor/login',
