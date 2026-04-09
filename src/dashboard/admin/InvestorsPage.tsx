@@ -10,6 +10,13 @@ import {
   updateAdminInvestor,
 } from '../dashboardApi'
 import { buildApiUrl } from '../../config/api'
+import {
+  getCellsBySector,
+  getDistrictsByProvince,
+  getProvinces,
+  getSectorsByDistrict,
+  getVillagesByCell,
+} from 'rwanda-geo-structure'
 
 type InvestorFormState = {
   users_id: string
@@ -89,6 +96,11 @@ export default function InvestorsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [provinces, setProvinces] = useState<string[]>([])
+  const [districts, setDistricts] = useState<string[]>([])
+  const [sectors, setSectors] = useState<string[]>([])
+  const [cells, setCells] = useState<string[]>([])
+  const [villages, setVillages] = useState<string[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
 
   const accessToken = getAccessToken()
@@ -104,6 +116,93 @@ export default function InvestorsPage() {
       { label: 'Pending Reviews', value: String(pendingReviews) },
     ]
   }, [investors])
+
+  useEffect(() => {
+    setProvinces(getProvinces())
+  }, [])
+
+  function loadDistrictsByProvince(provinceName: string) {
+    return provinceName ? getDistrictsByProvince(provinceName) : []
+  }
+
+  function loadSectorsByDistrict(provinceName: string, districtName: string) {
+    return provinceName && districtName ? getSectorsByDistrict(provinceName, districtName) : []
+  }
+
+  function loadCellsBySector(provinceName: string, districtName: string, sectorName: string) {
+    return provinceName && districtName && sectorName
+      ? getCellsBySector(provinceName, districtName, sectorName)
+      : []
+  }
+
+  function loadVillagesByCell(provinceName: string, districtName: string, sectorName: string, cellName: string) {
+    return provinceName && districtName && sectorName && cellName
+      ? getVillagesByCell(provinceName, districtName, sectorName, cellName)
+      : []
+  }
+
+  function hydrateLocationOptions(values: Pick<InvestorFormState, 'province' | 'district' | 'sector' | 'cell'>) {
+    setDistricts(loadDistrictsByProvince(values.province))
+    setSectors(loadSectorsByDistrict(values.province, values.district))
+    setCells(loadCellsBySector(values.province, values.district, values.sector))
+    setVillages(loadVillagesByCell(values.province, values.district, values.sector, values.cell))
+  }
+
+  function handleProvinceChange(provinceName: string) {
+    const nextDistricts = loadDistrictsByProvince(provinceName)
+
+    setForm((prev) => ({
+      ...prev,
+      province: provinceName,
+      district: '',
+      sector: '',
+      cell: '',
+      village: '',
+    }))
+    setDistricts(nextDistricts)
+    setSectors([])
+    setCells([])
+    setVillages([])
+  }
+
+  function handleDistrictChange(districtName: string) {
+    const nextSectors = loadSectorsByDistrict(form.province, districtName)
+
+    setForm((prev) => ({
+      ...prev,
+      district: districtName,
+      sector: '',
+      cell: '',
+      village: '',
+    }))
+    setSectors(nextSectors)
+    setCells([])
+    setVillages([])
+  }
+
+  function handleSectorChange(sectorName: string) {
+    const nextCells = loadCellsBySector(form.province, form.district, sectorName)
+
+    setForm((prev) => ({
+      ...prev,
+      sector: sectorName,
+      cell: '',
+      village: '',
+    }))
+    setCells(nextCells)
+    setVillages([])
+  }
+
+  function handleCellChange(cellName: string) {
+    const nextVillages = loadVillagesByCell(form.province, form.district, form.sector, cellName)
+
+    setForm((prev) => ({
+      ...prev,
+      cell: cellName,
+      village: '',
+    }))
+    setVillages(nextVillages)
+  }
 
   async function loadInvestors() {
     setLoading(true)
@@ -127,6 +226,10 @@ export default function InvestorsPage() {
     setShowForm(false)
     setActiveId(null)
     setForm(emptyForm)
+    setDistricts([])
+    setSectors([])
+    setCells([])
+    setVillages([])
     setFormError(null)
     if (fileRef.current) {
       fileRef.current.value = ''
@@ -158,6 +261,12 @@ export default function InvestorsPage() {
         id_number: investor.id_number ?? '',
         image: investor.image ?? '',
         imageFile: null,
+      })
+      hydrateLocationOptions({
+        province: investor.province ?? '',
+        district: investor.district ?? '',
+        sector: investor.sector ?? '',
+        cell: investor.cell ?? '',
       })
       setShowForm(true)
     } catch (loadError) {
@@ -366,53 +475,73 @@ export default function InvestorsPage() {
                 </label>
                 <label style={styles.field}>
                   <span>Province</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.province}
-                    onChange={(event) => setForm((prev) => ({ ...prev, province: event.target.value }))}
+                    onChange={(event) => handleProvinceChange(event.target.value)}
                     style={styles.input}
                     disabled={saving}
-                  />
+                  >
+                    <option value="">Select Province</option>
+                    {provinces.map((provinceName) => (
+                      <option key={provinceName} value={provinceName}>{provinceName}</option>
+                    ))}
+                  </select>
                 </label>
                 <label style={styles.field}>
                   <span>District</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.district}
-                    onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))}
+                    onChange={(event) => handleDistrictChange(event.target.value)}
                     style={styles.input}
-                    disabled={saving}
-                  />
+                    disabled={saving || !form.province}
+                  >
+                    <option value="">Select District</option>
+                    {districts.map((districtName) => (
+                      <option key={districtName} value={districtName}>{districtName}</option>
+                    ))}
+                  </select>
                 </label>
                 <label style={styles.field}>
                   <span>Sector</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.sector}
-                    onChange={(event) => setForm((prev) => ({ ...prev, sector: event.target.value }))}
+                    onChange={(event) => handleSectorChange(event.target.value)}
                     style={styles.input}
-                    disabled={saving}
-                  />
+                    disabled={saving || !form.district}
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sectorName) => (
+                      <option key={sectorName} value={sectorName}>{sectorName}</option>
+                    ))}
+                  </select>
                 </label>
                 <label style={styles.field}>
                   <span>Cell</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.cell}
-                    onChange={(event) => setForm((prev) => ({ ...prev, cell: event.target.value }))}
+                    onChange={(event) => handleCellChange(event.target.value)}
                     style={styles.input}
-                    disabled={saving}
-                  />
+                    disabled={saving || !form.sector}
+                  >
+                    <option value="">Select Cell</option>
+                    {cells.map((cellName) => (
+                      <option key={cellName} value={cellName}>{cellName}</option>
+                    ))}
+                  </select>
                 </label>
                 <label style={styles.field}>
                   <span>Village</span>
-                  <input
-                    type="text"
+                  <select
                     value={form.village}
                     onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
                     style={styles.input}
-                    disabled={saving}
-                  />
+                    disabled={saving || !form.cell}
+                  >
+                    <option value="">Select Village</option>
+                    {villages.map((villageName) => (
+                      <option key={villageName} value={villageName}>{villageName}</option>
+                    ))}
+                  </select>
                 </label>
                 <label style={styles.field}>
                   <span>ID Type</span>
