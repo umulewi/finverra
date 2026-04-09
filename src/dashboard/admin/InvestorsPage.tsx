@@ -6,6 +6,7 @@ import {
   deleteAdminInvestor,
   fetchAdminInvestorById,
   fetchAdminInvestors,
+  fetchAdminVerifiedProfiles,
   type AdminInvestor,
   updateAdminInvestor,
 } from '../dashboardApi'
@@ -84,6 +85,12 @@ function toImageUrl(value: string) {
   return buildApiUrl(text)
 }
 
+function getInitials(firstName: string, lastName: string) {
+  const first = firstName.trim().charAt(0).toUpperCase()
+  const last = lastName.trim().charAt(0).toUpperCase()
+  return `${first || '?'}${last || '?'}`
+}
+
 export default function InvestorsPage() {
   const [investors, setInvestors] = useState<AdminInvestor[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,21 +110,62 @@ export default function InvestorsPage() {
   const [sectors, setSectors] = useState<string[]>([])
   const [cells, setCells] = useState<string[]>([])
   const [villages, setVillages] = useState<string[]>([])
+  const [verifiedProfiles, setVerifiedProfiles] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const fileRef = useRef<HTMLInputElement>(null)
+  const pageSize = 10
 
   const accessToken = getAccessToken()
 
   const computedMetrics = useMemo(() => {
     const total = investors.length
-    const activeProfiles = investors.filter((item) => Boolean(item.first_name && item.last_name && item.telephone)).length
-    const pendingReviews = investors.filter((item) => !item.id_number || !item.id_type).length
 
     return [
       { label: 'Total Investors', value: String(total) },
-      { label: 'Active Profiles', value: String(activeProfiles) },
-      { label: 'Pending Reviews', value: String(pendingReviews) },
+      { label: 'Active Profiles', value: String(verifiedProfiles) },
     ]
-  }, [investors])
+  }, [investors, verifiedProfiles])
+
+  const visibleInvestors = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+
+    const sorted = [...investors].sort((left, right) => left.id - right.id)
+
+    const filtered = query
+      ? sorted.filter((item) => (
+        [
+          item.id,
+          item.users_id,
+          item.email,
+          item.first_name,
+          item.last_name,
+          item.telephone,
+          item.nationality,
+          item.province,
+          item.district,
+          item.sector,
+          item.cell,
+          item.village,
+          item.id_type,
+          item.id_number,
+        ]
+          .filter((value) => value !== null && value !== undefined)
+          .some((value) => String(value).toLowerCase().includes(query))
+      ))
+      : sorted
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+    const safePage = Math.min(currentPage, totalPages)
+    const startIndex = (safePage - 1) * pageSize
+
+    return {
+      items: filtered.slice(startIndex, startIndex + pageSize),
+      totalPages,
+      totalItems: filtered.length,
+      currentPage: safePage,
+    }
+  }, [investors, searchQuery, currentPage])
 
   useEffect(() => {
     setProvinces(getProvinces())
@@ -211,8 +259,12 @@ export default function InvestorsPage() {
     setError(null)
 
     try {
-      const rows = await fetchAdminInvestors(accessToken)
+      const [rows, verifiedCount] = await Promise.all([
+        fetchAdminInvestors(accessToken),
+        fetchAdminVerifiedProfiles(accessToken),
+      ])
       setInvestors(rows)
+      setVerifiedProfiles(verifiedCount)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load investors.')
     } finally {
@@ -236,6 +288,11 @@ export default function InvestorsPage() {
     if (fileRef.current) {
       fileRef.current.value = ''
     }
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value)
+    setCurrentPage(1)
   }
 
   function closeViewModal() {
@@ -378,8 +435,9 @@ export default function InvestorsPage() {
       subtitle="View and manage investor records, profile status, and engagement details."
     >
       <section style={styles.grid}>
-        {computedMetrics.map((metric) => (
-          <article key={metric.label} style={styles.card}>
+        {computedMetrics.map((metric, index) => (
+          <article key={metric.label} style={styles.card} className="investor-metric-card">
+            <span style={{ ...styles.metricGlow, animationDelay: `${index * 80}ms` }} />
             <p style={styles.metricLabel}>{metric.label}</p>
             <p style={styles.metricValue}>{metric.value}</p>
           </article>
@@ -622,18 +680,18 @@ export default function InvestorsPage() {
             <div style={styles.viewBody}>
               <div style={styles.viewImageWrap}>
                 {viewInvestor.image ? (
-                  <a href={toImageUrl(viewInvestor.image)} target="_blank" rel="noreferrer" style={styles.imageLink}>
-                    <img src={toImageUrl(viewInvestor.image)} alt={`${viewInvestor.first_name} ${viewInvestor.last_name}`} style={styles.viewImage} />
-                    <span style={styles.imageLinkText}>Open full-size image</span>
-                  </a>
+                  <div style={styles.viewImageCard}>
+                    <a href={toImageUrl(viewInvestor.image)} target="_blank" rel="noreferrer" style={styles.viewImageLink}>
+                      <img src={toImageUrl(viewInvestor.image)} alt={`${viewInvestor.first_name} ${viewInvestor.last_name}`} style={styles.viewImage} />
+                      <span style={styles.imageLinkText}>Open full-size image</span>
+                    </a>
+                  </div>
                 ) : (
                   <div style={styles.noImage}>No image available</div>
                 )}
               </div>
 
               <div style={styles.viewGrid}>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>ID</span><strong>{viewInvestor.id}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>User ID</span><strong>{viewInvestor.users_id}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Email</span><strong>{viewInvestor.email || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>First Name</span><strong>{viewInvestor.first_name || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Last Name</span><strong>{viewInvestor.last_name || '-'}</strong></div>
@@ -659,18 +717,42 @@ export default function InvestorsPage() {
         </div>
       ) : null}
 
-      <section style={styles.panel}>
-        <h3 style={styles.panelTitle}>Investor Directory</h3>
+      <section style={styles.panel} className="investor-directory-panel">
+        <div style={styles.panelHeader}>
+          <div>
+            <h3 style={styles.panelTitle}>Investor Directory</h3>
+            <p style={styles.panelText}>Curated investor records with one-click actions for view, edit, and cleanup.</p>
+          </div>
+          <div style={styles.panelHeaderActions}>
+            <span style={styles.countPill}>{visibleInvestors.totalItems} records</span>
+            <button type="button" style={styles.refreshBtn} onClick={() => void loadInvestors()}>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.searchRow}>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => handleSearchChange(event.target.value)}
+            placeholder="Search by name, email, phone, location, or ID..."
+            style={styles.searchInput}
+          />
+          <span style={styles.searchHint}>
+            Showing {visibleInvestors.items.length} of {visibleInvestors.totalItems}
+          </span>
+        </div>
 
         {loading ? <p style={styles.panelText}>Loading investors...</p> : null}
 
-        {!loading && investors.length === 0 ? (
+        {!loading && visibleInvestors.totalItems === 0 ? (
           <p style={styles.panelText}>No investors found.</p>
         ) : null}
 
-        {!loading && investors.length > 0 ? (
+        {!loading && visibleInvestors.totalItems > 0 ? (
           <div style={styles.tableWrap}>
-            <table style={styles.table}>
+            <table style={styles.table} className="investor-table">
               <thead>
                 <tr>
                   <th style={styles.th}>ID</th>
@@ -683,10 +765,18 @@ export default function InvestorsPage() {
                 </tr>
               </thead>
               <tbody>
-                {investors.map((item) => (
-                  <tr key={item.id}>
-                    <td style={styles.td}>{item.id}</td>
-                    <td style={styles.td}>{item.first_name} {item.last_name}</td>
+                {visibleInvestors.items.map((item, index) => (
+                  <tr key={item.id} className="investor-row" style={index % 2 === 0 ? styles.rowEven : styles.rowOdd}>
+                    <td style={styles.td}>{(visibleInvestors.currentPage - 1) * pageSize + index + 1}</td>
+                    <td style={styles.td}>
+                      <div style={styles.nameCell}>
+                        <span style={styles.nameAvatar}>{getInitials(item.first_name ?? '', item.last_name ?? '')}</span>
+                        <div style={styles.nameTextWrap}>
+                          <strong style={styles.namePrimary}>{item.first_name} {item.last_name}</strong>
+                          <span style={styles.nameSecondary}>{item.province || 'Unknown province'}</span>
+                        </div>
+                      </div>
+                    </td>
                     <td style={styles.td}>{item.email}</td>
                     <td style={styles.td}>{item.telephone}</td>
                     <td style={styles.td}>{item.nationality ?? '-'}</td>
@@ -697,10 +787,10 @@ export default function InvestorsPage() {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
-                        <button type="button" style={styles.secondaryBtn} onClick={() => openView(item.id)}>
+                        <button type="button" style={{ ...styles.secondaryBtn, ...styles.viewBtn }} onClick={() => openView(item.id)}>
                           View
                         </button>
-                        <button type="button" style={styles.secondaryBtn} onClick={() => openEdit(item.id)}>
+                        <button type="button" style={{ ...styles.secondaryBtn, ...styles.editBtn }} onClick={() => openEdit(item.id)}>
                           Edit
                         </button>
                         <button
@@ -719,7 +809,70 @@ export default function InvestorsPage() {
             </table>
           </div>
         ) : null}
+
+        {!loading && visibleInvestors.totalPages > 1 ? (
+          <div style={styles.pagination}>
+            <button
+              type="button"
+              style={styles.pageBtn}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={visibleInvestors.currentPage === 1}
+            >
+              Prev
+            </button>
+
+            <div style={styles.pageNumbers}>
+              {Array.from({ length: visibleInvestors.totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  type="button"
+                  style={{
+                    ...styles.pageBtn,
+                    ...(pageNumber === visibleInvestors.currentPage ? styles.pageBtnActive : {}),
+                  }}
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              style={styles.pageBtn}
+              onClick={() => setCurrentPage((page) => Math.min(visibleInvestors.totalPages, page + 1))}
+              disabled={visibleInvestors.currentPage === visibleInvestors.totalPages}
+            >
+              Next
+            </button>
+          </div>
+        ) : null}
       </section>
+
+      <style>{`
+        .investor-metric-card {
+          position: relative;
+          overflow: hidden;
+          transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .investor-metric-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 18px 36px rgba(15, 30, 53, 0.12);
+        }
+
+        .investor-directory-panel {
+          background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .investor-table tbody tr {
+          transition: background 180ms ease, transform 180ms ease;
+        }
+
+        .investor-table tbody tr:hover {
+          background: #f5f9ff !important;
+        }
+      `}</style>
     </AdminShell>
   )
 }
@@ -736,6 +889,15 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 14,
     padding: '16px 18px',
     boxShadow: '0 10px 25px rgba(15, 30, 53, 0.06)',
+  },
+  metricGlow: {
+    position: 'absolute',
+    top: -36,
+    right: -36,
+    width: 94,
+    height: 94,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(41,119,235,0.2), rgba(41,119,235,0))',
   },
   metricLabel: {
     margin: 0,
@@ -762,6 +924,59 @@ const styles: Record<string, CSSProperties> = {
     margin: 0,
     color: '#0e2a4f',
     fontSize: 18,
+  },
+  panelHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  panelHeaderActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  searchRow: {
+    marginTop: 14,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  searchInput: {
+    flex: '1 1 320px',
+    border: '1px solid #bfd6f3',
+    borderRadius: 12,
+    padding: '11px 14px',
+    background: '#f8fbff',
+    color: '#0e2a4f',
+    fontSize: 14,
+    outline: 'none',
+  },
+  searchHint: {
+    color: '#5b7797',
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  countPill: {
+    border: '1px solid #d6e3f5',
+    borderRadius: 999,
+    padding: '7px 11px',
+    fontSize: 12,
+    fontWeight: 800,
+    color: '#24517c',
+    background: '#f3f8ff',
+  },
+  refreshBtn: {
+    border: '1px solid #bfd6f3',
+    borderRadius: 9,
+    padding: '7px 12px',
+    cursor: 'pointer',
+    color: '#0f4e87',
+    background: 'linear-gradient(180deg, #ffffff 0%, #edf5ff 100%)',
+    fontWeight: 700,
   },
   panelText: {
     margin: '10px 0 0',
@@ -792,6 +1007,8 @@ const styles: Record<string, CSSProperties> = {
     width: '100%',
     borderCollapse: 'collapse',
     minWidth: 900,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   th: {
     textAlign: 'left',
@@ -806,6 +1023,41 @@ const styles: Record<string, CSSProperties> = {
     color: '#143a64',
     fontSize: 14,
     verticalAlign: 'middle',
+  },
+  rowEven: {
+    background: '#ffffff',
+  },
+  rowOdd: {
+    background: '#fcfdff',
+  },
+  nameCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  nameAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: '50%',
+    display: 'grid',
+    placeItems: 'center',
+    fontWeight: 800,
+    fontSize: 12,
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #244f7b 0%, #3f7ebb 100%)',
+  },
+  nameTextWrap: {
+    display: 'grid',
+    gap: 2,
+  },
+  namePrimary: {
+    color: '#0f2f55',
+    fontSize: 14,
+    lineHeight: 1.2,
+  },
+  nameSecondary: {
+    color: '#5b7797',
+    fontSize: 12,
   },
   avatar: {
     width: 42,
@@ -835,6 +1087,16 @@ const styles: Record<string, CSSProperties> = {
     background: '#fff',
     color: '#0e2a4f',
     fontWeight: 700,
+  },
+  viewBtn: {
+    borderColor: '#c7dffc',
+    color: '#0f4e87',
+    background: '#f2f8ff',
+  },
+  editBtn: {
+    borderColor: '#d7e8d9',
+    color: '#1c5f35',
+    background: '#f3fbf5',
   },
   deleteBtn: {
     border: '1px solid #f3c8c8',
@@ -1000,14 +1262,28 @@ const styles: Record<string, CSSProperties> = {
   },
   viewImageWrap: {
     display: 'flex',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
+  },
+  viewImageCard: {
+    border: '1px solid #dde7f3',
+    borderRadius: 16,
+    background: 'linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%)',
+    padding: 12,
+    boxShadow: '0 8px 24px rgba(14, 42, 79, 0.08)',
+  },
+  viewImageLink: {
+    display: 'inline-flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    textDecoration: 'none',
   },
   viewImage: {
-    width: 220,
-    height: 220,
-    borderRadius: 14,
+    width: 260,
+    height: 260,
+    borderRadius: 16,
     objectFit: 'cover',
-    border: '1px solid #d8e3f0',
+    border: '1px solid #cfdceb',
     background: '#f5f8fc',
   },
   viewGrid: {
@@ -1036,5 +1312,33 @@ const styles: Record<string, CSSProperties> = {
     padding: 16,
     display: 'flex',
     justifyContent: 'flex-end',
+  },
+  pagination: {
+    marginTop: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  pageNumbers: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  pageBtn: {
+    border: '1px solid #c9d9ea',
+    borderRadius: 10,
+    padding: '8px 12px',
+    background: '#fff',
+    color: '#0e2a4f',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  pageBtnActive: {
+    background: 'linear-gradient(180deg, #0f4e87 0%, #0b3862 100%)',
+    color: '#fff',
+    borderColor: '#0f4e87',
   },
 }

@@ -573,6 +573,12 @@ type AdminInvestorMutationPayload = {
   message?: string
 }
 
+type AdminInvestorVerifiedProfilesPayload = {
+  success: boolean
+  verified_profiles?: number
+  message?: string
+}
+
 function buildAdminAuthHeader(accessToken: string) {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -694,4 +700,30 @@ export async function deleteAdminInvestor(id: number, accessToken: string) {
   }
 
   return payload
+}
+
+export async function fetchAdminVerifiedProfiles(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/investor/verifiedProfiles'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the verified profiles server at ${buildConfiguredApiUrl('/admin/investor/verifiedProfiles')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorVerifiedProfilesPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load verified profiles count.'))
+  }
+
+  if (typeof payload?.verified_profiles !== 'number') {
+    throw new Error('Unexpected verified profiles response from server.')
+  }
+
+  return payload.verified_profiles
 }
