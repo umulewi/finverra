@@ -727,3 +727,221 @@ export async function fetchAdminVerifiedProfiles(accessToken: string) {
 
   return payload.verified_profiles
 }
+
+// ============================================================================
+// ADMIN ENTREPRENEURS API
+// ============================================================================
+
+export type AdminEntrepreneur = {
+  id: number
+  users_id: number
+  email: string
+  first_name: string
+  last_name: string
+  telephone: string
+  date_of_birth: string | null
+  gender: string | null
+  nationality: string | null
+  province: string | null
+  district: string | null
+  sector: string | null
+  cell: string | null
+  village: string | null
+  id_type: string | null
+  id_number: string | null
+  image: string | null
+  created_at: string
+}
+
+type AdminEntrepreneurListPayload = {
+  success: boolean
+  entrepreneurs?: AdminEntrepreneur[]
+  message?: string
+}
+
+type AdminEntrepreneurDetailPayload = {
+  success: boolean
+  entrepreneur?: AdminEntrepreneur
+  message?: string
+}
+
+type AdminEntrepreneurUpdatePayload = {
+  users_id: number
+  first_name: string
+  last_name: string
+  telephone: string
+  date_of_birth?: string
+  gender?: string
+  nationality?: string
+  province?: string
+  district?: string
+  sector?: string
+  cell?: string
+  village?: string
+  id_type?: string
+  id_number?: string
+  image?: string
+  imageFile?: File | null
+}
+
+type AdminEntrepreneurMutationPayload = {
+  success: boolean
+  message?: string
+}
+
+type AdminEntrepreneurVerifiedProfilesPayload = {
+  success: boolean
+  verified_profiles?: number
+  message?: string
+}
+
+export async function fetchAdminEntrepreneurs(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/entrepreneurs'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneurs server at ${buildConfiguredApiUrl('/admin/entrepreneurs')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurListPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load entrepreneurs.'))
+  }
+
+  if (!Array.isArray(payload?.entrepreneurs)) {
+    return []
+  }
+
+  // Normalize the response: map entrepreneur_id to id since backend uses alias
+  return payload.entrepreneurs.map((item: any) => ({
+    id: item.entrepreneur_id ?? item.id,
+    ...item,
+  }))
+}
+
+export async function fetchAdminEntrepreneurById(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/entrepreneurs/${id}`), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur detail server at ${buildConfiguredApiUrl(`/admin/entrepreneurs/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurDetailPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load entrepreneur details.'))
+  }
+
+  if (!payload?.entrepreneur) {
+    throw new Error('Entrepreneur detail payload is missing.')
+  }
+
+  return payload.entrepreneur
+}
+
+export async function updateAdminEntrepreneur(id: number, data: AdminEntrepreneurUpdatePayload, accessToken: string) {
+  const formData = new FormData()
+  formData.append('users_id', String(data.users_id))
+  formData.append('first_name', data.first_name)
+  formData.append('last_name', data.last_name)
+  formData.append('telephone', data.telephone)
+  formData.append('date_of_birth', data.date_of_birth ?? '')
+  formData.append('gender', data.gender ?? '')
+  formData.append('nationality', data.nationality ?? '')
+  formData.append('province', data.province ?? '')
+  formData.append('district', data.district ?? '')
+  formData.append('sector', data.sector ?? '')
+  formData.append('cell', data.cell ?? '')
+  formData.append('village', data.village ?? '')
+  formData.append('id_type', data.id_type ?? '')
+  formData.append('id_number', data.id_number ?? '')
+
+  if (data.imageFile) {
+    formData.append('image', data.imageFile)
+  } else if (data.image) {
+    formData.append('image', data.image)
+  }
+
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/entrepreneurs/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+      body: formData,
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur update server at ${buildConfiguredApiUrl(`/admin/entrepreneurs/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to update entrepreneur.'))
+  }
+
+  return payload
+}
+
+export async function deleteAdminEntrepreneur(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/entrepreneurs/${id}`), {
+      method: 'DELETE',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur delete server at ${buildConfiguredApiUrl(`/admin/entrepreneurs/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to delete entrepreneur.'))
+  }
+
+  return payload
+}
+
+export async function fetchAdminVerifiedEntrepreneurs(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/entrepreneur/verifiedProfiles'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the verified entrepreneurs server at ${buildConfiguredApiUrl('/admin/entrepreneur/verifiedProfiles')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurVerifiedProfilesPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load verified entrepreneurs count.'))
+  }
+
+  if (typeof payload?.verified_profiles !== 'number') {
+    throw new Error('Unexpected verified entrepreneurs response from server.')
+  }
+
+  return payload.verified_profiles
+}
