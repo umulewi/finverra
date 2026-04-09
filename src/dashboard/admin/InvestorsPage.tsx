@@ -91,6 +91,8 @@ export default function InvestorsPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [viewInvestor, setViewInvestor] = useState<AdminInvestor | null>(null)
   const [form, setForm] = useState<InvestorFormState>(emptyForm)
   const [formError, setFormError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -236,6 +238,11 @@ export default function InvestorsPage() {
     }
   }
 
+  function closeViewModal() {
+    setShowViewModal(false)
+    setViewInvestor(null)
+  }
+
   async function openEdit(investorId: number) {
     setFormError(null)
     setError(null)
@@ -269,6 +276,19 @@ export default function InvestorsPage() {
         cell: investor.cell ?? '',
       })
       setShowForm(true)
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load investor details.')
+    }
+  }
+
+  async function openView(investorId: number) {
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const investor = await fetchAdminInvestorById(investorId, accessToken)
+      setViewInvestor(investor)
+      setShowViewModal(true)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load investor details.')
     }
@@ -403,16 +423,6 @@ export default function InvestorsPage() {
               {formError ? <p style={styles.formError}>{formError}</p> : null}
 
               <div style={styles.formGrid}>
-                <label style={styles.field}>
-                  <span>users_id *</span>
-                  <input
-                    type="number"
-                    value={form.users_id}
-                    onChange={(event) => setForm((prev) => ({ ...prev, users_id: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
                 <label style={styles.field}>
                   <span>First Name *</span>
                   <input
@@ -566,14 +576,21 @@ export default function InvestorsPage() {
               </div>
 
               <label style={styles.field}>
-                <span>Existing Image Path</span>
-                <input
-                  type="text"
-                  value={form.image}
-                  onChange={(event) => setForm((prev) => ({ ...prev, image: event.target.value }))}
-                  style={styles.input}
-                  disabled={saving}
-                />
+                <span>Current Image</span>
+                {form.image ? (
+                  <a
+                    href={toImageUrl(form.image)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={styles.imageLink}
+                    title="Open full image in new tab"
+                  >
+                    <img src={toImageUrl(form.image)} alt="Current investor profile" style={styles.imagePreview} />
+                    <span style={styles.imageLinkText}>Click image to open full size</span>
+                  </a>
+                ) : (
+                  <div style={styles.noImage}>No image available</div>
+                )}
               </label>
 
               <label style={styles.field}>
@@ -590,6 +607,54 @@ export default function InvestorsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {showViewModal && viewInvestor ? (
+        <div style={styles.overlay} onClick={closeViewModal}>
+          <div style={styles.viewModal} onClick={(event) => event.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Investor Details</h3>
+              <button type="button" style={styles.closeBtn} onClick={closeViewModal}>x</button>
+            </div>
+
+            <div style={styles.viewBody}>
+              <div style={styles.viewImageWrap}>
+                {viewInvestor.image ? (
+                  <a href={toImageUrl(viewInvestor.image)} target="_blank" rel="noreferrer" style={styles.imageLink}>
+                    <img src={toImageUrl(viewInvestor.image)} alt={`${viewInvestor.first_name} ${viewInvestor.last_name}`} style={styles.viewImage} />
+                    <span style={styles.imageLinkText}>Open full-size image</span>
+                  </a>
+                ) : (
+                  <div style={styles.noImage}>No image available</div>
+                )}
+              </div>
+
+              <div style={styles.viewGrid}>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>ID</span><strong>{viewInvestor.id}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>User ID</span><strong>{viewInvestor.users_id}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Email</span><strong>{viewInvestor.email || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>First Name</span><strong>{viewInvestor.first_name || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Last Name</span><strong>{viewInvestor.last_name || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Telephone</span><strong>{viewInvestor.telephone || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Date Of Birth</span><strong>{toDateInputValue(viewInvestor.date_of_birth) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Gender</span><strong>{viewInvestor.gender || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Nationality</span><strong>{viewInvestor.nationality || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Province</span><strong>{viewInvestor.province || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>District</span><strong>{viewInvestor.district || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Sector</span><strong>{viewInvestor.sector || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Cell</span><strong>{viewInvestor.cell || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Village</span><strong>{viewInvestor.village || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>ID Type</span><strong>{viewInvestor.id_type || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>ID Number</span><strong>{viewInvestor.id_number || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Created At</span><strong>{viewInvestor.created_at || '-'}</strong></div>
+              </div>
+            </div>
+
+            <div style={styles.viewActions}>
+              <button type="button" style={styles.cancelBtn} onClick={closeViewModal}>Close</button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -632,6 +697,9 @@ export default function InvestorsPage() {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
+                        <button type="button" style={styles.secondaryBtn} onClick={() => openView(item.id)}>
+                          View
+                        </button>
                         <button type="button" style={styles.secondaryBtn} onClick={() => openEdit(item.id)}>
                           Edit
                         </button>
@@ -795,6 +863,15 @@ const styles: Record<string, CSSProperties> = {
     border: '1px solid #e4eaf3',
     boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
   },
+  viewModal: {
+    width: 'min(980px, 100%)',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    background: '#fff',
+    borderRadius: 14,
+    border: '1px solid #e4eaf3',
+    boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
+  },
   modalHeader: {
     display: 'flex',
     alignItems: 'center',
@@ -850,6 +927,34 @@ const styles: Record<string, CSSProperties> = {
     color: '#0e2a4f',
     background: '#fff',
   },
+  imageLink: {
+    display: 'inline-flex',
+    flexDirection: 'column',
+    gap: 6,
+    textDecoration: 'none',
+    alignItems: 'flex-start',
+  },
+  imagePreview: {
+    width: 150,
+    height: 150,
+    borderRadius: 12,
+    objectFit: 'cover',
+    border: '1px solid #d8e3f0',
+    background: '#f5f8fc',
+  },
+  imageLinkText: {
+    color: '#1f578d',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  noImage: {
+    border: '1px dashed #cfdbea',
+    borderRadius: 10,
+    padding: '10px 12px',
+    color: '#567497',
+    background: '#f8fbff',
+    fontSize: 13,
+  },
   formActions: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -887,5 +992,49 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: 10,
+  },
+  viewBody: {
+    padding: 16,
+    display: 'grid',
+    gap: 14,
+  },
+  viewImageWrap: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+  },
+  viewImage: {
+    width: 220,
+    height: 220,
+    borderRadius: 14,
+    objectFit: 'cover',
+    border: '1px solid #d8e3f0',
+    background: '#f5f8fc',
+  },
+  viewGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 10,
+  },
+  viewItem: {
+    display: 'grid',
+    gap: 4,
+    border: '1px solid #e4eaf3',
+    borderRadius: 10,
+    background: '#fbfdff',
+    padding: '10px 12px',
+    color: '#143a64',
+  },
+  viewLabel: {
+    color: '#4c6483',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    fontWeight: 700,
+  },
+  viewActions: {
+    borderTop: '1px solid #ecf1f7',
+    padding: 16,
+    display: 'flex',
+    justifyContent: 'flex-end',
   },
 }
