@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { buildApiUrl } from '../../config/api'
 import { getAuthSession } from '../authStorage'
 import InvestorLayout from './InvestorLayout'
@@ -22,7 +22,6 @@ type InvestorApplicationForm = {
   stage_do_you_prefer: string
   risk_level: string
   return_type: string
-  expected_roi: string
   investment_duration: string
   what_do_you_look_in_business: string
   minimum_requirements: string
@@ -42,6 +41,8 @@ type ExistingFiles = {
   company_registration: string
   proof_of_funds: string
   kyc: string
+  identification_document: string
+  cv: string
 }
 
 const initialForm: InvestorApplicationForm = {
@@ -56,7 +57,6 @@ const initialForm: InvestorApplicationForm = {
   stage_do_you_prefer: '',
   risk_level: '',
   return_type: '',
-  expected_roi: '',
   investment_duration: '',
   what_do_you_look_in_business: '',
   minimum_requirements: '',
@@ -76,6 +76,8 @@ const initialFiles: ExistingFiles = {
   company_registration: '',
   proof_of_funds: '',
   kyc: '',
+  identification_document: '',
+  cv: '',
 }
 
 const STEPS = [
@@ -86,6 +88,15 @@ const STEPS = [
   { label: 'Experience', icon: '◊', description: 'Past investment history' },
   { label: 'Docs & Verify', icon: '✦', description: 'Documents and compliance' },
 ]
+
+const PREFERRED_SECTOR_OPTIONS = ['Agriculture', 'Technology', 'Retail', 'Manufacturing', 'Services', 'Other']
+
+function parseSectorList(value: string): string[] {
+  return value
+    .split(',')
+    .map((item: string) => item.trim())
+    .filter(Boolean)
+}
 
 function toText(value: unknown) {
   return typeof value === 'string' ? value : value == null ? '' : String(value)
@@ -212,6 +223,8 @@ export default function ApplicationFoam() {
   const [companyRegistrationFile, setCompanyRegistrationFile] = useState<File | null>(null)
   const [proofOfFundsFile, setProofOfFundsFile] = useState<File | null>(null)
   const [kycFile, setKycFile] = useState<File | null>(null)
+  const [identificationDocumentFile, setIdentificationDocumentFile] = useState<File | null>(null)
+  const [cvFile, setCvFile] = useState<File | null>(null)
 
   const [isLoadingUser, setIsLoadingUser] = useState(false)
   const [isLoadingBasicInfo, setIsLoadingBasicInfo] = useState(false)
@@ -247,20 +260,6 @@ export default function ApplicationFoam() {
     gap: isPhone ? 12 : 16,
   }
 
-  const responsiveCardStyle: CSSProperties = {
-    ...s.sectionCard,
-    padding: isPhone ? 14 : isTablet ? 18 : 24,
-    borderRadius: isPhone ? 14 : 16,
-  }
-
-  const responsiveHeaderStyle: CSSProperties = {
-    ...s.sectionHeader,
-    flexDirection: isPhone ? 'column' : 'row',
-    alignItems: isPhone ? 'flex-start' : 'flex-start',
-    gap: isPhone ? 10 : 14,
-    marginBottom: isPhone ? 14 : 20,
-  }
-
   const responsiveStepperInnerStyle: CSSProperties = {
     ...s.stepperInner,
     gridTemplateColumns: isPhone ? 'repeat(2, minmax(0, 1fr))' : isTablet ? 'repeat(3, minmax(0, 1fr))' : 'repeat(6, 1fr)',
@@ -273,27 +272,11 @@ export default function ApplicationFoam() {
     borderRadius: isPhone ? 10 : 12,
   }
 
-  const responsiveLabelStyle: CSSProperties = {
-    ...s.label,
-    fontSize: isPhone ? 11 : 12,
-  }
-
   const responsiveInputStyle: CSSProperties = {
     ...s.input,
     minHeight: isPhone ? 42 : undefined,
     fontSize: isPhone ? 14 : 14,
     width: '100%',
-  }
-
-  const responsiveTextAreaStyle: CSSProperties = {
-    ...s.textarea,
-    minHeight: isPhone ? 84 : 90,
-  }
-
-  const responsiveNavRowStyle: CSSProperties = {
-    ...s.navRow,
-    flexDirection: isPhone ? 'column' : 'row',
-    alignItems: isPhone ? 'stretch' : 'center',
   }
 
   const responsiveButtonBase: CSSProperties = {
@@ -453,7 +436,6 @@ export default function ApplicationFoam() {
             stage_do_you_prefer: toText(row.stage_do_you_prefer),
             risk_level: toText(row.risk_level),
             return_type: toText(row.return_type),
-            expected_roi: toText(row.expected_roi),
             investment_duration: toText(row.investment_duration),
             what_do_you_look_in_business: toText(row.what_do_you_look_in_business),
             minimum_requirements: toText(row.minimum_requirements),
@@ -472,6 +454,8 @@ export default function ApplicationFoam() {
             company_registration: toText(row.company_registration),
             proof_of_funds: toText(row.proof_of_funds),
             kyc: toText(row.kyc),
+            identification_document: toText(row.identification_document),
+            cv: toText(row.cv),
           })
         }
       } catch (loadError) {
@@ -508,6 +492,7 @@ export default function ApplicationFoam() {
 
   function buildRequestBody() {
     const body = new FormData()
+    const hasInvestedBefore = form.have_you_invested_before === 'Yes'
     body.append('users_id', String(userId ?? ''))
     body.append('investor_type', form.investor_type)
     body.append('residence_country', form.residence_country)
@@ -520,15 +505,14 @@ export default function ApplicationFoam() {
     body.append('stage_do_you_prefer', form.stage_do_you_prefer)
     body.append('risk_level', form.risk_level)
     body.append('return_type', form.return_type)
-    body.append('expected_roi', form.expected_roi)
     body.append('investment_duration', form.investment_duration)
     body.append('what_do_you_look_in_business', form.what_do_you_look_in_business)
     body.append('minimum_requirements', form.minimum_requirements)
     body.append('how_involved_do_you_want', form.how_involved_do_you_want)
     body.append('have_you_invested_before', form.have_you_invested_before)
-    body.append('number_of_investments', form.number_of_investments)
-    body.append('invested_sector', form.invested_sector)
-    body.append('success_stories', form.success_stories)
+    body.append('number_of_investments', hasInvestedBefore ? form.number_of_investments : '0')
+    body.append('invested_sector', hasInvestedBefore ? form.invested_sector : 'none')
+    body.append('success_stories', hasInvestedBefore ? form.success_stories : 'none')
     body.append('preferred_contact', form.preferred_contact)
     body.append('availability', form.availability)
     body.append('confirm_the_information_is_accurate', form.confirm_the_information_is_accurate ? '1' : '0')
@@ -538,6 +522,8 @@ export default function ApplicationFoam() {
     if (companyRegistrationFile) body.append('company_registration', companyRegistrationFile)
     if (proofOfFundsFile) body.append('proof_of_funds', proofOfFundsFile)
     if (kycFile) body.append('kyc', kycFile)
+    if (identificationDocumentFile) body.append('identification_document', identificationDocumentFile)
+    if (cvFile) body.append('cv', cvFile)
 
     return body
   }
@@ -585,6 +571,8 @@ export default function ApplicationFoam() {
       setCompanyRegistrationFile(null)
       setProofOfFundsFile(null)
       setKycFile(null)
+      setIdentificationDocumentFile(null)
+      setCvFile(null)
 
       setSuccess(hasExistingApplication ? 'Application updated successfully.' : 'Application created successfully.')
     } catch (submitError) {
@@ -621,6 +609,8 @@ export default function ApplicationFoam() {
       setCompanyRegistrationFile(null)
       setProofOfFundsFile(null)
       setKycFile(null)
+      setIdentificationDocumentFile(null)
+      setCvFile(null)
       setApplicationId(null)
       setHasExistingApplication(false)
       setSuccess('Application deleted successfully.')
@@ -633,6 +623,23 @@ export default function ApplicationFoam() {
 
   const fullName = basicInfo ? `${basicInfo.first_name} ${basicInfo.last_name}`.trim() : ''
   const isBusy = isLoadingUser || isLoadingBasicInfo || isLoadingApplication
+  const selectedSectors = useMemo(() => parseSectorList(form.sectors_do_you_prefer), [form.sectors_do_you_prefer])
+
+  function handlePreferredSectorChange(sectorLabel: string, checked: boolean) {
+    setForm((prev) => {
+      const current = parseSectorList(prev.sectors_do_you_prefer)
+      const next = checked
+        ? Array.from(new Set([...current, sectorLabel]))
+        : current.filter((sector) => sector !== sectorLabel)
+
+      // Clearing "Other" should also clear free-typed sectors.
+      const normalized = checked || sectorLabel !== 'Other'
+        ? next
+        : next.filter((sector) => PREFERRED_SECTOR_OPTIONS.includes(sector))
+
+      return { ...prev, sectors_do_you_prefer: normalized.join(', ') }
+    })
+  }
 
   function getMissingFieldsForStep(step: number) {
     const missing: string[] = []
@@ -662,7 +669,6 @@ export default function ApplicationFoam() {
       // Risk & Returns
       if (!form.risk_level) missing.push('Risk Level')
       if (!form.return_type) missing.push('Expected Return Type')
-      if (!form.expected_roi) missing.push('Expected ROI')
       if (!form.investment_duration) missing.push('Investment Duration')
       if (!form.what_do_you_look_in_business) missing.push('What You Look For in Business')
       if (!form.how_involved_do_you_want) missing.push('Involvement Level')
@@ -679,6 +685,9 @@ export default function ApplicationFoam() {
 
     if (step === 5) {
       // Docs & Verify
+      if (!identificationDocumentFile && !existingFiles.identification_document) {
+        missing.push('Identification Document')
+      }
       if (!form.preferred_contact) missing.push('Preferred Contact Method')
       if (!form.availability) missing.push('Availability')
       if (!form.confirm_the_information_is_accurate) missing.push('Confirmation - Information is Accurate')
@@ -958,65 +967,15 @@ export default function ApplicationFoam() {
                 <Field full>
                   <FieldLabel>Preferred Sectors</FieldLabel>
                   <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Agriculture"
-                      checked={form.sectors_do_you_prefer.includes('Agriculture')}
-                      onChange={(checked) => {
-                        const sectors = checked
-                          ? form.sectors_do_you_prefer ? `${form.sectors_do_you_prefer}, Agriculture` : 'Agriculture'
-                          : form.sectors_do_you_prefer.replace(', Agriculture', '').replace('Agriculture', '')
-                        setForm((prev) => ({ ...prev, sectors_do_you_prefer: sectors }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Technology"
-                      checked={form.sectors_do_you_prefer.includes('Technology')}
-                      onChange={(checked) => {
-                        const sectors = checked
-                          ? form.sectors_do_you_prefer ? `${form.sectors_do_you_prefer}, Technology` : 'Technology'
-                          : form.sectors_do_you_prefer.replace(', Technology', '').replace('Technology', '')
-                        setForm((prev) => ({ ...prev, sectors_do_you_prefer: sectors }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Retail"
-                      checked={form.sectors_do_you_prefer.includes('Retail')}
-                      onChange={(checked) => {
-                        const sectors = checked
-                          ? form.sectors_do_you_prefer ? `${form.sectors_do_you_prefer}, Retail` : 'Retail'
-                          : form.sectors_do_you_prefer.replace(', Retail', '').replace('Retail', '')
-                        setForm((prev) => ({ ...prev, sectors_do_you_prefer: sectors }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Manufacturing"
-                      checked={form.sectors_do_you_prefer.includes('Manufacturing')}
-                      onChange={(checked) => {
-                        const sectors = checked
-                          ? form.sectors_do_you_prefer ? `${form.sectors_do_you_prefer}, Manufacturing` : 'Manufacturing'
-                          : form.sectors_do_you_prefer.replace(', Manufacturing', '').replace('Manufacturing', '')
-                        setForm((prev) => ({ ...prev, sectors_do_you_prefer: sectors }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Services"
-                      checked={form.sectors_do_you_prefer.includes('Services')}
-                      onChange={(checked) => {
-                        const sectors = checked
-                          ? form.sectors_do_you_prefer ? `${form.sectors_do_you_prefer}, Services` : 'Services'
-                          : form.sectors_do_you_prefer.replace(', Services', '').replace('Services', '')
-                        setForm((prev) => ({ ...prev, sectors_do_you_prefer: sectors }))
-                      }}
-                    />
+                    {PREFERRED_SECTOR_OPTIONS.map((sectorLabel) => (
+                      <CheckboxOption
+                        key={sectorLabel}
+                        label={sectorLabel}
+                        checked={selectedSectors.includes(sectorLabel)}
+                        onChange={(checked) => handlePreferredSectorChange(sectorLabel, checked)}
+                      />
+                    ))}
                   </div>
-                </Field>
-                <Field full>
-                  <FieldLabel>Other Sectors (optional)</FieldLabel>
-                  <input
-                    value={form.sectors_do_you_prefer.split(',').find((s) => !['Agriculture', 'Technology', 'Retail', 'Manufacturing', 'Services'].includes(s.trim())) || ''}
-                    placeholder="List any other sectors..."
-                    style={s.input}
-                  />
                 </Field>
               </SectionCard>
 
@@ -1124,16 +1083,6 @@ export default function ApplicationFoam() {
                       onChange={() => setForm((prev) => ({ ...prev, return_type: 'Equity growth' }))}
                     />
                   </div>
-                </Field>
-
-                <Field>
-                  <FieldLabel>Expected ROI (% or range)</FieldLabel>
-                  <input
-                    value={form.expected_roi}
-                    onChange={handleTextChange('expected_roi')}
-                    placeholder="Example: 15% - 20% per year"
-                    style={s.input}
-                  />
                 </Field>
 
                 <Field full>
@@ -1301,9 +1250,9 @@ export default function ApplicationFoam() {
           {/* ── STEP 5: Docs & Verify ────────────────────────────────────– */}
           {stepIndex === 5 && (
             <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="16" title="Verification & Compliance" subtitle="Upload required documents for verification.">
+              <SectionCard gridStyle={responsiveGridStyle} badge="16" title="Verification & Compliance" subtitle="Upload documents for verification (Identification Document is required).">
                 <Field full>
-                  <FieldLabel>Company Registration / ID</FieldLabel>
+                  <FieldLabel>Company Registration / ID (optional)</FieldLabel>
                   <label style={s.uploadRow}>
                     <span style={s.uploadLabel}>Company Registration or Government ID</span>
                     <input
@@ -1318,7 +1267,7 @@ export default function ApplicationFoam() {
                 </Field>
 
                 <Field full>
-                  <FieldLabel>Proof of Funds</FieldLabel>
+                  <FieldLabel>Proof of Funds (optional)</FieldLabel>
                   <label style={s.uploadRow}>
                     <span style={s.uploadLabel}>Bank Balance Confirmation or Bank Statement</span>
                     <input
@@ -1333,7 +1282,7 @@ export default function ApplicationFoam() {
                 </Field>
 
                 <Field full>
-                  <FieldLabel>KYC Verification</FieldLabel>
+                  <FieldLabel>KYC Verification (optional)</FieldLabel>
                   <label style={s.uploadRow}>
                     <span style={s.uploadLabel}>KYC Document (Know Your Customer Verification)</span>
                     <input
@@ -1343,6 +1292,36 @@ export default function ApplicationFoam() {
                     />
                     {existingFiles.kyc ? (
                       <small style={s.fileHint}>Current: {fileLabel(existingFiles.kyc)}</small>
+                    ) : null}
+                  </label>
+                </Field>
+
+                <Field full>
+                  <FieldLabel>Identification Document</FieldLabel>
+                  <label style={s.uploadRow}>
+                    <span style={s.uploadLabel}>Passport, National ID, or Driver's License</span>
+                    <input
+                      type="file"
+                      onChange={(event) => setIdentificationDocumentFile(event.target.files?.[0] ?? null)}
+                      style={s.fileInput}
+                    />
+                    {existingFiles.identification_document ? (
+                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.identification_document)}</small>
+                    ) : null}
+                  </label>
+                </Field>
+
+                <Field full>
+                  <FieldLabel>Curriculum Vitae (optional)</FieldLabel>
+                  <label style={s.uploadRow}>
+                    <span style={s.uploadLabel}>Your CV or Professional Resume</span>
+                    <input
+                      type="file"
+                      onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
+                      style={s.fileInput}
+                    />
+                    {existingFiles.cv ? (
+                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.cv)}</small>
                     ) : null}
                   </label>
                 </Field>

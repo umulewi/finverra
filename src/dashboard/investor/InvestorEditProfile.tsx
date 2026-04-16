@@ -44,6 +44,205 @@ const emptyProfile: CompleteProfile = {
   id_number: '',
 }
 
+const nationalityOptions: Array<{ country: string; demonym: string }> = [
+  { country: 'Afghanistan', demonym: 'Afghan' },
+  { country: 'Albania', demonym: 'Albanian' },
+  { country: 'Algeria', demonym: 'Algerian' },
+  { country: 'Andorra', demonym: 'Andorran' },
+  { country: 'Angola', demonym: 'Angolan' },
+  { country: 'Antigua and Barbuda', demonym: 'Antiguan or Barbudan' },
+  { country: 'Argentina', demonym: 'Argentine' },
+  { country: 'Armenia', demonym: 'Armenian' },
+  { country: 'Australia', demonym: 'Australian' },
+  { country: 'Austria', demonym: 'Austrian' },
+  { country: 'Azerbaijan', demonym: 'Azerbaijani' },
+  { country: 'Bahamas', demonym: 'Bahamian' },
+  { country: 'Bahrain', demonym: 'Bahraini' },
+  { country: 'Bangladesh', demonym: 'Bangladeshi' },
+  { country: 'Barbados', demonym: 'Barbadian' },
+  { country: 'Belarus', demonym: 'Belarusian' },
+  { country: 'Belgium', demonym: 'Belgian' },
+  { country: 'Belize', demonym: 'Belizean' },
+  { country: 'Benin', demonym: 'Beninese' },
+  { country: 'Bhutan', demonym: 'Bhutanese' },
+  { country: 'Bolivia', demonym: 'Bolivian' },
+  { country: 'Bosnia and Herzegovina', demonym: 'Bosnian or Herzegovinian' },
+  { country: 'Botswana', demonym: 'Motswana' },
+  { country: 'Brazil', demonym: 'Brazilian' },
+  { country: 'Brunei', demonym: 'Bruneian' },
+  { country: 'Bulgaria', demonym: 'Bulgarian' },
+  { country: 'Burkina Faso', demonym: 'Burkinabe' },
+  { country: 'Burundi', demonym: 'Burundian' },
+  { country: 'Cabo Verde', demonym: 'Cape Verdean' },
+  { country: 'Cambodia', demonym: 'Cambodian' },
+  { country: 'Cameroon', demonym: 'Cameroonian' },
+  { country: 'Canada', demonym: 'Canadian' },
+  { country: 'Central African Republic', demonym: 'Central African' },
+  { country: 'Chad', demonym: 'Chadian' },
+  { country: 'Chile', demonym: 'Chilean' },
+  { country: 'China', demonym: 'Chinese' },
+  { country: 'Colombia', demonym: 'Colombian' },
+  { country: 'Comoros', demonym: 'Comorian' },
+  { country: 'Congo (Congo-Brazzaville)', demonym: 'Congolese' },
+  { country: 'Costa Rica', demonym: 'Costa Rican' },
+  { country: 'Croatia', demonym: 'Croatian' },
+  { country: 'Cuba', demonym: 'Cuban' },
+  { country: 'Cyprus', demonym: 'Cypriot' },
+  { country: 'Czechia', demonym: 'Czech' },
+  { country: 'Democratic Republic of the Congo', demonym: 'Congolese' },
+  { country: 'Denmark', demonym: 'Danish' },
+  { country: 'Djibouti', demonym: 'Djiboutian' },
+  { country: 'Dominica', demonym: 'Dominican' },
+  { country: 'Dominican Republic', demonym: 'Dominican' },
+  { country: 'Ecuador', demonym: 'Ecuadorian' },
+  { country: 'Egypt', demonym: 'Egyptian' },
+  { country: 'El Salvador', demonym: 'Salvadoran' },
+  { country: 'Equatorial Guinea', demonym: 'Equatorial Guinean' },
+  { country: 'Eritrea', demonym: 'Eritrean' },
+  { country: 'Estonia', demonym: 'Estonian' },
+  { country: 'Eswatini', demonym: 'Swazi' },
+  { country: 'Ethiopia', demonym: 'Ethiopian' },
+  { country: 'Fiji', demonym: 'Fijian' },
+  { country: 'Finland', demonym: 'Finnish' },
+  { country: 'France', demonym: 'French' },
+  { country: 'Gabon', demonym: 'Gabonese' },
+  { country: 'Gambia', demonym: 'Gambian' },
+  { country: 'Georgia', demonym: 'Georgian' },
+  { country: 'Germany', demonym: 'German' },
+  { country: 'Ghana', demonym: 'Ghanaian' },
+  { country: 'Greece', demonym: 'Greek' },
+  { country: 'Grenada', demonym: 'Grenadian' },
+  { country: 'Guatemala', demonym: 'Guatemalan' },
+  { country: 'Guinea', demonym: 'Guinean' },
+  { country: 'Guinea-Bissau', demonym: 'Bissau-Guinean' },
+  { country: 'Guyana', demonym: 'Guyanese' },
+  { country: 'Haiti', demonym: 'Haitian' },
+  { country: 'Holy See', demonym: 'Vatican' },
+  { country: 'Honduras', demonym: 'Honduran' },
+  { country: 'Hungary', demonym: 'Hungarian' },
+  { country: 'Iceland', demonym: 'Icelandic' },
+  { country: 'India', demonym: 'Indian' },
+  { country: 'Indonesia', demonym: 'Indonesian' },
+  { country: 'Iran', demonym: 'Iranian' },
+  { country: 'Iraq', demonym: 'Iraqi' },
+  { country: 'Ireland', demonym: 'Irish' },
+  { country: 'Israel', demonym: 'Israeli' },
+  { country: 'Italy', demonym: 'Italian' },
+  { country: 'Ivory Coast', demonym: 'Ivorian' },
+  { country: 'Jamaica', demonym: 'Jamaican' },
+  { country: 'Japan', demonym: 'Japanese' },
+  { country: 'Jordan', demonym: 'Jordanian' },
+  { country: 'Kazakhstan', demonym: 'Kazakhstani' },
+  { country: 'Kenya', demonym: 'Kenyan' },
+  { country: 'Kiribati', demonym: 'I-Kiribati' },
+  { country: 'Kuwait', demonym: 'Kuwaiti' },
+  { country: 'Kyrgyzstan', demonym: 'Kyrgyzstani' },
+  { country: 'Laos', demonym: 'Lao' },
+  { country: 'Latvia', demonym: 'Latvian' },
+  { country: 'Lebanon', demonym: 'Lebanese' },
+  { country: 'Lesotho', demonym: 'Mosotho' },
+  { country: 'Liberia', demonym: 'Liberian' },
+  { country: 'Libya', demonym: 'Libyan' },
+  { country: 'Liechtenstein', demonym: 'Liechtensteiner' },
+  { country: 'Lithuania', demonym: 'Lithuanian' },
+  { country: 'Luxembourg', demonym: 'Luxembourgish' },
+  { country: 'Madagascar', demonym: 'Malagasy' },
+  { country: 'Malawi', demonym: 'Malawian' },
+  { country: 'Malaysia', demonym: 'Malaysian' },
+  { country: 'Maldives', demonym: 'Maldivian' },
+  { country: 'Mali', demonym: 'Malian' },
+  { country: 'Malta', demonym: 'Maltese' },
+  { country: 'Marshall Islands', demonym: 'Marshallese' },
+  { country: 'Mauritania', demonym: 'Mauritanian' },
+  { country: 'Mauritius', demonym: 'Mauritian' },
+  { country: 'Mexico', demonym: 'Mexican' },
+  { country: 'Micronesia', demonym: 'Micronesian' },
+  { country: 'Moldova', demonym: 'Moldovan' },
+  { country: 'Monaco', demonym: 'Monegasque' },
+  { country: 'Mongolia', demonym: 'Mongolian' },
+  { country: 'Montenegro', demonym: 'Montenegrin' },
+  { country: 'Morocco', demonym: 'Moroccan' },
+  { country: 'Mozambique', demonym: 'Mozambican' },
+  { country: 'Myanmar', demonym: 'Burmese' },
+  { country: 'Namibia', demonym: 'Namibian' },
+  { country: 'Nauru', demonym: 'Nauruan' },
+  { country: 'Nepal', demonym: 'Nepali' },
+  { country: 'Netherlands', demonym: 'Dutch' },
+  { country: 'New Zealand', demonym: 'New Zealander' },
+  { country: 'Nicaragua', demonym: 'Nicaraguan' },
+  { country: 'Niger', demonym: 'Nigerien' },
+  { country: 'Nigeria', demonym: 'Nigerian' },
+  { country: 'North Korea', demonym: 'North Korean' },
+  { country: 'North Macedonia', demonym: 'Macedonian' },
+  { country: 'Norway', demonym: 'Norwegian' },
+  { country: 'Oman', demonym: 'Omani' },
+  { country: 'Pakistan', demonym: 'Pakistani' },
+  { country: 'Palau', demonym: 'Palauan' },
+  { country: 'Palestine', demonym: 'Palestinian' },
+  { country: 'Panama', demonym: 'Panamanian' },
+  { country: 'Papua New Guinea', demonym: 'Papua New Guinean' },
+  { country: 'Paraguay', demonym: 'Paraguayan' },
+  { country: 'Peru', demonym: 'Peruvian' },
+  { country: 'Philippines', demonym: 'Filipino' },
+  { country: 'Poland', demonym: 'Polish' },
+  { country: 'Portugal', demonym: 'Portuguese' },
+  { country: 'Qatar', demonym: 'Qatari' },
+  { country: 'Romania', demonym: 'Romanian' },
+  { country: 'Russia', demonym: 'Russian' },
+  { country: 'Rwanda', demonym: 'Rwandan' },
+  { country: 'Saint Kitts and Nevis', demonym: 'Kittitian or Nevisian' },
+  { country: 'Saint Lucia', demonym: 'Saint Lucian' },
+  { country: 'Saint Vincent and the Grenadines', demonym: 'Vincentian' },
+  { country: 'Samoa', demonym: 'Samoan' },
+  { country: 'San Marino', demonym: 'Sammarinese' },
+  { country: 'Sao Tome and Principe', demonym: 'Sao Tomean' },
+  { country: 'Saudi Arabia', demonym: 'Saudi' },
+  { country: 'Senegal', demonym: 'Senegalese' },
+  { country: 'Serbia', demonym: 'Serbian' },
+  { country: 'Seychelles', demonym: 'Seychellois' },
+  { country: 'Sierra Leone', demonym: 'Sierra Leonean' },
+  { country: 'Singapore', demonym: 'Singaporean' },
+  { country: 'Slovakia', demonym: 'Slovak' },
+  { country: 'Slovenia', demonym: 'Slovenian' },
+  { country: 'Solomon Islands', demonym: 'Solomon Islander' },
+  { country: 'Somalia', demonym: 'Somali' },
+  { country: 'South Africa', demonym: 'South African' },
+  { country: 'South Korea', demonym: 'South Korean' },
+  { country: 'South Sudan', demonym: 'South Sudanese' },
+  { country: 'Spain', demonym: 'Spanish' },
+  { country: 'Sri Lanka', demonym: 'Sri Lankan' },
+  { country: 'Sudan', demonym: 'Sudanese' },
+  { country: 'Suriname', demonym: 'Surinamese' },
+  { country: 'Sweden', demonym: 'Swedish' },
+  { country: 'Switzerland', demonym: 'Swiss' },
+  { country: 'Syria', demonym: 'Syrian' },
+  { country: 'Taiwan', demonym: 'Taiwanese' },
+  { country: 'Tajikistan', demonym: 'Tajikistani' },
+  { country: 'Tanzania', demonym: 'Tanzanian' },
+  { country: 'Thailand', demonym: 'Thai' },
+  { country: 'Timor-Leste', demonym: 'Timorese' },
+  { country: 'Togo', demonym: 'Togolese' },
+  { country: 'Tonga', demonym: 'Tongan' },
+  { country: 'Trinidad and Tobago', demonym: 'Trinidadian or Tobagonian' },
+  { country: 'Tunisia', demonym: 'Tunisian' },
+  { country: 'Turkey', demonym: 'Turkish' },
+  { country: 'Turkmenistan', demonym: 'Turkmen' },
+  { country: 'Tuvalu', demonym: 'Tuvaluan' },
+  { country: 'Uganda', demonym: 'Ugandan' },
+  { country: 'Ukraine', demonym: 'Ukrainian' },
+  { country: 'United Arab Emirates', demonym: 'Emirati' },
+  { country: 'United Kingdom', demonym: 'British' },
+  { country: 'United States', demonym: 'American' },
+  { country: 'Uruguay', demonym: 'Uruguayan' },
+  { country: 'Uzbekistan', demonym: 'Uzbekistani' },
+  { country: 'Vanuatu', demonym: 'Ni-Vanuatu' },
+  { country: 'Venezuela', demonym: 'Venezuelan' },
+  { country: 'Vietnam', demonym: 'Vietnamese' },
+  { country: 'Yemen', demonym: 'Yemeni' },
+  { country: 'Zambia', demonym: 'Zambian' },
+  { country: 'Zimbabwe', demonym: 'Zimbabwean' },
+]
+
 function authHeader(): HeadersInit {
   const session = getAuthSession()
 
@@ -139,6 +338,14 @@ export default function investorProfile() {
     () => (session && typeof session.email === 'string' ? session.email : ''),
     [session],
   )
+  const hasKnownNationality = useMemo(
+    () => nationalityOptions.some(({ demonym }) => demonym.toLowerCase() === form.nationality.trim().toLowerCase()),
+    [form.nationality],
+  )
+  const isRwandanNationality = useMemo(() => {
+    const normalizedNationality = form.nationality.trim().toLowerCase()
+    return normalizedNationality === 'rwandan' || normalizedNationality === 'rwanda'
+  }, [form.nationality])
 
   useEffect(() => {
     setProvinces(getProvinces())
@@ -567,88 +774,150 @@ export default function investorProfile() {
 
               <label style={responsiveFieldLabelStyle}>
                 Nationality
-                <input
+                <select
                   style={responsiveInputStyle}
-                  type="text"
                   value={form.nationality}
                   onChange={(event) => setForm((prev) => ({ ...prev, nationality: event.target.value }))}
                   disabled={loading || saving}
-                />
+                >
+                  <option value="">Select Nationality</option>
+                  {!hasKnownNationality && form.nationality ? (
+                    <option value={form.nationality}>{form.nationality}</option>
+                  ) : null}
+                  {nationalityOptions.map(({ country, demonym }) => (
+                    <option key={country} value={demonym}>{`${demonym} (${country})`}</option>
+                  ))}
+                </select>
               </label>
 
               <label style={responsiveFieldLabelStyle}>
                 Province
-                <select
-                  style={responsiveInputStyle}
-                  value={form.province}
-                  onChange={(event) => handleProvinceChange(event.target.value)}
-                  disabled={loading || saving}
-                >
-                  <option value="">Select Province</option>
-                  {provinces.map((provinceName) => (
-                    <option key={provinceName} value={provinceName}>{provinceName}</option>
-                  ))}
-                </select>
+                {isRwandanNationality ? (
+                  <select
+                    style={responsiveInputStyle}
+                    value={form.province}
+                    onChange={(event) => handleProvinceChange(event.target.value)}
+                    disabled={loading || saving}
+                  >
+                    <option value="">Select Province</option>
+                    {provinces.map((provinceName) => (
+                      <option key={provinceName} value={provinceName}>{provinceName}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    style={responsiveInputStyle}
+                    type="text"
+                    value={form.province}
+                    onChange={(event) => setForm((prev) => ({ ...prev, province: event.target.value }))}
+                    disabled={loading || saving}
+                    placeholder="Enter province"
+                  />
+                )}
               </label>
 
               <label style={responsiveFieldLabelStyle}>
-                District
-                <select
-                  style={responsiveInputStyle}
-                  value={form.district}
-                  onChange={(event) => handleDistrictChange(event.target.value)}
-                  disabled={loading || saving || !form.province}
-                >
-                  <option value="">Select District</option>
-                  {districts.map((districtName) => (
-                    <option key={districtName} value={districtName}>{districtName}</option>
-                  ))}
-                </select>
+                {isRwandanNationality ? 'District' : 'City'}
+                {isRwandanNationality ? (
+                  <select
+                    style={responsiveInputStyle}
+                    value={form.district}
+                    onChange={(event) => handleDistrictChange(event.target.value)}
+                    disabled={loading || saving || !form.province}
+                  >
+                    <option value="">Select District</option>
+                    {districts.map((districtName) => (
+                      <option key={districtName} value={districtName}>{districtName}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    style={responsiveInputStyle}
+                    type="text"
+                    value={form.district}
+                    onChange={(event) => setForm((prev) => ({ ...prev, district: event.target.value }))}
+                    disabled={loading || saving}
+                    placeholder="Enter city"
+                  />
+                )}
               </label>
 
               <label style={responsiveFieldLabelStyle}>
-                Sector
-                <select
-                  style={responsiveInputStyle}
-                  value={form.sector}
-                  onChange={(event) => handleSectorChange(event.target.value)}
-                  disabled={loading || saving || !form.district}
-                >
-                  <option value="">Select Sector</option>
-                  {sectors.map((sectorName) => (
-                    <option key={sectorName} value={sectorName}>{sectorName}</option>
-                  ))}
-                </select>
+                {isRwandanNationality ? 'Sector' : 'Town'}
+                {isRwandanNationality ? (
+                  <select
+                    style={responsiveInputStyle}
+                    value={form.sector}
+                    onChange={(event) => handleSectorChange(event.target.value)}
+                    disabled={loading || saving || !form.district}
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sectorName) => (
+                      <option key={sectorName} value={sectorName}>{sectorName}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    style={responsiveInputStyle}
+                    type="text"
+                    value={form.sector}
+                    onChange={(event) => setForm((prev) => ({ ...prev, sector: event.target.value }))}
+                    disabled={loading || saving}
+                    placeholder="Enter town"
+                  />
+                )}
               </label>
 
               <label style={responsiveFieldLabelStyle}>
-                Cell
-                <select
-                  style={responsiveInputStyle}
-                  value={form.cell}
-                  onChange={(event) => handleCellChange(event.target.value)}
-                  disabled={loading || saving || !form.sector}
-                >
-                  <option value="">Select Cell</option>
-                  {cells.map((cellName) => (
-                    <option key={cellName} value={cellName}>{cellName}</option>
-                  ))}
-                </select>
+                {isRwandanNationality ? 'Cell' : 'Street'}
+                {isRwandanNationality ? (
+                  <select
+                    style={responsiveInputStyle}
+                    value={form.cell}
+                    onChange={(event) => handleCellChange(event.target.value)}
+                    disabled={loading || saving || !form.sector}
+                  >
+                    <option value="">Select Cell</option>
+                    {cells.map((cellName) => (
+                      <option key={cellName} value={cellName}>{cellName}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    style={responsiveInputStyle}
+                    type="text"
+                    value={form.cell}
+                    onChange={(event) => setForm((prev) => ({ ...prev, cell: event.target.value }))}
+                    disabled={loading || saving}
+                    placeholder="Enter street"
+                  />
+                )}
               </label>
 
               <label style={responsiveFieldLabelStyle}>
-                Village
-                <select
-                  style={responsiveInputStyle}
-                  value={form.village}
-                  onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
-                  disabled={loading || saving || !form.cell}
-                >
-                  <option value="">Select Village</option>
-                  {villages.map((villageName) => (
-                    <option key={villageName} value={villageName}>{villageName}</option>
-                  ))}
-                </select>
+                {isRwandanNationality ? 'Village' : 'Postcode'}
+                {isRwandanNationality ? (
+                  <select
+                    style={responsiveInputStyle}
+                    value={form.village}
+                    onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
+                    disabled={loading || saving || !form.cell}
+                  >
+                    <option value="">Select Village</option>
+                    {villages.map((villageName) => (
+                      <option key={villageName} value={villageName}>{villageName}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    style={responsiveInputStyle}
+                    type="text"
+                    value={form.village}
+                    onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
+                    disabled={loading || saving}
+                    placeholder="Enter postcode"
+                  />
+                )}
               </label>
 
               <label style={responsiveFieldLabelStyle}>
