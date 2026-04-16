@@ -91,6 +91,17 @@ function getInitials(firstName: string, lastName: string) {
   return `${first || '?'}${last || '?'}`
 }
 
+function toText(value: unknown) {
+  return typeof value === 'string' ? value : value == null ? '' : String(value)
+}
+
+function toDateDisplay(value: unknown) {
+  const text = toText(value)
+  if (!text) return '-'
+  const matchedDate = text.match(/^(\d{4}-\d{2}-\d{2})/)
+  return matchedDate ? matchedDate[1] : text
+}
+
 export default function EntrepreneursPage() {
   const [entrepreneurs, setEntrepreneurs] = useState<AdminEntrepreneur[]>([])
   const [loading, setLoading] = useState(true)
@@ -706,7 +717,7 @@ export default function EntrepreneursPage() {
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Village</span><strong>{viewEntrepreneur.village || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>ID Type</span><strong>{viewEntrepreneur.id_type || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>ID Number</span><strong>{viewEntrepreneur.id_number || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Created At</span><strong>{viewEntrepreneur.created_at || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Created At</span><strong>{toDateDisplay(viewEntrepreneur.created_at)}</strong></div>
               </div>
             </div>
 
@@ -862,7 +873,7 @@ export default function EntrepreneursPage() {
         }
 
         .entrepreneur-directory-panel {
-          background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+          background: linear-gradient(180deg, #ffffff 0%, #f9fcfd 100%);
         }
 
         .entrepreneur-table tbody tr {
@@ -870,7 +881,7 @@ export default function EntrepreneursPage() {
         }
 
         .entrepreneur-table tbody tr:hover {
-          background: #f5f9ff !important;
+          background: #f4fcfd !important;
         }
       `}</style>
     </AdminShell>
@@ -885,7 +896,7 @@ const styles: Record<string, CSSProperties> = {
   },
   card: {
     background: '#ffffff',
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     borderRadius: 14,
     padding: '16px 18px',
     boxShadow: '0 10px 25px rgba(15, 30, 53, 0.06)',
@@ -904,25 +915,25 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    color: '#4c6483',
+    color: '#4f6f78',
     fontWeight: 700,
   },
   metricValue: {
     margin: '8px 0 0',
     fontSize: 26,
-    color: '#0e2a4f',
+    color: '#023341',
     fontWeight: 800,
   },
   panel: {
     marginTop: 16,
     background: '#ffffff',
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     borderRadius: 14,
     padding: '20px',
   },
   panelTitle: {
     margin: 0,
-    color: '#0e2a4f',
+    color: '#023341',
     fontSize: 18,
   },
   panelHeader: {
@@ -947,40 +958,40 @@ const styles: Record<string, CSSProperties> = {
   },
   searchInput: {
     flex: '1 1 320px',
-    border: '1px solid #bfd6f3',
+    border: '1px solid #bdd8de',
     borderRadius: 12,
     padding: '11px 14px',
-    background: '#f8fbff',
-    color: '#0e2a4f',
+    background: '#f9fcfd',
+    color: '#023341',
     fontSize: 14,
     outline: 'none',
   },
   searchHint: {
-    color: '#5b7797',
+    color: '#5f7f88',
     fontSize: 13,
     fontWeight: 600,
   },
   countPill: {
-    border: '1px solid #d6e3f5',
+    border: '1px solid #c8dde1',
     borderRadius: 999,
     padding: '7px 11px',
     fontSize: 12,
     fontWeight: 800,
-    color: '#24517c',
-    background: '#f3f8ff',
+    color: '#03475a',
+    background: '#f6fbfc',
   },
   refreshBtn: {
-    border: '1px solid #bfd6f3',
+    border: '1px solid #bdd8de',
     borderRadius: 9,
     padding: '7px 12px',
     cursor: 'pointer',
-    color: '#0f4e87',
-    background: 'linear-gradient(180deg, #ffffff 0%, #edf5ff 100%)',
+    color: '#03475a',
+    background: 'linear-gradient(180deg, #ffffff 0%, #eef7f8 100%)',
     fontWeight: 700,
   },
   panelText: {
     margin: '10px 0 0',
-    color: '#4c6483',
+    color: '#4f6f78',
     lineHeight: 1.6,
   },
   errorBanner: {
@@ -1014,13 +1025,13 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'left',
     padding: '10px 8px',
     fontSize: 12,
-    color: '#4c6483',
-    borderBottom: '1px solid #e4eaf3',
+    color: '#4f6f78',
+    borderBottom: '1px solid #d8e8eb',
   },
   td: {
     padding: '12px 8px',
-    borderBottom: '1px solid #eef2f8',
-    color: '#143a64',
+    borderBottom: '1px solid #e6f0f2',
+    color: '#03475a',
     fontSize: 14,
     verticalAlign: 'middle',
   },
@@ -1051,12 +1062,12 @@ const styles: Record<string, CSSProperties> = {
     gap: 2,
   },
   namePrimary: {
-    color: '#0f2f55',
+    color: '#023341',
     fontSize: 14,
     lineHeight: 1.2,
   },
   nameSecondary: {
-    color: '#5b7797',
+    color: '#5f7f88',
     fontSize: 12,
   },
   avatar: {
@@ -1064,7 +1075,7 @@ const styles: Record<string, CSSProperties> = {
     height: 42,
     borderRadius: '50%',
     objectFit: 'cover',
-    border: '1px solid #d7e1f0',
+    border: '1px solid #cadee3',
   },
   actions: {
     display: 'flex',
@@ -1075,23 +1086,23 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 8,
     padding: '9px 12px',
     cursor: 'pointer',
-    background: '#0e2a4f',
+    background: '#023341',
     color: '#fff',
     fontWeight: 700,
   },
   secondaryBtn: {
-    border: '1px solid #d9e2ef',
+    border: '1px solid #cfe0e3',
     borderRadius: 8,
     padding: '8px 12px',
     cursor: 'pointer',
     background: '#fff',
-    color: '#0e2a4f',
+    color: '#023341',
     fontWeight: 700,
   },
   viewBtn: {
     borderColor: '#c7dffc',
-    color: '#0f4e87',
-    background: '#f2f8ff',
+    color: '#03475a',
+    background: '#f2fbfc',
   },
   editBtn: {
     borderColor: '#d7e8d9',
@@ -1122,7 +1133,7 @@ const styles: Record<string, CSSProperties> = {
     overflow: 'auto',
     background: '#fff',
     borderRadius: 14,
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
   },
   viewModal: {
@@ -1131,7 +1142,7 @@ const styles: Record<string, CSSProperties> = {
     overflow: 'auto',
     background: '#fff',
     borderRadius: 14,
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
   },
   modalHeader: {
@@ -1143,14 +1154,14 @@ const styles: Record<string, CSSProperties> = {
   },
   modalTitle: {
     margin: 0,
-    color: '#0e2a4f',
+    color: '#023341',
     fontSize: 18,
   },
   closeBtn: {
-    border: '1px solid #dbe3ef',
+    border: '1px solid #d1e0e3',
     borderRadius: 8,
     background: '#fff',
-    color: '#234b78',
+    color: '#03475a',
     width: 30,
     height: 30,
     cursor: 'pointer',
@@ -1182,11 +1193,11 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 600,
   },
   input: {
-    border: '1px solid #d8e3f0',
+    border: '1px solid #cfdee1',
     borderRadius: 9,
     padding: '9px 10px',
     fontSize: 14,
-    color: '#0e2a4f',
+    color: '#023341',
     background: '#fff',
   },
   imageLink: {
@@ -1201,11 +1212,11 @@ const styles: Record<string, CSSProperties> = {
     height: 150,
     borderRadius: 12,
     objectFit: 'cover',
-    border: '1px solid #d8e3f0',
+    border: '1px solid #cfdee1',
     background: '#f5f8fc',
   },
   imageLinkText: {
-    color: '#1f578d',
+    color: '#03475a',
     fontSize: 12,
     fontWeight: 700,
   },
@@ -1214,7 +1225,7 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 10,
     padding: '10px 12px',
     color: '#567497',
-    background: '#f8fbff',
+    background: '#f9fcfd',
     fontSize: 13,
   },
   formActions: {
@@ -1224,7 +1235,7 @@ const styles: Record<string, CSSProperties> = {
     marginTop: 6,
   },
   cancelBtn: {
-    border: '1px solid #d9e2ef',
+    border: '1px solid #cfe0e3',
     borderRadius: 8,
     padding: '9px 12px',
     cursor: 'pointer',
@@ -1237,17 +1248,17 @@ const styles: Record<string, CSSProperties> = {
     background: '#fff',
     borderRadius: 12,
     padding: 16,
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     boxShadow: '0 20px 50px rgba(8, 20, 38, 0.2)',
   },
   confirmTitle: {
     margin: '0 0 8px',
-    color: '#0e2a4f',
+    color: '#023341',
     fontSize: 18,
   },
   confirmText: {
     margin: 0,
-    color: '#4c6483',
+    color: '#4f6f78',
   },
   confirmActions: {
     marginTop: 14,
@@ -1267,7 +1278,7 @@ const styles: Record<string, CSSProperties> = {
   viewImageCard: {
     border: '1px solid #dde7f3',
     borderRadius: 16,
-    background: 'linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%)',
+    background: 'linear-gradient(180deg, #fcfefe 0%, #f6fbfc 100%)',
     padding: 12,
     boxShadow: '0 8px 24px rgba(14, 42, 79, 0.08)',
   },
@@ -1294,14 +1305,14 @@ const styles: Record<string, CSSProperties> = {
   viewItem: {
     display: 'grid',
     gap: 4,
-    border: '1px solid #e4eaf3',
+    border: '1px solid #d8e8eb',
     borderRadius: 10,
-    background: '#fbfdff',
+    background: '#fcfefe',
     padding: '10px 12px',
-    color: '#143a64',
+    color: '#03475a',
   },
   viewLabel: {
-    color: '#4c6483',
+    color: '#4f6f78',
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -1328,17 +1339,17 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: 'center',
   },
   pageBtn: {
-    border: '1px solid #c9d9ea',
+    border: '1px solid #bfd5da',
     borderRadius: 10,
     padding: '8px 12px',
     background: '#fff',
-    color: '#0e2a4f',
+    color: '#023341',
     fontWeight: 700,
     cursor: 'pointer',
   },
   pageBtnActive: {
-    background: 'linear-gradient(180deg, #0f4e87 0%, #0b3862 100%)',
+    background: 'linear-gradient(180deg, #03475a 0%, #023341 100%)',
     color: '#fff',
-    borderColor: '#0f4e87',
+    borderColor: '#03475a',
   },
 }

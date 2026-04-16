@@ -75,7 +75,7 @@ export default function AdminShell({ title, subtitle, children }: AdminShellProp
 const styles: Record<string, CSSProperties> = {
   root: {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #f3f6fb 0%, #eef3fa 100%)',
+    background: 'linear-gradient(180deg, #f4fcfd 0%, #eef7f8 100%)',
   },
   sidebarWrapper: {
     position: 'fixed',
@@ -102,16 +102,16 @@ const styles: Record<string, CSSProperties> = {
     marginTop: 18,
     borderRadius: 24,
     padding: '30px 28px',
-    background: 'linear-gradient(140deg, rgba(15,45,92,0.96), rgba(26,64,128,0.92))',
+    background: 'linear-gradient(140deg, rgba(2,51,65,0.96), rgba(3,71,90,0.92))',
     color: '#ffffff',
-    boxShadow: '0 24px 54px rgba(15, 45, 92, 0.2)',
+    boxShadow: '0 24px 54px rgba(2, 51, 65, 0.2)',
   },
   heroKicker: {
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     fontWeight: 700,
-    color: '#ffd166',
+    color: '#ffec00',
   },
   pageTitle: {
     margin: '8px 0 0',

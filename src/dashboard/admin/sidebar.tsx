@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useEffect } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -9,95 +11,125 @@ type MenuItem = {
   label: string
   path: string
   icon: ReactNode
+  groupKey: SidebarGroup['key']
 }
 
-const menuItems: MenuItem[] = [
+type SidebarGroup = {
+  key: 'entrepreneurs' | 'investors' | 'website'
+  label: string
+  items: MenuItem[]
+}
 
-{
-    label: 'Investors',
-    path: '/dashboard/admin/investors',
+const dashboardMenu: MenuItem[] = [
+  {
+    label: 'Dashboard Statistics',
+    path: '/dashboard/admin/statistics',
+    groupKey: 'entrepreneurs',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="7" height="7" rx="1.5" />
-        <rect x="15" y="3" width="7" height="7" rx="1.5" />
-        <rect x="2" y="14" width="7" height="7" rx="1.5" />
-        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+        <line x1="12" y1="2" x2="12" y2="22" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H4" />
+        <polyline points="22 12 18 16 22 20" />
       </svg>
     ),
   },
+]
+
+const entrepreneurMenu: MenuItem[] = [
   {
     label: 'Entrepreneurs',
     path: '/dashboard/admin/entrepreneurs',
+    groupKey: 'entrepreneurs',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="7" height="7" rx="1.5" />
-        <rect x="15" y="3" width="7" height="7" rx="1.5" />
-        <rect x="2" y="14" width="7" height="7" rx="1.5" />
-        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
   {
-    label: 'Investor applications',
-    path: '/dashboard/admin/investor-applications',
+    label: 'Entreprenur Business info',
+    path: '/dashboard/admin/entreprenur-business-info',
+    groupKey: 'entrepreneurs',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="7" height="7" rx="1.5" />
-        <rect x="15" y="3" width="7" height="7" rx="1.5" />
-        <rect x="2" y="14" width="7" height="7" rx="1.5" />
-        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+        <path d="M3 7h18" />
+        <path d="M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2" />
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M9 12h6" />
       </svg>
     ),
   },
   {
     label: 'Entrepreneur applications',
     path: '/dashboard/admin/entrepreneur-applications',
+    groupKey: 'entrepreneurs',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="7" height="7" rx="1.5" />
-        <rect x="15" y="3" width="7" height="7" rx="1.5" />
-        <rect x="2" y="14" width="7" height="7" rx="1.5" />
-        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M8 13h8" />
+        <path d="M8 17h6" />
       </svg>
     ),
   },
+]
 
+const investorMenu: MenuItem[] = [
+  {
+    label: 'Investors',
+    path: '/dashboard/admin/investors',
+    groupKey: 'investors',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1v22" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Investor applications',
+    path: '/dashboard/admin/investor-applications',
+    groupKey: 'investors',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+        <path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3" />
+        <path d="m9 14 2 2 4-4" />
+      </svg>
+    ),
+  },
+]
 
+const websiteMenu: MenuItem[] = [
   {
     label: 'Services',
     path: '/dashboard/admin/services',
+    groupKey: 'website',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="7" height="7" rx="1.5" />
-        <rect x="15" y="3" width="7" height="7" rx="1.5" />
-        <rect x="2" y="14" width="7" height="7" rx="1.5" />
-        <rect x="15" y="14" width="7" height="7" rx="1.5" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.82-.33 1.7 1.7 0 0 0-1.02 1.55V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.02-1.55 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .33-1.82 1.7 1.7 0 0 0-1.55-1.02H3a2 2 0 0 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.02 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.82.33H9a1.7 1.7 0 0 0 1.02-1.55V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.04 4h.04a1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.33 1.82V8a1.7 1.7 0 0 0 1.55 1.02H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z" />
       </svg>
     ),
   },
   {
     label: 'Partners',
     path: '/dashboard/admin/partners',
+    groupKey: 'website',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="6" />
-        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
-      </svg>   
-    ),
-  },
-  {
-    label: 'Achievements',
-    path: '/dashboard/admin/achievements',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="6" />
-        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12" />
-      </svg>   
+        <path d="M10 13a5 5 0 0 1 7.54 0l2.46 2.46a2 2 0 1 1-2.83 2.83L14.7 15.8" />
+        <path d="M14 11a5 5 0 0 0-7.54 0L4 13.46a2 2 0 1 0 2.83 2.83L9.3 13.8" />
+      </svg>
     ),
   },
   {
     label: 'Events',
     path: '/dashboard/admin/events',
+    groupKey: 'website',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -110,6 +142,7 @@ const menuItems: MenuItem[] = [
   {
     label: 'Team',
     path: '/dashboard/admin/team',
+    groupKey: 'website',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -122,56 +155,167 @@ const menuItems: MenuItem[] = [
   {
     label: 'Testimonials',
     path: '/dashboard/admin/testimonials',
+    groupKey: 'website',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+        <path d="M8 10h8" />
+        <path d="M8 14h5" />
       </svg>
     ),
   },
 ]
 
+const sidebarGroups: SidebarGroup[] = [
+  { key: 'entrepreneurs', label: 'Entrepreneurs', items: entrepreneurMenu },
+  { key: 'investors', label: 'Investors', items: investorMenu },
+  { key: 'website', label: 'Website Pages', items: websiteMenu },
+]
+
+const sidebarOpenGroupsStorageKey = 'finverra-admin-sidebar-open-groups'
+
 export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [openGroups, setOpenGroups] = useState<Record<SidebarGroup['key'], boolean>>({
+    entrepreneurs: false,
+    investors: false,
+    website: false,
+  })
+
+  useEffect(() => {
+    try {
+      const storedValue = window.localStorage.getItem(sidebarOpenGroupsStorageKey)
+      if (!storedValue) return
+
+      const parsed = JSON.parse(storedValue) as Partial<Record<SidebarGroup['key'], boolean>>
+      setOpenGroups({
+        entrepreneurs: Boolean(parsed.entrepreneurs),
+        investors: Boolean(parsed.investors),
+        website: Boolean(parsed.website),
+      })
+    } catch {
+      // Ignore invalid persisted state and keep the default closed state.
+    }
+  }, [])
+
+  function persistOpenGroups(nextState: Record<SidebarGroup['key'], boolean>) {
+    setOpenGroups(nextState)
+
+    try {
+      window.localStorage.setItem(sidebarOpenGroupsStorageKey, JSON.stringify(nextState))
+    } catch {
+      // Ignore storage write failures.
+    }
+  }
+
+  function toggleGroup(key: SidebarGroup['key']) {
+    const nextState = {
+      entrepreneurs: key === 'entrepreneurs' ? !openGroups.entrepreneurs : false,
+      investors: key === 'investors' ? !openGroups.investors : false,
+      website: key === 'website' ? !openGroups.website : false,
+    }
+
+    persistOpenGroups(nextState)
+  }
+
+  function openGroupAndNavigate(groupKey: SidebarGroup['key'], path: string) {
+    persistOpenGroups({
+      entrepreneurs: groupKey === 'entrepreneurs',
+      investors: groupKey === 'investors',
+      website: groupKey === 'website',
+    })
+    navigate(path)
+  }
+
+  function isGroupActive(group: SidebarGroup) {
+    return group.items.some((item) => pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin'))
+  }
 
   return (
     <aside style={styles.sidebar}>
       <div style={styles.sidebarBrand}>
-        <div style={styles.brandLogo}>
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <path d="M14 2L26 8v12L14 26 2 20V8z" fill="#E6A817" opacity="0.15" stroke="#E6A817" strokeWidth="1.5" />
-            <path d="M14 7l8 4.5V17L14 21.5 6 17v-5.5z" fill="#E6A817" opacity="0.4" />
-            <path d="M14 12l4 2.5V17L14 19.5 10 17v-2.5z" fill="#0EA5A0" />
-          </svg>
-          <div>
-            <span style={styles.brandName}>Finverra</span>
-            <span style={styles.brandTag}>Admin Navigation</span>
+        <button
+          type="button"
+          style={styles.brandButton}
+          onClick={() => navigate('/dashboard/admin/statistics')}
+          aria-label="Go to dashboard statistics"
+        >
+          <div style={styles.brandLogo}>
+            <img src="/logo-finverra-white.png" alt="Finverra" style={styles.brandImage} />
           </div>
-        </div>
+        </button>
       </div>
 
       <nav style={styles.navScroll}>
         <div style={styles.navSection}>
-          <span style={styles.navSectionTitle}>Menu</span>
-          {menuItems.map((item) => {
-            const isActive = pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin')
+          <span style={styles.navSectionTitle}>Quick Access</span>
+          {dashboardMenu.map((item) => {
+            const isActive = pathname === item.path
+
             return (
               <button
                 key={item.label}
                 type="button"
-                style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) }}
+                style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}), marginBottom: 8 }}
                 onClick={() => navigate(item.path)}
               >
-                <span style={{ color: isActive ? '#E6A817' : 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ color: isActive ? '#ffec00' : 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                   {item.icon}
                 </span>
                 <span style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.76)', fontWeight: isActive ? 700 : 500 }}>
                   {item.label}
                 </span>
               </button>
+            )
+          })}
+        </div>
+
+        <div style={styles.navSection}>
+          <span style={styles.navSectionTitle}>Menu</span>
+          {sidebarGroups.map((group) => {
+            const groupActive = isGroupActive(group)
+            const groupOpen = openGroups[group.key]
+
+            return (
+              <div key={group.key} style={styles.groupBlock}>
+                <button
+                  type="button"
+                  style={{ ...styles.groupHeader, ...(groupActive ? styles.groupHeaderActive : {}) }}
+                  onClick={() => toggleGroup(group.key)}
+                >
+                  <span style={styles.groupHeaderLeft}>
+                    <span style={{ ...styles.chevron, ...(groupOpen ? styles.chevronOpen : {}) }}>▾</span>
+                    <span style={{ color: groupActive ? '#ffffff' : 'rgba(255,255,255,0.78)', fontWeight: 700 }}>
+                      {group.label}
+                    </span>
+                  </span>
+                </button>
+
+                {groupOpen ? (
+                  <div style={styles.groupItems}>
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin')
+
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          style={{ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) }}
+                          onClick={() => openGroupAndNavigate(item.groupKey, item.path)}
+                        >
+                          <span style={{ color: isActive ? '#ffec00' : 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                            {item.icon}
+                          </span>
+                          <span style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.76)', fontWeight: isActive ? 700 : 500 }}>
+                            {item.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : null}
+              </div>
             )
           })}
         </div>
@@ -195,7 +339,7 @@ const styles: Record<string, CSSProperties> = {
   sidebar: {
     width: 280,
     height: '100%',
-    background: 'linear-gradient(180deg, #0d2345 0%, #11315f 52%, #0b2444 100%)',
+    background: 'linear-gradient(180deg, #023341 0%, #03475a 52%, #023341 100%)',
     borderRight: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     flexDirection: 'column',
@@ -203,13 +347,34 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: '28px 0 60px rgba(15, 30, 53, 0.18)',
   },
   sidebarBrand: {
-    padding: '22px 20px 18px',
+    padding: '12px 12px 10px',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
+  },
+  brandButton: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    textAlign: 'center',
+    cursor: 'pointer',
   },
   brandLogo: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    width: '100%',
+    minHeight: 64,
+  },
+  brandImage: {
+    width: '92%',
+    maxWidth: 240,
+    height: 'auto',
+    maxHeight: 72,
+    objectFit: 'contain',
+    flexShrink: 0,
   },
   brandName: {
     fontSize: 18,
@@ -257,9 +422,49 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'left',
     transition: 'background 0.15s, border-color 0.15s, transform 0.15s',
   },
+  groupBlock: {
+    marginBottom: 10,
+  },
+  groupHeader: {
+    width: '100%',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#ffffff',
+    borderRadius: 14,
+    padding: '12px 12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+    marginBottom: 8,
+  },
+  groupHeaderActive: {
+    background: 'linear-gradient(135deg, rgba(255, 236, 0, 0.25), rgba(255, 236, 0, 0.12))',
+    border: '1px solid rgba(255, 236, 0, 0.35)',
+  },
+  groupHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  chevron: {
+    display: 'inline-block',
+    transform: 'rotate(-90deg)',
+    transition: 'transform 0.15s ease',
+    fontSize: 12,
+    opacity: 0.9,
+  },
+  chevronOpen: {
+    transform: 'rotate(0deg)',
+  },
+  groupItems: {
+    display: 'grid',
+    gap: 8,
+    paddingLeft: 10,
+  },
   navItemActive: {
-    background: 'linear-gradient(135deg, rgba(230, 168, 23, 0.22), rgba(14, 165, 160, 0.18))',
-    border: '1px solid rgba(255, 209, 102, 0.18)',
+    background: 'linear-gradient(135deg, rgba(255, 236, 0, 0.25), rgba(255, 236, 0, 0.12))',
+    border: '1px solid rgba(255, 236, 0, 0.35)',
     transform: 'translateX(2px)',
   },
   sidebarFooter: {

@@ -945,3 +945,268 @@ export async function fetchAdminVerifiedEntrepreneurs(accessToken: string) {
 
   return payload.verified_profiles
 }
+
+// ============================================================================
+// ADMIN ENTREPRENEUR BUSINESS INFO API
+// ============================================================================
+
+export type AdminEntrepreneurBusinessInfo = {
+  id: number
+  users_id: number
+  entrepreneur_id?: number
+  email?: string
+  first_name?: string
+  last_name?: string
+  telephone?: string
+  created_at?: string
+  [key: string]: unknown
+}
+
+type AdminEntrepreneurBusinessInfoListPayload = {
+  success: boolean
+  business_info?: AdminEntrepreneurBusinessInfo[]
+  message?: string
+}
+
+type AdminEntrepreneurBusinessInfoDetailPayload = {
+  success: boolean
+  business_info?: AdminEntrepreneurBusinessInfo
+  message?: string
+}
+
+export async function fetchAdminEntrepreneurBusinessInfos(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/entrepreneurs/business-info'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur business info server at ${buildConfiguredApiUrl('/admin/entrepreneurs/business-info')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurBusinessInfoListPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load entrepreneur business info.'))
+  }
+
+  return Array.isArray(payload?.business_info) ? payload.business_info : []
+}
+
+export async function fetchAdminEntrepreneurBusinessInfoById(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/entrepreneurs/business-info/${id}`), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur business info detail server at ${buildConfiguredApiUrl(`/admin/entrepreneurs/business-info/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurBusinessInfoDetailPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load entrepreneur business info detail.'))
+  }
+
+  if (!payload?.business_info) {
+    throw new Error('Entrepreneur business info detail payload is missing.')
+  }
+
+  return payload.business_info
+}
+
+// ============================================================================
+// ADMIN INVESTOR APPLICATIONS API
+// ============================================================================
+
+export type AdminInvestorApplication = {
+  id: number
+  users_id: number
+  email?: string
+  investor_type?: string | null
+  residence_country?: string | null
+  investment_budget?: string | null
+  investment_size?: string | null
+  how_many_business_you_can_invest?: string | null
+  type_of_investment?: string | null
+  sectors_do_you_prefer?: string | null
+  where_do_you_want_to_invest?: string | null
+  stage_do_you_prefer?: string | null
+  risk_level?: string | null
+  return_type?: string | null
+  expected_roi?: string | null
+  investment_duration?: string | null
+  what_do_you_look_in_business?: string | null
+  minimum_requirements?: string | null
+  how_involved_do_you_want?: string | null
+  have_you_invested_before?: string | null
+  number_of_investments?: string | null
+  invested_sector?: string | null
+  success_stories?: string | null
+  preferred_contact?: string | null
+  availability?: string | null
+  confirm_the_information_is_accurate?: boolean | number | string | null
+  i_agree_to_terms?: boolean | number | string | null
+  i_consent_to_be_matched_with_entrepreneurs?: boolean | number | string | null
+  company_registration?: string | null
+  proof_of_funds?: string | null
+  kyc?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+type AdminInvestorApplicationsListPayload = {
+  success: boolean
+  investor_applications?: AdminInvestorApplication[]
+  message?: string
+}
+
+type AdminInvestorApplicationDetailPayload = {
+  success: boolean
+  investor_application?: AdminInvestorApplication
+  message?: string
+}
+
+export type AdminInvestorApplicationUpdatePayload = {
+  users_id: number
+  investor_type?: string | null
+  residence_country?: string | null
+  investment_budget?: string | null
+  investment_size?: string | null
+  how_many_business_you_can_invest?: string | null
+  type_of_investment?: string | null
+  sectors_do_you_prefer?: string | null
+  where_do_you_want_to_invest?: string | null
+  stage_do_you_prefer?: string | null
+  risk_level?: string | null
+  return_type?: string | null
+  expected_roi?: string | null
+  investment_duration?: string | null
+  what_do_you_look_in_business?: string | null
+  minimum_requirements?: string | null
+  how_involved_do_you_want?: string | null
+  have_you_invested_before?: string | null
+  number_of_investments?: string | null
+  invested_sector?: string | null
+  success_stories?: string | null
+  preferred_contact?: string | null
+  availability?: string | null
+  confirm_the_information_is_accurate?: boolean | null
+  i_agree_to_terms?: boolean | null
+  i_consent_to_be_matched_with_entrepreneurs?: boolean | null
+  company_registration?: string | null
+  proof_of_funds?: string | null
+  kyc?: string | null
+}
+
+type AdminInvestorApplicationMutationPayload = {
+  success: boolean
+  message?: string
+}
+
+export async function fetchAdminInvestorApplications(accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl('/admin/investor_applications'), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor applications server at ${buildConfiguredApiUrl('/admin/investor_applications')}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorApplicationsListPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load investor applications.'))
+  }
+
+  return Array.isArray(payload?.investor_applications) ? payload.investor_applications : []
+}
+
+export async function fetchAdminInvestorApplicationById(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investor_applications/${id}`), {
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor application detail server at ${buildConfiguredApiUrl(`/admin/investor_applications/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorApplicationDetailPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load investor application details.'))
+  }
+
+  if (!payload?.investor_application) {
+    throw new Error('Investor application detail payload is missing.')
+  }
+
+  return payload.investor_application
+}
+
+export async function updateAdminInvestorApplication(
+  id: number,
+  data: AdminInvestorApplicationUpdatePayload,
+  accessToken: string,
+) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investor_applications/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor application update server at ${buildConfiguredApiUrl(`/admin/investor_applications/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorApplicationMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to update investor application.'))
+  }
+
+  return payload
+}
+
+export async function deleteAdminInvestorApplication(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/admin/investor_applications/${id}`), {
+      method: 'DELETE',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor application delete server at ${buildConfiguredApiUrl(`/admin/investor_applications/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorApplicationMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to delete investor application.'))
+  }
+
+  return payload
+}

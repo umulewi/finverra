@@ -649,10 +649,6 @@ function Partners() {
                 <div className="partner-logo-circle" style={{ background: `${p.color}18`, borderColor: `${p.color}30` }}>
                   <img src={p.logo} alt={`${p.name} logo`} className="partner-logo-img" loading="lazy" decoding="async" />
                 </div>
-                <div className="partner-meta">
-                  <span className="partner-name">{p.name}</span>
-                  <span className="partner-cat" style={{ color: p.color }}>{p.category}</span>
-                </div>
               </a>
             ))}
           </div>

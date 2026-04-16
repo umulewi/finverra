@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import type { CSSProperties, ChangeEvent, FormEvent } from 'react'
+import { useEffect, useState } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import AdminShell from './AdminShell'
 import { buildApiUrl } from '../../config/api'
 import { getAuthSession } from '../authStorage'
@@ -8,17 +8,14 @@ type Service = {
   id: number
   title: string
   description: string
-  image: string
 }
 
 type FormState = {
   title: string
   description: string
-  image: File | null
-  existingImage: string
 }
 
-const emptyForm: FormState = { title: '', description: '', image: null, existingImage: '' }
+const emptyForm: FormState = { title: '', description: '' }
 
 function authHeader(): HeadersInit {
   const session = getAuthSession()
@@ -34,10 +31,8 @@ export default function ServicesPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
-  const [preview, setPreview] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   async function loadServices() {
     setLoading(true)
@@ -59,15 +54,13 @@ export default function ServicesPage() {
   function openCreate() {
     setEditingId(null)
     setForm(emptyForm)
-    setPreview(null)
     setFormError(null)
     setShowForm(true)
   }
 
   function openEdit(s: Service) {
     setEditingId(s.id)
-    setForm({ title: s.title, description: s.description, image: null, existingImage: s.image })
-    setPreview(buildApiUrl(s.image))
+    setForm({ title: s.title, description: s.description })
     setFormError(null)
     setShowForm(true)
   }
@@ -76,17 +69,7 @@ export default function ServicesPage() {
     setShowForm(false)
     setEditingId(null)
     setForm(emptyForm)
-    setPreview(null)
     setFormError(null)
-  }
-
-  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setForm(f => ({ ...f, image: file }))
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setPreview(url)
-    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -97,21 +80,11 @@ export default function ServicesPage() {
       setFormError('Title and description are required.')
       return
     }
-    if (!editingId && !form.image) {
-      setFormError('An image file is required.')
-      return
-    }
-
     setSubmitting(true)
     try {
       const body = new FormData()
       body.append('title', form.title.trim())
       body.append('description', form.description.trim())
-      if (form.image) {
-        body.append('image', form.image)
-      } else if (editingId && form.existingImage) {
-        body.append('image', form.existingImage)
-      }
 
       const url = editingId
         ? buildApiUrl(`/admin/services/${editingId}`)
@@ -235,36 +208,6 @@ export default function ServicesPage() {
                 rows={4}
               />
 
-              <label style={styles.fieldLabel}>
-                Image {editingId ? '(leave blank to keep existing)' : ''}
-              </label>
-              <div
-                style={styles.dropZone}
-                onClick={() => fileRef.current?.click()}
-                onDragOver={ev => ev.preventDefault()}
-                onDrop={ev => {
-                  ev.preventDefault()
-                  const file = ev.dataTransfer.files?.[0]
-                  if (file) {
-                    setForm(f => ({ ...f, image: file }))
-                    setPreview(URL.createObjectURL(file))
-                  }
-                }}
-              >
-                {preview
-                  ? <img src={preview} alt="preview" style={styles.previewImg} />
-                  : (
-                    <span style={styles.dropHint}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9aafc6" strokeWidth="1.6" strokeLinecap="round">
-                        <rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                      Click or drag an image here
-                    </span>
-                  )}
-              </div>
-              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
-
               <div style={styles.formActions}>
                 <button type="button" style={styles.cancelBtn} onClick={closeForm} disabled={submitting}>
                   Cancel
@@ -287,12 +230,6 @@ export default function ServicesPage() {
             <div style={styles.grid}>
               {services.map(s => (
                 <div key={s.id} style={styles.card}>
-                  <img
-                    src={buildApiUrl(s.image)}
-                    alt={s.title}
-                    style={styles.cardImg}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
-                  />
                   <div style={styles.cardBody}>
                     <p style={styles.cardTitle}>{s.title}</p>
                     <p style={styles.cardDesc}>{s.description}</p>
@@ -368,15 +305,8 @@ const styles: Record<string, CSSProperties> = {
     border: '1px solid rgba(15,30,53,0.1)',
     background: '#ffffff',
     boxShadow: '0 8px 24px rgba(15,45,92,0.06)',
-    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-  },
-  cardImg: {
-    width: '100%',
-    height: 160,
-    objectFit: 'cover',
-    display: 'block',
   },
   cardBody: {
     padding: '14px 16px',
@@ -496,30 +426,6 @@ const styles: Record<string, CSSProperties> = {
   textarea: {
     resize: 'vertical',
     minHeight: 90,
-  },
-  dropZone: {
-    border: '2px dashed rgba(15,30,53,0.18)',
-    borderRadius: 14,
-    minHeight: 120,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    overflow: 'hidden',
-    background: '#f7f9fc',
-  },
-  dropHint: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: 8,
-    color: '#9aafc6',
-    fontSize: 13,
-  },
-  previewImg: {
-    width: '100%',
-    maxHeight: 200,
-    objectFit: 'cover',
   },
   formError: {
     background: 'rgba(220,38,38,0.08)',

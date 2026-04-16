@@ -9,7 +9,7 @@ import { getRoleDefinition } from '../roles'
 export default function AdminAuth() {
   const navigate = useNavigate()
   const roleDefinition = getRoleDefinition('admin')
-  const basePath = '/dashboard/admin'
+  const basePath = '/dashboard/admin/statistics'
   const [roles, setRoles] = useState<RoleOption[]>([])
   const [isLoadingRole, setIsLoadingRole] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -287,9 +287,8 @@ export default function PartnersPage() {
         <div style={styles.grid}>
           {partners.map((partner) => (
             <article key={partner.id} style={styles.partnerCard}>
-              <img src={buildApiUrl(partner.image)} alt="Partner" style={styles.partnerImage} />
-              <a href={partner.url} target="_blank" rel="noreferrer" style={styles.partnerUrl}>
-                {partner.url}
+              <a href={partner.url} target="_blank" rel="noreferrer" style={styles.partnerLogoLink} aria-label="Open partner website">
+                <img src={buildApiUrl(partner.image)} alt="Partner logo" style={styles.partnerImage} />
               </a>
               <div style={styles.cardActions}>
                 <button type="button" style={styles.editBtn} onClick={() => openEdit(partner)}>
@@ -366,20 +365,17 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     boxShadow: '0 8px 24px rgba(15,45,92,0.06)',
   },
+  partnerLogoLink: {
+    display: 'block',
+    padding: '12px',
+  },
   partnerImage: {
     width: '100%',
-    height: 120,
-    objectFit: 'cover',
+    height: 130,
+    objectFit: 'contain',
     display: 'block',
-    background: '#e8edf4',
-  },
-  partnerUrl: {
-    padding: '10px 12px',
-    color: '#1a4080',
-    fontSize: 13,
-    lineHeight: 1.5,
-    textDecoration: 'none',
-    wordBreak: 'break-all',
+    background: '#f9fcfd',
+    borderRadius: 10,
   },
   cardActions: {
     display: 'flex',

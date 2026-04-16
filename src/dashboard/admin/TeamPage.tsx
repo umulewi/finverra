@@ -8,18 +8,18 @@ type TeamMember = {
   id: number
   name: string
   position: string
-  description: string
+  phone: string
+  team_category: string
   email: string
-  linkedin: string
   image: string
 }
 
 type FormState = {
   name: string
   position: string
-  description: string
+  phone: string
+  team_category: string
   email: string
-  linkedin: string
   image: File | null
   existingImage: string
 }
@@ -27,11 +27,22 @@ type FormState = {
 const emptyForm: FormState = {
   name: '',
   position: '',
-  description: '',
+  phone: '',
+  team_category: '',
   email: '',
-  linkedin: '',
   image: null,
   existingImage: '',
+}
+
+const TEAM_CATEGORY_OPTIONS = [
+  { value: 'Board of Directors', label: 'Board of Directors (Governance)' },
+  { value: 'Executive Management Team', label: 'Executive Management Team (Operations)' },
+] as const
+
+type TeamCategory = (typeof TEAM_CATEGORY_OPTIONS)[number]['value']
+
+function isTeamCategory(value: string): value is TeamCategory {
+  return TEAM_CATEGORY_OPTIONS.some((option) => option.value === value)
 }
 
 function authHeader(): HeadersInit {
@@ -88,9 +99,9 @@ export default function TeamPage() {
     setForm({
       name: member.name,
       position: member.position,
-      description: member.description,
+      phone: member.phone,
+      team_category: member.team_category,
       email: member.email,
-      linkedin: member.linkedin,
       image: null,
       existingImage: member.image,
     })
@@ -123,16 +134,20 @@ export default function TeamPage() {
     event.preventDefault()
     setFormError(null)
 
-    if (!form.name.trim() || !form.position.trim() || !form.description.trim()) {
-      setFormError('Name, position, and description are required.')
+    if (!form.name.trim() || !form.position.trim() || !form.team_category.trim()) {
+      setFormError('Name, position, and team category are required.')
+      return
+    }
+    if (!isTeamCategory(form.team_category)) {
+      setFormError('Team category must be Board of Directors or Executive Management Team.')
       return
     }
     if (!form.email.trim()) {
       setFormError('Email is required.')
       return
     }
-    if (!form.linkedin.trim()) {
-      setFormError('LinkedIn URL is required.')
+    if (!form.phone.trim()) {
+      setFormError('Phone is required.')
       return
     }
     if (!editingId && !form.image) {
@@ -145,9 +160,9 @@ export default function TeamPage() {
       const payload = new FormData()
       payload.append('name', form.name.trim())
       payload.append('position', form.position.trim())
-      payload.append('description', form.description.trim())
+      payload.append('phone', form.phone.trim())
+      payload.append('team_category', form.team_category.trim())
       payload.append('email', form.email.trim())
-      payload.append('linkedin', form.linkedin.trim())
 
       if (form.image) {
         payload.append('image', form.image)
@@ -200,6 +215,9 @@ export default function TeamPage() {
       setDeletingId(null)
     }
   }
+
+  const boardMembers = team.filter((member) => member.team_category === 'Board of Directors')
+  const executiveMembers = team.filter((member) => member.team_category === 'Executive Management Team')
 
   return (
     <AdminShell
@@ -277,14 +295,28 @@ export default function TeamPage() {
                 disabled={submitting}
               />
 
-              <label style={styles.fieldLabel}>Description</label>
-              <textarea
-                style={{ ...styles.input, ...styles.textarea }}
-                placeholder="Short bio"
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+              <label style={styles.fieldLabel}>Phone</label>
+              <input
+                type="text"
+                style={styles.input}
+                placeholder="e.g. +250 7XX XXX XXX"
+                value={form.phone}
+                onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
                 disabled={submitting}
               />
+
+              <label style={styles.fieldLabel}>Team Category</label>
+              <select
+                style={styles.input}
+                value={form.team_category}
+                onChange={(event) => setForm((prev) => ({ ...prev, team_category: event.target.value }))}
+                disabled={submitting}
+              >
+                <option value="">Select team category</option>
+                {TEAM_CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
 
               <label style={styles.fieldLabel}>Email</label>
               <input
@@ -293,16 +325,6 @@ export default function TeamPage() {
                 placeholder="name@finverra.com"
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                disabled={submitting}
-              />
-
-              <label style={styles.fieldLabel}>LinkedIn URL</label>
-              <input
-                type="url"
-                style={styles.input}
-                placeholder="https://www.linkedin.com/in/..."
-                value={form.linkedin}
-                onChange={(event) => setForm((prev) => ({ ...prev, linkedin: event.target.value }))}
                 disabled={submitting}
               />
 
@@ -342,7 +364,24 @@ export default function TeamPage() {
                   Cancel
                 </button>
                 <button type="submit" style={styles.submitBtn} disabled={submitting}>
-                  {submitting ? 'Saving...' : editingId ? 'Save Changes' : 'Create Team Member'}
+                  {submitting ? (
+                    <span style={styles.submitBusy}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={styles.submitSpinner}>
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                        <path d="M21 12a9 9 0 0 1-9 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                          <animateTransform
+                            attributeName="transform"
+                            type="rotate"
+                            from="0 12 12"
+                            to="360 12 12"
+                            dur="0.8s"
+                            repeatCount="indefinite"
+                          />
+                        </path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : editingId ? 'Save Changes' : 'Create Team Member'}
                 </button>
               </div>
             </form>
@@ -355,38 +394,78 @@ export default function TeamPage() {
       ) : team.length === 0 ? (
         <p style={styles.emptyMsg}>No team members yet. Click "Add Team Member" to create one.</p>
       ) : (
-        <div style={styles.grid}>
-          {team.map((member) => (
-            <article key={member.id} style={styles.memberCard}>
-              <img src={buildApiUrl(member.image)} alt={member.name} style={styles.memberImage} />
-              <div style={styles.memberBody}>
-                <h4 style={styles.memberName}>{member.name}</h4>
-                <p style={styles.memberPosition}>{member.position}</p>
-                <p style={styles.memberDescription}>{member.description}</p>
-                <div style={styles.memberLinks}>
-                  <a href={member.linkedin} target="_blank" rel="noreferrer" style={styles.memberLink}>
-                    LinkedIn
-                  </a>
-                  <a href={`mailto:${member.email}`} style={styles.memberLink}>
-                    {member.email}
-                  </a>
-                </div>
+        <div style={styles.categoryStack}>
+          <section style={styles.categorySection}>
+            <h3 style={styles.categoryTitle}>Board of Directors</h3>
+            {boardMembers.length === 0 ? (
+              <p style={styles.categoryEmpty}>No members in this category.</p>
+            ) : (
+              <div style={styles.grid}>
+                {boardMembers.map((member) => (
+                  <article key={member.id} style={styles.memberCard}>
+                    <img src={buildApiUrl(member.image)} alt={member.name} style={styles.memberImage} />
+                    <div style={styles.memberBody}>
+                      <h4 style={styles.memberName}>{member.name}</h4>
+                      <p style={styles.memberPosition}>{member.position}</p>
+                      <div style={styles.memberLinks}>
+                        <p style={styles.memberMeta}><span style={styles.metaLabel}>Tel:</span> <a href={`tel:${member.phone}`} style={styles.memberLink}>{member.phone}</a></p>
+                        <p style={styles.memberMeta}><span style={styles.metaLabel}>Email:</span> <a href={`mailto:${member.email}`} style={styles.memberLink}>{member.email}</a></p>
+                      </div>
+                    </div>
+                    <div style={styles.cardActions}>
+                      <button type="button" style={styles.editBtn} onClick={() => openEdit(member)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        style={{ ...styles.deleteBtn, ...(deletingId === member.id ? styles.deletingBtn : {}) }}
+                        onClick={() => setConfirmDeleteId(member.id)}
+                        disabled={deletingId === member.id}
+                      >
+                        {deletingId === member.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </article>
+                ))}
               </div>
-              <div style={styles.cardActions}>
-                <button type="button" style={styles.editBtn} onClick={() => openEdit(member)}>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  style={{ ...styles.deleteBtn, ...(deletingId === member.id ? styles.deletingBtn : {}) }}
-                  onClick={() => setConfirmDeleteId(member.id)}
-                  disabled={deletingId === member.id}
-                >
-                  {deletingId === member.id ? 'Deleting...' : 'Delete'}
-                </button>
+            )}
+          </section>
+
+          <section style={styles.categorySection}>
+            <h3 style={styles.categoryTitle}>Executive Management Team</h3>
+            {executiveMembers.length === 0 ? (
+              <p style={styles.categoryEmpty}>No members in this category.</p>
+            ) : (
+              <div style={styles.grid}>
+                {executiveMembers.map((member) => (
+                  <article key={member.id} style={styles.memberCard}>
+                    <img src={buildApiUrl(member.image)} alt={member.name} style={styles.memberImage} />
+                    <div style={styles.memberBody}>
+                      <h4 style={styles.memberName}>{member.name}</h4>
+                      <p style={styles.memberPosition}>{member.position}</p>
+                      <div style={styles.memberLinks}>
+                        <p style={styles.memberMeta}><span style={styles.metaLabel}>Tel:</span> <a href={`tel:${member.phone}`} style={styles.memberLink}>{member.phone}</a></p>
+                        <p style={styles.memberMeta}><span style={styles.metaLabel}>Email:</span> <a href={`mailto:${member.email}`} style={styles.memberLink}>{member.email}</a></p>
+                      </div>
+                    </div>
+                    <div style={styles.cardActions}>
+                      <button type="button" style={styles.editBtn} onClick={() => openEdit(member)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        style={{ ...styles.deleteBtn, ...(deletingId === member.id ? styles.deletingBtn : {}) }}
+                        onClick={() => setConfirmDeleteId(member.id)}
+                        disabled={deletingId === member.id}
+                      >
+                        {deletingId === member.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </article>
+                ))}
               </div>
-            </article>
-          ))}
+            )}
+          </section>
         </div>
       )}
     </AdminShell>
@@ -433,71 +512,98 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'center',
     padding: '40px 0',
   },
+  categoryStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+  },
+  categorySection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  },
+  categoryTitle: {
+    margin: 0,
+    color: '#023341',
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  categoryEmpty: {
+    margin: 0,
+    color: '#5f7f88',
+    fontSize: 13,
+    padding: '4px 0 2px',
+  },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(4, minmax(220px, 1fr))',
     gap: 14,
   },
   memberCard: {
-    borderRadius: 14,
-    border: '1px solid rgba(15,30,53,0.1)',
-    background: '#fff',
+    borderRadius: 30,
+    border: '1px solid #d4dce4',
+    background: '#e7edf2',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 8px 24px rgba(15,45,92,0.06)',
+    boxShadow: '0 8px 20px rgba(15,45,92,0.08)',
   },
   memberImage: {
     width: '100%',
-    height: 180,
+    height: 260,
     objectFit: 'cover',
     display: 'block',
     background: '#e8edf4',
   },
   memberBody: {
-    padding: '12px 14px',
+    padding: '18px 16px 14px',
+    background: '#f8fafc',
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 8,
+    textAlign: 'center',
   },
   memberName: {
     margin: 0,
-    fontSize: 15,
-    fontWeight: 700,
-    color: '#0f1e35',
+    fontSize: 22,
+    fontWeight: 800,
+    color: '#052f52',
   },
   memberPosition: {
     margin: 0,
-    color: '#1a4080',
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  memberDescription: {
-    margin: 0,
-    color: '#516178',
-    fontSize: 13,
-    lineHeight: 1.5,
+    color: '#3d6284',
+    fontSize: 15,
+    fontWeight: 500,
   },
   memberLinks: {
-    marginTop: 6,
+    marginTop: 2,
     display: 'flex',
-    flexWrap: 'wrap',
-    gap: 8,
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+  },
+  memberMeta: {
+    margin: 0,
+    fontSize: 12,
+    color: '#7a8ea4',
+    lineHeight: 1.5,
+  },
+  metaLabel: {
+    color: '#7a8ea4',
+    fontWeight: 500,
   },
   memberLink: {
-    color: '#1a4080',
+    color: '#6788a9',
     textDecoration: 'none',
     fontSize: 12,
-    border: '1px solid rgba(26,64,128,0.2)',
-    borderRadius: 20,
-    padding: '4px 10px',
-    background: 'rgba(26,64,128,0.05)',
+    fontWeight: 400,
   },
   cardActions: {
     display: 'flex',
     gap: 8,
-    padding: '0 12px 12px',
+    padding: '0 14px 14px',
     marginTop: 'auto',
+    background: '#f8fafc',
   },
   editBtn: {
     flex: 1,
@@ -629,10 +735,6 @@ const styles: Record<string, CSSProperties> = {
     boxSizing: 'border-box',
     fontFamily: 'inherit',
   },
-  textarea: {
-    minHeight: 96,
-    resize: 'vertical',
-  },
   dropZone: {
     minHeight: 120,
     borderRadius: 14,
@@ -690,5 +792,14 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
     cursor: 'pointer',
+  },
+  submitBusy: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  submitSpinner: {
+    display: 'block',
   },
 }

@@ -14,13 +14,15 @@ const AdminAuth = lazy(() => import('./dashboard/admin/AdminAuth'))
 const ServicesPage = lazy(() => import('./dashboard/admin/ServicesPage'))
 const InvestorsPage = lazy(() => import('./dashboard/admin/InvestorsPage'))
 const EntrepreneursPage = lazy(() => import('./dashboard/admin/EntrepreneursPage'))
+const EntreprenurBusinessInfoPage = lazy(() => import('./dashboard/admin/EntreprenurBusinessInfoPage'))
 const InvestorApplicationsPage = lazy(() => import('./dashboard/admin/InvestorApplicationsPage'))
 const EntrepreneurApplicationsPage = lazy(() => import('./dashboard/admin/EntrepreneurApplicationsPage'))
 const PartnersPage = lazy(() => import('./dashboard/admin/PartnersPage'))
-const AchievementsPage = lazy(() => import('./dashboard/admin/AchievementsPage'))
+
 const EventsPage = lazy(() => import('./dashboard/admin/EventsPage'))
 const TeamPage = lazy(() => import('./dashboard/admin/TeamPage'))
 const Testimonials = lazy(() => import('./dashboard/admin/TestimonialsPage'))
+const StatisticsPage = lazy(() => import('./dashboard/admin/StatisticsPage'))
 
 const EntrepreneurAuth = lazy(() => import('./dashboard/entrepreneur/EntrepreneurAuth'))
 const EntrepreneurForgotPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurForgotPassword'))
@@ -76,7 +78,7 @@ export default function AppRouter() {
           <Route path="/dashboard/admin/login" element={<AdminAuth />} />
           <Route
             path="/dashboard/admin"
-            element={<Navigate to="/dashboard/admin/services" replace />}
+            element={<Navigate to="/dashboard/admin/statistics" replace />}
           />
           <Route
             path="/dashboard/admin/services"
@@ -99,6 +101,14 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="admin">
                 <EntrepreneursPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/entreprenur-business-info"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <EntreprenurBusinessInfoPage />
               </ProtectedRoleRoute>
             )}
           />
@@ -126,14 +136,7 @@ export default function AppRouter() {
               </ProtectedRoleRoute>
             )}
           />
-          <Route
-            path="/dashboard/admin/achievements"
-            element={(
-              <ProtectedRoleRoute role="admin">
-                <AchievementsPage />
-              </ProtectedRoleRoute>
-            )}
-          />
+          
           <Route
             path="/dashboard/admin/events"
             element={(
@@ -155,6 +158,14 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="admin">
                 <Testimonials />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/statistics"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <StatisticsPage />
               </ProtectedRoleRoute>
             )}
           />

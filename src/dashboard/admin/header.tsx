@@ -9,7 +9,7 @@ export default function AdminHeader({ onToggleSidebar }: AdminHeaderProps) {
     <header style={styles.topbar}>
       <div style={styles.leftWrap}>
         <button type="button" style={styles.hamburger} onClick={onToggleSidebar} aria-label="Toggle menu">
-          <svg width="18" height="18" fill="none" stroke="#0f1e35" strokeWidth="2" viewBox="0 0 24 24">
+          <svg width="18" height="18" fill="none" stroke="#023341" strokeWidth="2" viewBox="0 0 24 24">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -42,9 +42,9 @@ const styles: Record<string, CSSProperties> = {
     padding: '18px 24px',
     background: 'rgba(255,255,255,0.78)',
     backdropFilter: 'blur(18px)',
-    border: '1px solid rgba(15, 30, 53, 0.08)',
+    border: '1px solid rgba(2, 51, 65, 0.1)',
     borderRadius: 24,
-    boxShadow: '0 18px 40px rgba(15, 45, 92, 0.08)',
+    boxShadow: '0 18px 40px rgba(2, 51, 65, 0.08)',
     zIndex: 50,
   },
   leftWrap: {
@@ -53,8 +53,8 @@ const styles: Record<string, CSSProperties> = {
     gap: 16,
   },
   hamburger: {
-    background: 'linear-gradient(135deg, #fff8e6, #ffffff)',
-    border: '1px solid rgba(230, 168, 23, 0.22)',
+    background: 'linear-gradient(135deg, #fffde6, #ffffff)',
+    border: '1px solid rgba(255, 236, 0, 0.35)',
     cursor: 'pointer',
     padding: 10,
     borderRadius: 14,
@@ -66,13 +66,13 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.4,
-    color: '#c8910e',
+    color: '#d8c500',
     fontWeight: 700,
   },
   title: {
     margin: '2px 0 0',
     fontSize: 18,
-    color: '#0f1e35',
+    color: '#023341',
     fontWeight: 700,
   },
   avatarWrap: {
@@ -82,14 +82,14 @@ const styles: Record<string, CSSProperties> = {
     padding: '6px 8px 6px 6px',
     borderRadius: 18,
     background: '#ffffff',
-    border: '1px solid rgba(15, 30, 53, 0.08)',
-    boxShadow: '0 10px 24px rgba(15, 45, 92, 0.06)',
+    border: '1px solid rgba(2, 51, 65, 0.1)',
+    boxShadow: '0 10px 24px rgba(2, 51, 65, 0.06)',
   },
   avatar: {
     width: 38,
     height: 38,
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #0f2d5c, #1a4080)',
+    background: 'linear-gradient(135deg, #023341, #03475a)',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',
@@ -111,6 +111,6 @@ const styles: Record<string, CSSProperties> = {
   },
   avatarName: {
     fontSize: 13,
-    color: '#0f1e35',
+    color: '#023341',
   },
 }
