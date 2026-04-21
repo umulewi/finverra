@@ -43,20 +43,24 @@ export default function DashboardChoice() {
   }, [])
 
   return (
-    <main className="dashboard-page">
+    <main className="dashboard-page dashboard-choice-page">
       <div className="account-layout">
         <aside className="account-aside">
           <p className="aside-brand">FINVERRA</p>
-          <h1>Finance With Trust</h1>
-          <p>
+          <h1>
+            Finance
+            <span className="aside-title-highlight">With Trust</span>
+          </h1>
+          <p className="aside-lead">
             Secure access for investors and entrepreneurs in one platform.
             Choose your role and continue to your account.
           </p>
-          <div className="aside-points">
-            <span>Verified opportunities</span>
-            <span>Secure collaboration</span>
-            <span>Dedicated support</span>
-          </div>
+          <ul className="aside-points" aria-label="Platform highlights">
+            <li>Verified opportunities</li>
+            <li>Secure collaboration</li>
+            <li>Dedicated support</li>
+          </ul>
+          <p className="aside-footnote">Trusted onboarding crafted for investors and entrepreneurs.</p>
           <Link to="/" className="aside-link">Back to Home</Link>
         </aside>
 

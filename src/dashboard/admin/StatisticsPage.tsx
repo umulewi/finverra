@@ -425,7 +425,8 @@ const styles: Record<string, CSSProperties> = {
   /* KPI grid */
   kpiGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateColumns: 'repeat(2, minmax(260px, 360px))',
+    justifyContent: 'center',
     gap: 14,
   },
   kpiCard: {

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import App from './App'
 import ProtectedRoleRoute from './dashboard/ProtectedRoleRoute'
+import SuperUserRoute from './dashboard/SuperUserRoute'
 
 const PartnershipArticlePage = lazy(() => import('./showcase/PartnershipArticlePage'))
 const HowItWorksPage = lazy(() => import('./showcase/HowItWorksPage'))
@@ -23,6 +24,8 @@ const EventsPage = lazy(() => import('./dashboard/admin/EventsPage'))
 const TeamPage = lazy(() => import('./dashboard/admin/TeamPage'))
 const Testimonials = lazy(() => import('./dashboard/admin/TestimonialsPage'))
 const StatisticsPage = lazy(() => import('./dashboard/admin/StatisticsPage'))
+const AdminUsersPage = lazy(() => import('./dashboard/admin/AdminUsersPage'))
+const AdminChangePasswordPage = lazy(() => import('./dashboard/admin/AdminChangePasswordPage'))
 
 const EntrepreneurAuth = lazy(() => import('./dashboard/entrepreneur/EntrepreneurAuth'))
 const EntrepreneurForgotPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurForgotPassword'))
@@ -166,6 +169,24 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="admin">
                 <StatisticsPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/users"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <SuperUserRoute>
+                  <AdminUsersPage />
+                </SuperUserRoute>
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/change-password"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <AdminChangePasswordPage />
               </ProtectedRoleRoute>
             )}
           />

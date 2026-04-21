@@ -56,7 +56,7 @@ export default function AdminShell({ title, subtitle, children }: AdminShellProp
           marginLeft: sidebarOpen ? '280px' : '0',
         }}
       >
-        <AdminHeader onToggleSidebar={() => setSidebarOpen((open) => !open)} />
+        <AdminHeader onToggleSidebar={() => setSidebarOpen((open) => !open)} onLogout={handleLogout} />
 
         <section style={styles.heroBanner}>
           <div>

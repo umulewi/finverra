@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { buildApiUrl } from './config/api'
 
 import './App.css'
 import ScrollToTop from './components/ScrollToTop'
@@ -55,6 +56,67 @@ function useCounter(target: number, inView: boolean, duration = 2000, restartKey
   }, [inView, target, duration, restartKey])
   return count
 }
+
+type PartnerApiItem = {
+  id: number
+  image: string
+  url: string
+}
+
+type PartnerCard = PartnerApiItem & {
+  color: string
+}
+
+type TestimonialApiItem = {
+  id: number
+  name: string
+  position: string
+  company: string
+  testimony: string
+}
+
+type TestimonialCard = {
+  id: number
+  name: string
+  role: string
+  text: string
+  rating: number
+}
+
+const PARTNER_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#14B8A6', '#F97316', '#6366F1']
+
+const FALLBACK_PARTNERS: PartnerCard[] = [
+  { id: 1, image: '/patners/rdb.png', url: 'https://www.rdb.rw/', color: PARTNER_COLORS[0] },
+  { id: 2, image: '/patners/bk.jpg', url: 'https://bk.rw/', color: PARTNER_COLORS[1] },
+  { id: 3, image: '/patners/brd.png', url: 'https://www.brd.rw/', color: PARTNER_COLORS[2] },
+  { id: 4, image: '/patners/im.png', url: 'https://www.imbankgroup.com/rwanda/', color: PARTNER_COLORS[3] },
+  { id: 5, image: '/patners/Equity_Group_Logo.png', url: 'https://equitygroupholdings.com/rw/', color: PARTNER_COLORS[4] },
+  { id: 6, image: '/patners/africa50.jpg', url: 'https://www.africa50.com/', color: PARTNER_COLORS[5] },
+]
+
+const FALLBACK_TESTIMONIALS: TestimonialCard[] = [
+  {
+    id: 1,
+    name: 'Marie Claire Uwimana',
+    role: 'Founder, AgroTech Rwanda',
+    text: 'FINVERRA connected me with the right investors within 3 months. Their advisory team prepared my business plan professionally and I secured RWF 50M in funding. Life-changing!',
+    rating: 5,
+  },
+  {
+    id: 2,
+    name: 'Patrick Habimana',
+    role: 'CEO, TechHub Kigali',
+    text: 'The investment monitoring dashboard gives our investors real-time visibility which built enormous trust. FINVERRA transformed how we communicate with our funding partners.',
+    rating: 5,
+  },
+  {
+    id: 3,
+    name: 'Sophie Niyonzima',
+    role: 'Investor, Kigali Capital Partners',
+    text: 'As an investor, I value the due diligence FINVERRA does before presenting opportunities. Every project I\'ve reviewed has been thoroughly vetted and professionally prepared.',
+    rating: 5,
+  },
+]
 
 // NAV
 export function Navbar() {
@@ -392,15 +454,59 @@ function Achievements() {
 function Testimonials() {
   const { ref, inView } = useInView()
   const [active, setActive] = useState(0)
-  const testimonials = [
-    { name: 'Marie Claire Uwimana', role: 'Founder, AgroTech Rwanda', text: 'FINVERRA connected me with the right investors within 3 months. Their advisory team prepared my business plan professionally and I secured RWF 50M in funding. Life-changing!', rating: 5 },
-    { name: 'Patrick Habimana', role: 'CEO, TechHub Kigali', text: 'The investment monitoring dashboard gives our investors real-time visibility which built enormous trust. FINVERRA transformed how we communicate with our funding partners.', rating: 5 },
-    { name: 'Sophie Niyonzima', role: 'Investor, Kigali Capital Partners', text: 'As an investor, I value the due diligence FINVERRA does before presenting opportunities. Every project I\'ve reviewed has been thoroughly vetted and professionally prepared.', rating: 5 },
-  ]
+  const [testimonials, setTestimonials] = useState<TestimonialCard[]>(FALLBACK_TESTIMONIALS)
+
   useEffect(() => {
-    const timer = setInterval(() => setActive(a => (a + 1) % testimonials.length), 5000)
-    return () => clearInterval(timer)
+    let mounted = true
+
+    async function loadTestimonials() {
+      try {
+        const response = await fetch(buildApiUrl('/admin/testimonials'))
+        const payload = await response.json().catch(() => null)
+
+        if (!response.ok || !payload || typeof payload !== 'object' || !Array.isArray((payload as { testimonials?: unknown }).testimonials)) {
+          return
+        }
+
+        const apiTestimonials = (payload as { testimonials: TestimonialApiItem[] }).testimonials
+        const mappedTestimonials: TestimonialCard[] = apiTestimonials
+          .map((item) => {
+            const companyPart = item.company?.trim() ? `, ${item.company.trim()}` : ''
+            return {
+              id: item.id,
+              name: item.name,
+              role: `${item.position}${companyPart}`,
+              text: item.testimony,
+              rating: 5,
+            }
+          })
+          .filter((item) => item.name.trim() && item.role.trim() && item.text.trim())
+
+        if (mounted && mappedTestimonials.length > 0) {
+          setTestimonials(mappedTestimonials)
+          setActive(0)
+        }
+      } catch {
+        // Keep fallback testimonials if the API is unavailable.
+      }
+    }
+
+    void loadTestimonials()
+
+    return () => {
+      mounted = false
+    }
   }, [])
+
+  useEffect(() => {
+    if (testimonials.length <= 1) {
+      return
+    }
+
+    const timer = setInterval(() => setActive((a) => (a + 1) % testimonials.length), 5000)
+    return () => clearInterval(timer)
+  }, [testimonials])
+
   const t = testimonials[active]
   return (
     <section className="testimonials testimonials-premium section" id="testimonials" ref={ref}>
@@ -438,11 +544,60 @@ function Testimonials() {
 function Appointment() {
   const { ref, inView } = useInView()
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [formData, setFormData] = useState({
+    names: '',
+    email: '',
+    phone: '',
+    date: '',
+    time: '',
+    meeting_format: '',
+    message: '',
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 4000)
+
+    if (!formData.names.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.date || !formData.time || !formData.meeting_format || !formData.message.trim()) {
+      setFormError('All fields are required.')
+      return
+    }
+
+    setSubmitting(true)
+    setFormError('')
+
+    try {
+      const response = await fetch(buildApiUrl('/book-appointment'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const payload = await response.json().catch(() => null)
+
+      if (!response.ok || !payload || typeof payload !== 'object' || payload.success !== true) {
+        throw new Error((payload as { message?: string } | null)?.message ?? 'Failed to send appointment request')
+      }
+
+      setSubmitted(true)
+      setFormData({
+        names: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '',
+        meeting_format: '',
+        message: '',
+      })
+      setTimeout(() => setSubmitted(false), 4000)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Failed to send appointment request')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -469,11 +624,6 @@ function Appointment() {
                 </div>
               </div>
             ))}
-            <div className="appt-formats">
-              <span>In-Person (Kigali)</span>
-              <span>Zoom / Google Meet</span>
-              <span>Phone Call</span>
-            </div>
           </div>
           <div className="appt-form-wrap">
             {submitted ? (
@@ -483,11 +633,55 @@ function Appointment() {
               </div>
             ) : (
               <form className="appt-form" onSubmit={handleSubmit}>
+                {formError && <p className="form-error" style={{ marginBottom: 12 }}>{formError}</p>}
                 <div className="form-row">
-                  <input type="text" placeholder="Full Name" required />
-                  <input type="email" placeholder="Email Address" required />
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={formData.names}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, names: event.target.value }))}
+                    required
+                    disabled={submitting}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={formData.email}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
+                    required
+                    disabled={submitting}
+                  />
                 </div>
-                <select required>
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={formData.phone}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, phone: event.target.value }))}
+                  required
+                  disabled={submitting}
+                />
+                <div className="form-row">
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, date: event.target.value }))}
+                    required
+                    disabled={submitting}
+                  />
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={(event) => setFormData((prev) => ({ ...prev, time: event.target.value }))}
+                    required
+                    disabled={submitting}
+                  />
+                </div>
+                <select
+                  value={formData.meeting_format}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, meeting_format: event.target.value }))}
+                  required
+                  disabled={submitting}
+                >
                   <option value="">Type of Meeting</option>
                   <option>Business Consultation</option>
                   <option>Investment Discussion</option>
@@ -495,26 +689,17 @@ function Appointment() {
                   <option>Partnership Meeting</option>
                   <option>Advisory Session</option>
                 </select>
-                <div className="form-row">
-                  <input type="date" required />
-                  <select>
-                    <option>9:00 AM</option>
-                    <option>10:00 AM</option>
-                    <option>11:00 AM</option>
-                    <option>2:00 PM</option>
-                    <option>3:00 PM</option>
-                    <option>4:00 PM</option>
-                  </select>
-                </div>
-                <select>
-                  <option value="">Meeting Format</option>
-                  <option>In-Person (Kigali Office)</option>
-                  <option>Zoom</option>
-                  <option>Google Meet</option>
-                  <option>Phone Call</option>
-                </select>
-                <textarea placeholder="Brief description of your purpose / agenda..." rows={3} />
-                <button type="submit" className="btn-primary full">Book Appointment →</button>
+                <textarea
+                  placeholder="Brief description of your purpose / agenda..."
+                  rows={3}
+                  value={formData.message}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, message: event.target.value }))}
+                  required
+                  disabled={submitting}
+                />
+                <button type="submit" className="btn-primary full" disabled={submitting}>
+                  {submitting ? 'Sending...' : 'Book Appointment →'}
+                </button>
               </form>
             )}
           </div>
@@ -607,14 +792,40 @@ export function Footer() {
 function Partners() {
   const { ref, inView } = useInView()
 
-  const partners = [
-    { name: 'Rwanda Development Board', category: 'Government', color: '#3B82F6', logo: '/patners/rdb.png', website: 'https://www.rdb.rw/' },
-    { name: 'Bank of Kigali', category: 'Banking', color: '#10B981', logo: '/patners/bk.jpg', website: 'https://bk.rw/' },
-    { name: 'Development Bank of Rwanda', category: 'Development', color: '#F59E0B', logo: '/patners/brd.png', website: 'https://www.brd.rw/' },
-    { name: 'I&M Bank Rwanda', category: 'Banking', color: '#14B8A6', logo: '/patners/im.png', website: 'https://www.imbankgroup.com/rwanda/' },
-    { name: 'Equity Bank Rwanda', category: 'Banking', color: '#F97316', logo: '/patners/Equity_Group_Logo.png', website: 'https://equitygroupholdings.com/rw/' },
-    { name: 'Africa50', category: 'Investment', color: '#6366F1', logo: '/patners/africa50.jpg', website: 'https://www.africa50.com/' },
-  ]
+  const [partners, setPartners] = useState<PartnerCard[]>(FALLBACK_PARTNERS)
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadPartners() {
+      try {
+        const response = await fetch(buildApiUrl('/admin/partners'))
+        const payload = await response.json().catch(() => null)
+
+        if (!response.ok || !payload || typeof payload !== 'object' || !Array.isArray((payload as { partners?: unknown }).partners)) {
+          return
+        }
+
+        const apiPartners = (payload as { partners: PartnerApiItem[] }).partners
+        const mappedPartners = apiPartners.map((partner, index) => ({
+          ...partner,
+          color: PARTNER_COLORS[index % PARTNER_COLORS.length],
+        }))
+
+        if (mounted && mappedPartners.length > 0) {
+          setPartners(mappedPartners)
+        }
+      } catch {
+        // Keep fallback partners if the API is unavailable.
+      }
+    }
+
+    void loadPartners()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   // Duplicate for seamless infinite scroll
   const allPartners = [...partners, ...partners]
@@ -640,14 +851,14 @@ function Partners() {
             {allPartners.map((p, i) => (
               <a
                 className="partner-logo-card"
-                key={`${p.name}-${i}`}
-                href={p.website}
+                key={`${p.id}-${i}`}
+                href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Visit ${p.name} website`}
+                aria-label="Visit partner website"
               >
                 <div className="partner-logo-circle" style={{ background: `${p.color}18`, borderColor: `${p.color}30` }}>
-                  <img src={p.logo} alt={`${p.name} logo`} className="partner-logo-img" loading="lazy" decoding="async" />
+                  <img src={buildApiUrl(p.image)} alt="Partner logo" className="partner-logo-img" loading="lazy" decoding="async" />
                 </div>
               </a>
             ))}

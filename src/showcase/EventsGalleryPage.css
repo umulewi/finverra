@@ -164,6 +164,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
+  align-items: stretch;
 }
 
 .events-list-modern {
@@ -171,10 +172,11 @@
   border-radius: 14px;
   box-shadow: 0 4px 16px rgba(10,47,71,0.06);
   padding: 14px 10px;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
 }
 
 .event-card-modern {

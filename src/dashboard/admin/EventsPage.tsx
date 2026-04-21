@@ -38,12 +38,6 @@ function formatDateForInput(date: Date) {
   return `${year}-${month}-${day}`
 }
 
-function addDays(date: Date, days: number) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
-
 function authHeader(): HeadersInit {
   const session = getAuthSession()
   return session ? { Authorization: `Bearer ${(session.payload as { token?: string })?.token ?? ''}` } : {}
@@ -51,7 +45,6 @@ function authHeader(): HeadersInit {
 
 export default function EventsPage() {
   const todayDate = formatDateForInput(new Date())
-  const tomorrowDate = formatDateForInput(addDays(new Date(), 1))
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -152,12 +145,8 @@ export default function EventsPage() {
       setFormError('Event date is required.')
       return
     }
-    if (!editingId && form.date <= todayDate) {
-      setFormError('For new events, select a future date.')
-      return
-    }
-    if (editingId && form.date !== todayDate) {
-      setFormError('When updating, only the current date is allowed.')
+    if (form.date < todayDate) {
+      setFormError('Only current or future dates are allowed.')
       return
     }
     if (!editingId && !form.image) {
@@ -318,8 +307,7 @@ export default function EventsPage() {
                 style={styles.input}
                 value={form.date}
                 onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
-                min={editingId ? todayDate : tomorrowDate}
-                max={editingId ? todayDate : undefined}
+                min={todayDate}
                 disabled={submitting}
               />
 

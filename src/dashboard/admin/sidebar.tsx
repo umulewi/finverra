@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useEffect } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { getAuthSession } from '../authStorage'
+import { isSuperUserSession } from './superUser'
 
 type AdminSidebarProps = {
   onLogout: () => void
@@ -15,7 +17,7 @@ type MenuItem = {
 }
 
 type SidebarGroup = {
-  key: 'entrepreneurs' | 'investors' | 'website'
+  key: 'entrepreneurs' | 'investors' | 'website' | 'administration'
   label: string
   items: MenuItem[]
 }
@@ -166,10 +168,27 @@ const websiteMenu: MenuItem[] = [
   },
 ]
 
+const administrationMenu: MenuItem[] = [
+  {
+    label: 'Admin Users',
+    path: '/dashboard/admin/users',
+    groupKey: 'administration',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8.5" cy="7" r="4" />
+        <line x1="20" y1="8" x2="20" y2="14" />
+        <line x1="17" y1="11" x2="23" y2="11" />
+      </svg>
+    ),
+  },
+]
+
 const sidebarGroups: SidebarGroup[] = [
   { key: 'entrepreneurs', label: 'Entrepreneurs', items: entrepreneurMenu },
   { key: 'investors', label: 'Investors', items: investorMenu },
   { key: 'website', label: 'Website Pages', items: websiteMenu },
+  { key: 'administration', label: 'Administration', items: administrationMenu },
 ]
 
 const sidebarOpenGroupsStorageKey = 'finverra-admin-sidebar-open-groups'
@@ -177,10 +196,13 @@ const sidebarOpenGroupsStorageKey = 'finverra-admin-sidebar-open-groups'
 export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const session = getAuthSession()
+  const isSuperUser = isSuperUserSession(session)
   const [openGroups, setOpenGroups] = useState<Record<SidebarGroup['key'], boolean>>({
     entrepreneurs: false,
     investors: false,
     website: false,
+    administration: false,
   })
 
   useEffect(() => {
@@ -193,6 +215,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
         entrepreneurs: Boolean(parsed.entrepreneurs),
         investors: Boolean(parsed.investors),
         website: Boolean(parsed.website),
+        administration: Boolean(parsed.administration),
       })
     } catch {
       // Ignore invalid persisted state and keep the default closed state.
@@ -214,6 +237,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
       entrepreneurs: key === 'entrepreneurs' ? !openGroups.entrepreneurs : false,
       investors: key === 'investors' ? !openGroups.investors : false,
       website: key === 'website' ? !openGroups.website : false,
+      administration: key === 'administration' ? !openGroups.administration : false,
     }
 
     persistOpenGroups(nextState)
@@ -224,9 +248,23 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
       entrepreneurs: groupKey === 'entrepreneurs',
       investors: groupKey === 'investors',
       website: groupKey === 'website',
+      administration: groupKey === 'administration',
     })
     navigate(path)
   }
+
+  const visibleGroups = sidebarGroups
+    .map((group) => {
+      if (group.key !== 'administration') {
+        return group
+      }
+
+      return {
+        ...group,
+        items: isSuperUser ? group.items : [],
+      }
+    })
+    .filter((group) => group.items.length > 0)
 
   function isGroupActive(group: SidebarGroup) {
     return group.items.some((item) => pathname === item.path || (item.path === '/dashboard/admin/services' && pathname === '/dashboard/admin'))
@@ -273,7 +311,7 @@ export default function AdminSidebar({ onLogout }: AdminSidebarProps) {
 
         <div style={styles.navSection}>
           <span style={styles.navSectionTitle}>Menu</span>
-          {sidebarGroups.map((group) => {
+          {visibleGroups.map((group) => {
             const groupActive = isGroupActive(group)
             const groupOpen = openGroups[group.key]
 
