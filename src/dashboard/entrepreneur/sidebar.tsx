@@ -12,10 +12,6 @@ type MenuItem = {
 }
 
 const menuItems: MenuItem[] = [
-
-    
-
-  
   {
     label: 'Dashboard',
     path: '/dashboard/entrepreneur',
@@ -64,6 +60,27 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
   },
+  {
+    label: 'Application Status',
+    path: '/dashboard/entrepreneur/application-status',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </svg>
+    ),
+  },
+  // Service Fees menu LAST
+  {
+    label: 'Service Fees',
+    path: '/dashboard/entrepreneur/service-fees',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4l3 3" />
+      </svg>
+    ),
+  },
 ]
 
 export default function EntrepreneurSidebar({ onLogout }: EntrepreneurSidebarProps) {
@@ -74,15 +91,7 @@ export default function EntrepreneurSidebar({ onLogout }: EntrepreneurSidebarPro
     <aside style={styles.sidebar}>
       <div style={styles.sidebarBrand}>
         <div style={styles.brandLogo}>
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <path d="M14 2L26 8v12L14 26 2 20V8z" fill="#E6A817" opacity="0.15" stroke="#E6A817" strokeWidth="1.5" />
-            <path d="M14 7l8 4.5V17L14 21.5 6 17v-5.5z" fill="#E6A817" opacity="0.4" />
-            <path d="M14 12l4 2.5V17L14 19.5 10 17v-2.5z" fill="#0EA5A0" />
-          </svg>
-          <div>
-            <span style={styles.brandName}>Finverra</span>
-            <span style={styles.brandTag}>Entrepreneur Navigation</span>
-          </div>
+          <img src="/logo-finverra-white.png" alt="Finverra" style={styles.brandImage} />
         </div>
       </div>
 
@@ -136,13 +145,23 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: '28px 0 60px rgba(15, 30, 53, 0.18)',
   },
   sidebarBrand: {
-    padding: '22px 20px 18px',
+    padding: '12px 12px 10px',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
   },
   brandLogo: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    width: '100%',
+    minHeight: 64,
+  },
+  brandImage: {
+    width: '92%',
+    maxWidth: 240,
+    height: 'auto',
+    maxHeight: 72,
+    objectFit: 'contain',
+    flexShrink: 0,
   },
   brandName: {
     fontSize: 18,

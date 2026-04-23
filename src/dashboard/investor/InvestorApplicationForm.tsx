@@ -230,7 +230,6 @@ export default function ApplicationFoam() {
   const [isLoadingBasicInfo, setIsLoadingBasicInfo] = useState(false)
   const [isLoadingApplication, setIsLoadingApplication] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
@@ -579,45 +578,6 @@ export default function ApplicationFoam() {
       setError(submitError instanceof Error ? submitError.message : 'Failed to submit application.')
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  async function handleDelete() {
-    const targetId = applicationId ?? userId
-    if (!targetId) {
-      setError('Application id is missing, so delete cannot proceed.')
-      return
-    }
-
-    setIsDeleting(true)
-    setError(null)
-    setSuccess(null)
-
-    try {
-      const response = await fetch(buildApiUrl(`/investor_application/${targetId}`), {
-        method: 'DELETE',
-        headers: authHeader(),
-      })
-      const payload = await parseResponseBody(response)
-
-      if (!response.ok) {
-        throw new Error(getErrorMessage(payload, 'Failed to delete investor application.'))
-      }
-
-      setForm(initialForm)
-      setExistingFiles(initialFiles)
-      setCompanyRegistrationFile(null)
-      setProofOfFundsFile(null)
-      setKycFile(null)
-      setIdentificationDocumentFile(null)
-      setCvFile(null)
-      setApplicationId(null)
-      setHasExistingApplication(false)
-      setSuccess('Application deleted successfully.')
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Failed to delete investor application.')
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -1420,27 +1380,16 @@ export default function ApplicationFoam() {
               >
                 Next Step →
               </button>
-            ) : (
-              <>
+            ) : hasExistingApplication === false ? (
                 <button
                   style={{ ...s.btnPrimary, ...s.btnSubmit, ...responsiveButtonBase }}
                   type="submit"
                   disabled={isSaving || isBusy || !userId}
                 >
-                  {isSaving ? 'Saving…' : hasExistingApplication === false ? 'Create Application' : 'Update Application'}
+                  {isSaving ? 'Saving…' : 'Create Application'}
                 </button>
-                {hasExistingApplication ? (
-                  <button
-                    type="button"
-                    style={{ ...s.btnDanger, ...responsiveButtonBase }}
-                    onClick={() => void handleDelete()}
-                    disabled={isBusy || isDeleting}
-                  >
-                    {isDeleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                ) : null}
-              </>
-            )}
+            ) : null
+            }
           </div>
         </form>
       </div>

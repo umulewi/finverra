@@ -211,6 +211,7 @@ export default function InvestorDashboardPage() {
 					onToggleSidebar={() => setSidebarOpen((o) => !o)}
 					searchVal={searchVal}
 					onSearchChange={setSearchVal}
+					onLogout={handleLogout}
 				/>
 
 				<div style={bodyStyle}>

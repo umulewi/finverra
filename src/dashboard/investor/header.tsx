@@ -1,12 +1,22 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type InvestorHeaderProps = {
 	onToggleSidebar: () => void
 	searchVal: string
 	onSearchChange: (val: string) => void
+	onLogout: () => void
 }
 
-export default function InvestorHeader({ onToggleSidebar, searchVal: _searchVal, onSearchChange: _onSearchChange }: InvestorHeaderProps) {
+export default function InvestorHeader({
+	onToggleSidebar,
+	searchVal: _searchVal,
+	onSearchChange: _onSearchChange,
+	onLogout,
+}: InvestorHeaderProps) {
+	const navigate = useNavigate()
+	const menuRef = useRef<HTMLDivElement>(null)
+	const [menuOpen, setMenuOpen] = useState(false)
 	const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
 
 	useEffect(() => {
@@ -14,6 +24,28 @@ export default function InvestorHeader({ onToggleSidebar, searchVal: _searchVal,
 		window.addEventListener('resize', handleResize)
 		handleResize()
 		return () => window.removeEventListener('resize', handleResize)
+	}, [])
+
+	useEffect(() => {
+		function handleOutsideClick(event: MouseEvent) {
+			if (!menuRef.current?.contains(event.target as Node)) {
+				setMenuOpen(false)
+			}
+		}
+
+		function handleEscape(event: KeyboardEvent) {
+			if (event.key === 'Escape') {
+				setMenuOpen(false)
+			}
+		}
+
+		document.addEventListener('mousedown', handleOutsideClick)
+		document.addEventListener('keydown', handleEscape)
+
+		return () => {
+			document.removeEventListener('mousedown', handleOutsideClick)
+			document.removeEventListener('keydown', handleEscape)
+		}
 	}, [])
 
 	const isPhone = viewportWidth <= 640
@@ -75,12 +107,47 @@ export default function InvestorHeader({ onToggleSidebar, searchVal: _searchVal,
 				
 				
 
-				<div style={avatarWrapStyle}>
-					<div style={avatarStyle}>IV</div>
-					<div style={avatarMetaStyle}>
-						<span style={styles.avatarRole}>Investor</span>
-						<strong style={styles.avatarName}>Finverra</strong>
-					</div>
+				<div style={styles.profileWrap} ref={menuRef}>
+					<button
+						type="button"
+						style={avatarWrapStyle}
+						onClick={() => setMenuOpen((open) => !open)}
+						aria-haspopup="menu"
+						aria-expanded={menuOpen}
+						aria-label="Open investor menu"
+					>
+						<div style={avatarStyle}>IV</div>
+						<div style={avatarMetaStyle}>
+							<span style={styles.avatarRole}>Investor</span>
+							<strong style={styles.avatarName}>Finverra</strong>
+						</div>
+						<span style={styles.menuChevron}>▾</span>
+					</button>
+
+					{menuOpen ? (
+						<div style={styles.dropdown} role="menu" aria-label="Investor account menu">
+							<button
+								type="button"
+								style={styles.dropdownItem}
+								onClick={() => {
+									setMenuOpen(false)
+									navigate('/dashboard/investor/change-password')
+								}}
+							>
+								Change Password
+							</button>
+							<button
+								type="button"
+								style={{ ...styles.dropdownItem, ...styles.dropdownItemDanger }}
+								onClick={() => {
+									setMenuOpen(false)
+									onLogout()
+								}}
+							>
+								Logout
+							</button>
+						</div>
+					) : null}
 				</div>
 			</div>
 		</header>
@@ -157,6 +224,9 @@ const styles: Record<string, CSSProperties> = {
 		alignItems: 'center',
 		gap: 10,
 	},
+	profileWrap: {
+		position: 'relative',
+	},
 	infoChip: {
 		display: 'flex',
 		flexDirection: 'column',
@@ -213,6 +283,7 @@ const styles: Record<string, CSSProperties> = {
 		background: '#ffffff',
 		border: '1px solid rgba(2, 51, 65, 0.12)',
 		boxShadow: '0 4px 12px rgba(2, 51, 65, 0.08)',
+		cursor: 'pointer',
 	},
 	avatar: {
 		width: 38,
@@ -241,5 +312,39 @@ const styles: Record<string, CSSProperties> = {
 	avatarName: {
 		fontSize: 13,
 		color: '#023341',
+	},
+	menuChevron: {
+		fontSize: 12,
+		color: '#66808b',
+		marginLeft: 4,
+	},
+	dropdown: {
+		position: 'absolute',
+		top: 'calc(100% + 8px)',
+		right: 0,
+		minWidth: 180,
+		borderRadius: 12,
+		border: '1px solid rgba(2, 51, 65, 0.12)',
+		background: '#ffffff',
+		boxShadow: '0 18px 32px rgba(2,51,65,0.14)',
+		overflow: 'hidden',
+		zIndex: 100,
+	},
+	dropdownItem: {
+		width: '100%',
+		border: 'none',
+		borderBottom: '1px solid rgba(2, 51, 65, 0.08)',
+		background: '#ffffff',
+		color: '#023341',
+		textAlign: 'left',
+		padding: '10px 12px',
+		fontSize: 13,
+		fontWeight: 600,
+		cursor: 'pointer',
+	},
+	dropdownItemDanger: {
+		borderBottom: 'none',
+		color: '#a61d24',
+		background: 'rgba(220,38,38,0.05)',
 	},
 }

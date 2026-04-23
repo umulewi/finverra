@@ -114,6 +114,27 @@ function toText(value: unknown) {
   return typeof value === 'string' ? value : value == null ? '' : String(value)
 }
 
+async function parseResponseBody(response: Response) {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) return response.json()
+  const text = await response.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+function getErrorMessage(payload: unknown, fallbackMessage: string) {
+  if (typeof payload === 'string' && payload.trim()) return payload
+  if (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string') {
+    return payload.message
+  }
+  return fallbackMessage
+}
+
+const allowedStatuses = ['pending', 'approved', 'rejected'] as const
+
 function toBool(value: unknown) {
   if (typeof value === 'boolean') return value
   if (typeof value === 'number') return value === 1
@@ -174,19 +195,22 @@ export default function InvestorApplicationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmStatusUpdateId, setConfirmStatusUpdateId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [statusSavingId, setStatusSavingId] = useState<number | null>(null)
+  const [statusDraftById, setStatusDraftById] = useState<Record<number, string>>({})
   const pageSize = 10
 
   const accessToken = getAccessToken()
 
   const computedMetrics = useMemo(() => {
     const total = applications.length
-    const agreed = applications.filter((item) => toBool(item.i_agree_to_terms)).length
+    const approved = applications.filter((item) => toText((item as Record<string, unknown>).status).toLowerCase() === 'approved').length
 
     return [
       { label: 'Total Applications', value: String(total) },
-      { label: 'Terms Accepted', value: String(agreed) },
+      { label: 'Approved Applications', value: String(approved) },
     ]
   }, [applications])
 
@@ -235,10 +259,64 @@ export default function InvestorApplicationsPage() {
     try {
       const rows = await fetchAdminInvestorApplications(accessToken)
       setApplications(rows)
+      const nextDrafts: Record<number, string> = {}
+      rows.forEach((item) => {
+        const status = toText((item as Record<string, unknown>).status).trim().toLowerCase()
+        nextDrafts[item.id] = allowedStatuses.includes(status as (typeof allowedStatuses)[number]) ? status : 'pending'
+      })
+      setStatusDraftById(nextDrafts)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load investor applications.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleStatusDraftChange(applicationId: number, value: string) {
+    setStatusDraftById((prev) => ({
+      ...prev,
+      [applicationId]: value,
+    }))
+  }
+
+  async function handleUpdateStatus(applicationId: number) {
+    const nextStatus = (statusDraftById[applicationId] ?? '').trim().toLowerCase()
+
+    if (!allowedStatuses.includes(nextStatus as (typeof allowedStatuses)[number])) {
+      setError('Status must be one of: pending, approved, rejected.')
+      return
+    }
+
+    setConfirmStatusUpdateId(null)
+    setStatusSavingId(applicationId)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch(buildApiUrl(`/admin/investor_applications/${applicationId}/status`), {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+      const payload = await parseResponseBody(response)
+
+      if (!response.ok) {
+        throw new Error(getErrorMessage(payload, 'Failed to update investor application status.'))
+      }
+
+      setApplications((prev) => prev.map((item) => (
+        item.id === applicationId
+          ? ({ ...item, status: nextStatus } as AdminInvestorApplication)
+          : item
+      )))
+      setSuccess(getErrorMessage(payload, 'Investor application status updated successfully.'))
+    } catch (statusError) {
+      setError(statusError instanceof Error ? statusError.message : 'Failed to update investor application status.')
+    } finally {
+      setStatusSavingId(null)
     }
   }
 
@@ -444,6 +522,30 @@ export default function InvestorApplicationsPage() {
         </div>
       ) : null}
 
+      {confirmStatusUpdateId !== null ? (
+        <div style={styles.overlay} onClick={() => setConfirmStatusUpdateId(null)}>
+          <div style={styles.confirmModal} onClick={(event) => event.stopPropagation()}>
+            <h3 style={styles.confirmTitle}>Update Application Status?</h3>
+            <p style={styles.confirmText}>
+              This will set status to <strong>{statusDraftById[confirmStatusUpdateId] ?? 'pending'}</strong>.
+            </p>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.cancelBtn} onClick={() => setConfirmStatusUpdateId(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.primaryBtn}
+                disabled={statusSavingId === confirmStatusUpdateId}
+                onClick={() => { void handleUpdateStatus(confirmStatusUpdateId) }}
+              >
+                {statusSavingId === confirmStatusUpdateId ? 'Updating...' : 'Yes, Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {showForm ? (
         <div style={styles.overlay} onClick={closeForm}>
           <div style={styles.modal} onClick={(event) => event.stopPropagation()}>
@@ -606,8 +708,8 @@ export default function InvestorApplicationsPage() {
               </div>
 
               <div style={styles.viewGrid}>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>ID</span><strong>{viewApplication.id}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>User ID</span><strong>{viewApplication.users_id}</strong></div>
+                
+                
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Email</span><strong>{toText(viewApplication.email) || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Investor Type</span><strong>{toText(viewApplication.investor_type) || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Residence Country</span><strong>{toText(viewApplication.residence_country) || '-'}</strong></div>
@@ -679,6 +781,7 @@ export default function InvestorApplicationsPage() {
                   <th style={styles.th}>Budget</th>
                   <th style={styles.th}>Preferred Sectors</th>
                   <th style={styles.th}>Contact</th>
+                  <th style={styles.th}>Status</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -700,11 +803,32 @@ export default function InvestorApplicationsPage() {
                     <td style={styles.td}>{toText(item.investment_budget) || '-'}</td>
                     <td style={styles.td}>{toText(item.sectors_do_you_prefer) || '-'}</td>
                     <td style={styles.td}>{toText(item.preferred_contact) || '-'}</td>
+                    <td style={styles.td}>{toText((item as Record<string, unknown>).status) || '-'}</td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.viewBtn }} onClick={() => openView(item.id)}>
                           View
                         </button>
+                        <div style={styles.statusActionWrap}>
+                          <select
+                            value={statusDraftById[item.id] ?? 'pending'}
+                            onChange={(event) => handleStatusDraftChange(item.id, event.target.value)}
+                            style={styles.statusSelect}
+                            disabled={statusSavingId === item.id}
+                          >
+                            <option value="pending">pending</option>
+                            <option value="approved">approved</option>
+                            <option value="rejected">rejected</option>
+                          </select>
+                          <button
+                            type="button"
+                            style={styles.statusUpdateBtn}
+                            onClick={() => setConfirmStatusUpdateId(item.id)}
+                            disabled={statusSavingId === item.id}
+                          >
+                            {statusSavingId === item.id ? 'Updating...' : 'Update'}
+                          </button>
+                        </div>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.editBtn }} onClick={() => openEdit(item.id)}>
                           Edit
                         </button>
@@ -973,7 +1097,32 @@ const styles: Record<string, CSSProperties> = {
   },
   actions: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: 8,
+  },
+  statusActionWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusSelect: {
+    border: '1px solid #cfe0e3',
+    borderRadius: 8,
+    padding: '7px 10px',
+    background: '#ffffff',
+    color: '#023341',
+    fontWeight: 600,
+    fontSize: 12,
+  },
+  statusUpdateBtn: {
+    border: '1px solid #023341',
+    borderRadius: 8,
+    padding: '7px 10px',
+    background: '#023341',
+    color: '#ffffff',
+    fontWeight: 700,
+    fontSize: 12,
+    cursor: 'pointer',
   },
   primaryBtn: {
     border: 'none',

@@ -13,6 +13,8 @@ const navPathByLabel: Record<string, string> = {
   'Edit Profile': '/dashboard/investor/edit-profile',
   'Application Form': '/dashboard/investor/application-form',
   'My Application': '/dashboard/investor/application-form',
+  'Application Status': '/dashboard/investor/application-status',
+  'Service Fees': '/dashboard/investor/service-fees',
   
 }
 
@@ -108,6 +110,7 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
           onToggleSidebar={() => setSidebarOpen((open) => !open)}
           searchVal={searchVal}
           onSearchChange={setSearchVal}
+          onLogout={handleLogout}
         />
 
         <div

@@ -32,8 +32,13 @@ const EntrepreneurForgotPassword = lazy(() => import('./dashboard/entrepreneur/E
 const EntrepreneurResetPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurResetPassword'))
 const EntrepreneurDashboard = lazy(() => import('./dashboard/entrepreneur/EntrepreneurDashboard'))
 const EntrepreneurProfile = lazy(() => import('./dashboard/entrepreneur/EntrepreneurProfile'))
+const EntrepreneurChangePasswordPage = lazy(() => import('./dashboard/entrepreneur/EntrepreneurChangePasswordPage.tsx'))
+
 const ApplicationInfo = lazy(() => import('./dashboard/entrepreneur/ApplicationInfo'))
+const EntrepreneurApplicationStatus = lazy(() => import('./dashboard/entrepreneur/ApplicationStatus'))
 const BusinessInfo = lazy(() => import('./dashboard/entrepreneur/BusinessInfo'))
+
+const EntrepreneurServiceFees = lazy(() => import('./dashboard/entrepreneur/ServiceFees'))
 
 
 
@@ -43,11 +48,15 @@ const InvestorVerifyOtp = lazy(() => import('./dashboard/investor/InvestorVerify
 const InvestorForgotPassword = lazy(() => import('./dashboard/investor/InvestorForgotPassword'))
 const InvestorResetPassword = lazy(() => import('./dashboard/investor/InvestorResetPassword'))
 const InvestorApplicationForm = lazy(() => import('./dashboard/investor/InvestorApplicationForm'))
+const InvestorApplicationStatus = lazy(() => import('./dashboard/investor/ApplicationStatusPage'))
 
 
 const PipelinePage = lazy(() => import('./dashboard/investor/PipelinePage'))
 
 const DocumentsPage = lazy(() => import('./dashboard/investor/DocumentsPage'))
+
+const InvestorServiceFees = lazy(() => import('./dashboard/investor/ServiceFees'))
+const InvestorChangePasswordPage = lazy(() => import('./dashboard/investor/InvestorChangePasswordPage'))
 
 
 const InvestorEditProfile = lazy(() => import('./dashboard/investor/InvestorEditProfile'))
@@ -211,6 +220,14 @@ export default function AppRouter() {
             )}
           />
           <Route
+            path="/dashboard/entrepreneur/change-password"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <EntrepreneurChangePasswordPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
             path="/dashboard/entrepreneur/ApplicationInfo"
             element={(
               <ProtectedRoleRoute role="entrepreneur">
@@ -220,10 +237,29 @@ export default function AppRouter() {
           />
 
           <Route
+            path="/dashboard/entrepreneur/application-status"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <EntrepreneurApplicationStatus />
+              </ProtectedRoleRoute>
+            )}
+          />
+
+
+          <Route
             path="/dashboard/entrepreneur/BusinessInfo"
             element={(
               <ProtectedRoleRoute role="entrepreneur">
                 <BusinessInfo />
+              </ProtectedRoleRoute>
+            )}
+          />
+
+          <Route
+            path="/dashboard/entrepreneur/service-fees"
+            element={(
+              <ProtectedRoleRoute role="entrepreneur">
+                <EntrepreneurServiceFees />
               </ProtectedRoleRoute>
             )}
           />
@@ -268,6 +304,15 @@ export default function AppRouter() {
               </ProtectedRoleRoute>
             )}
           />
+
+          <Route
+            path="/dashboard/investor/application-status"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorApplicationStatus />
+              </ProtectedRoleRoute>
+            )}
+          />
           
           <Route
             path="/dashboard/investor/documents"
@@ -285,6 +330,22 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="investor">
                 <InvestorEditProfile />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/change-password"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorChangePasswordPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/investor/service-fees"
+            element={(
+              <ProtectedRoleRoute role="investor">
+                <InvestorServiceFees />
               </ProtectedRoleRoute>
             )}
           />

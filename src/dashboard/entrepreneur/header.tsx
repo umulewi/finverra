@@ -1,10 +1,39 @@
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 type EntrepreneurHeaderProps = {
   onToggleSidebar: () => void
+  onLogout: () => void
 }
 
-export default function EntrepreneurHeader({ onToggleSidebar }: EntrepreneurHeaderProps) {
+export default function EntrepreneurHeader({ onToggleSidebar, onLogout }: EntrepreneurHeaderProps) {
+  const navigate = useNavigate()
+  const menuRef = useRef<HTMLDivElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
+
   return (
     <header style={styles.topbar}>
       <div style={styles.leftWrap}>
@@ -21,12 +50,47 @@ export default function EntrepreneurHeader({ onToggleSidebar }: EntrepreneurHead
         </div>
       </div>
 
-      <div style={styles.avatarWrap}>
-        <div style={styles.avatar}>EN</div>
-        <div style={styles.avatarMeta}>
-          <span style={styles.avatarRole}>Entrepreneur</span>
-          <strong style={styles.avatarName}>Finverra</strong>
-        </div>
+      <div style={styles.profileWrap} ref={menuRef}>
+        <button
+          type="button"
+          style={styles.avatarWrap}
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label="Open entrepreneur menu"
+        >
+          <div style={styles.avatar}>EN</div>
+          <div style={styles.avatarMeta}>
+            <span style={styles.avatarRole}>Entrepreneur</span>
+            <strong style={styles.avatarName}>Finverra</strong>
+          </div>
+          <span style={styles.menuChevron}>▾</span>
+        </button>
+
+        {menuOpen ? (
+          <div style={styles.dropdown} role="menu" aria-label="Entrepreneur account menu">
+            <button
+              type="button"
+              style={styles.dropdownItem}
+              onClick={() => {
+                setMenuOpen(false)
+                navigate('/dashboard/entrepreneur/change-password')
+              }}
+            >
+              Change Password
+            </button>
+            <button
+              type="button"
+              style={{ ...styles.dropdownItem, ...styles.dropdownItemDanger }}
+              onClick={() => {
+                setMenuOpen(false)
+                onLogout()
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        ) : null}
       </div>
     </header>
   )
@@ -75,6 +139,9 @@ const styles: Record<string, CSSProperties> = {
     color: '#023341',
     fontWeight: 700,
   },
+  profileWrap: {
+    position: 'relative',
+  },
   avatarWrap: {
     display: 'flex',
     alignItems: 'center',
@@ -84,6 +151,7 @@ const styles: Record<string, CSSProperties> = {
     background: '#ffffff',
     border: '1px solid rgba(15, 30, 53, 0.08)',
     boxShadow: '0 10px 24px rgba(15, 45, 92, 0.06)',
+    cursor: 'pointer',
   },
   avatar: {
     width: 38,
@@ -112,5 +180,39 @@ const styles: Record<string, CSSProperties> = {
   avatarName: {
     fontSize: 13,
     color: '#0f1e35',
+  },
+  menuChevron: {
+    fontSize: 12,
+    color: '#66808b',
+    marginLeft: 4,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 8px)',
+    right: 0,
+    minWidth: 180,
+    borderRadius: 12,
+    border: '1px solid rgba(15, 30, 53, 0.12)',
+    background: '#ffffff',
+    boxShadow: '0 18px 32px rgba(15,45,92,0.14)',
+    overflow: 'hidden',
+    zIndex: 100,
+  },
+  dropdownItem: {
+    width: '100%',
+    border: 'none',
+    borderBottom: '1px solid rgba(15, 30, 53, 0.08)',
+    background: '#ffffff',
+    color: '#0f1e35',
+    textAlign: 'left',
+    padding: '10px 12px',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  dropdownItemDanger: {
+    borderBottom: 'none',
+    color: '#a61d24',
+    background: 'rgba(220,38,38,0.05)',
   },
 }

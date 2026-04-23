@@ -1,60 +1,52 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent, CSSProperties, FormEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import AdminShell from './AdminShell'
 import { getAuthSession } from '../authStorage'
 import {
   deleteAdminEntrepreneur,
-  fetchAdminEntrepreneurById,
-  fetchAdminEntrepreneurs,
-  fetchAdminVerifiedEntrepreneurs,
   type AdminEntrepreneur,
-  updateAdminEntrepreneur,
 } from '../dashboardApi'
 import { buildApiUrl } from '../../config/api'
-import {
-  getCellsBySector,
-  getDistrictsByProvince,
-  getProvinces,
-  getSectorsByDistrict,
-  getVillagesByCell,
-} from 'rwanda-geo-structure'
+
+const editableFields = [
+  { key: 'support_needed', label: 'Support Needed' },
+  { key: 'urgency_level', label: 'Urgency Level' },
+  { key: 'problem_faced', label: 'Problem Faced' },
+  { key: 'experience', label: 'Experience' },
+  { key: 'opportunity', label: 'Opportunity' },
+  { key: 'product_offers', label: 'Product Offers' },
+  { key: 'how_it_works', label: 'How It Works' },
+  { key: 'what_makes_unique', label: 'What Makes Unique' },
+  { key: 'target_customers', label: 'Target Customers' },
+  { key: 'customer_location', label: 'Customer Location' },
+  { key: 'customer_numbers', label: 'Customer Numbers' },
+  { key: 'competitors', label: 'Competitors' },
+  { key: 'competitive_advantages', label: 'Competitive Advantages' },
+  { key: 'business_idea', label: 'Business Idea' },
+  { key: 'monthly_revenue', label: 'Monthly Revenue' },
+  { key: 'growth_trend', label: 'Growth Trend' },
+  { key: 'key_achievement', label: 'Key Achievement' },
+  { key: 'amount_requested', label: 'Amount Requested' },
+  { key: 'preferred_type', label: 'Preferred Type' },
+  { key: 'funds_be_used', label: 'Funds Be Used' },
+  { key: 'expected_impacts', label: 'Expected Impacts' },
+  { key: 'financial_record', label: 'Financial Record' },
+  { key: 'can_repay_loan', label: 'Can Repay Loan' },
+  { key: 'existing_loan', label: 'Existing Loan' },
+  { key: 'method_used', label: 'Method Used' },
+  { key: 'main_risk', label: 'Main Risk' },
+  { key: 'current_challenges', label: 'Current Challenges' },
+  { key: 'handle_challenges', label: 'Handle Challenges' },
+  { key: 'what_do_you_want', label: 'What Do You Want' },
+  { key: 'preferred_support', label: 'Preferred Support' },
+] as const
 
 type EntrepreneurFormState = {
   users_id: string
-  first_name: string
-  last_name: string
-  telephone: string
-  date_of_birth: string
-  gender: string
-  nationality: string
-  province: string
-  district: string
-  sector: string
-  cell: string
-  village: string
-  id_type: string
-  id_number: string
-  image: string
-  imageFile: File | null
-}
+} & Record<string, string>
 
 const emptyForm: EntrepreneurFormState = {
   users_id: '',
-  first_name: '',
-  last_name: '',
-  telephone: '',
-  date_of_birth: '',
-  gender: '',
-  nationality: '',
-  province: '',
-  district: '',
-  sector: '',
-  cell: '',
-  village: '',
-  id_type: '',
-  id_number: '',
-  image: '',
-  imageFile: null,
 }
 
 function getAccessToken() {
@@ -62,14 +54,7 @@ function getAccessToken() {
   return session ? (session.payload as { token?: string })?.token ?? '' : ''
 }
 
-function toDateInputValue(value: string | null) {
-  if (!value) {
-    return ''
-  }
 
-  const matchedDate = value.match(/^(\d{4}-\d{2}-\d{2})/)
-  return matchedDate ? matchedDate[1] : ''
-}
 
 function toImageUrl(value: string) {
   const text = value.trim()
@@ -89,11 +74,38 @@ function toText(value: unknown) {
   return typeof value === 'string' ? value : value == null ? '' : String(value)
 }
 
+function fileNameFromPath(value: string) {
+  if (!value) return ''
+  const parts = value.split('/')
+  return parts[parts.length - 1] || value
+}
+
+async function parseResponseBody(response: Response) {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) return response.json()
+  const text = await response.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+function getErrorMessage(payload: unknown, fallbackMessage: string) {
+  if (typeof payload === 'string' && payload.trim()) return payload
+  if (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string') {
+    return payload.message
+  }
+  return fallbackMessage
+}
+
 function getInitials(firstName: string, lastName: string) {
   const first = firstName.trim().charAt(0).toUpperCase()
   const last = lastName.trim().charAt(0).toUpperCase()
   return `${first || '?'}${last || '?'}`
 }
+
+const allowedStatuses = ['pending', 'approved', 'rejected'] as const
 
 export default function EntrepreneurApplicationsPage() {
   const [entrepreneurs, setEntrepreneurs] = useState<AdminEntrepreneur[]>([])
@@ -109,27 +121,26 @@ export default function EntrepreneurApplicationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
-  const [provinces, setProvinces] = useState<string[]>([])
-  const [districts, setDistricts] = useState<string[]>([])
-  const [sectors, setSectors] = useState<string[]>([])
-  const [cells, setCells] = useState<string[]>([])
-  const [villages, setVillages] = useState<string[]>([])
-  const [verifiedProfiles, setVerifiedProfiles] = useState(0)
+  const [confirmStatusUpdateId, setConfirmStatusUpdateId] = useState<number | null>(null)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [statusSavingId, setStatusSavingId] = useState<number | null>(null)
+  const [statusDraftById, setStatusDraftById] = useState<Record<number, string>>({})
+
   const pageSize = 10
 
   const accessToken = getAccessToken()
 
   const computedMetrics = useMemo(() => {
     const total = entrepreneurs.length
+    const approvedCount = entrepreneurs.filter((item) => toText((item as Record<string, unknown>).status).toLowerCase().includes('approve')).length
 
     return [
       { label: 'Total Applications', value: String(total) },
-      { label: 'Verified Profiles', value: String(verifiedProfiles) },
+      { label: 'Approved Applications', value: String(approvedCount) },
     ]
-  }, [entrepreneurs, verifiedProfiles])
+  }, [entrepreneurs])
 
   const visibleEntrepreneurs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -145,14 +156,9 @@ export default function EntrepreneurApplicationsPage() {
           item.first_name,
           item.last_name,
           item.telephone,
-          item.nationality,
-          item.province,
-          item.district,
-          item.sector,
-          item.cell,
-          item.village,
-          item.id_type,
-          item.id_number,
+          (item as Record<string, unknown>).status,
+          (item as Record<string, unknown>).support_needed,
+          (item as Record<string, unknown>).urgency_level,
         ]
           .filter((value) => value !== null && value !== undefined)
           .some((value) => String(value).toLowerCase().includes(query))
@@ -171,108 +177,100 @@ export default function EntrepreneurApplicationsPage() {
     }
   }, [entrepreneurs, searchQuery, currentPage])
 
-  useEffect(() => {
-    setProvinces(getProvinces())
-  }, [])
 
-  function loadDistrictsByProvince(provinceName: string) {
-    return provinceName ? getDistrictsByProvince(provinceName) : []
-  }
-
-  function loadSectorsByDistrict(provinceName: string, districtName: string) {
-    return provinceName && districtName ? getSectorsByDistrict(provinceName, districtName) : []
-  }
-
-  function loadCellsBySector(provinceName: string, districtName: string, sectorName: string) {
-    return provinceName && districtName && sectorName
-      ? getCellsBySector(provinceName, districtName, sectorName)
-      : []
-  }
-
-  function loadVillagesByCell(provinceName: string, districtName: string, sectorName: string, cellName: string) {
-    return provinceName && districtName && sectorName && cellName
-      ? getVillagesByCell(provinceName, districtName, sectorName, cellName)
-      : []
-  }
-
-  function hydrateLocationOptions(values: Pick<EntrepreneurFormState, 'province' | 'district' | 'sector' | 'cell'>) {
-    setDistricts(loadDistrictsByProvince(values.province))
-    setSectors(loadSectorsByDistrict(values.province, values.district))
-    setCells(loadCellsBySector(values.province, values.district, values.sector))
-    setVillages(loadVillagesByCell(values.province, values.district, values.sector, values.cell))
-  }
-
-  function handleProvinceChange(provinceName: string) {
-    const nextDistricts = loadDistrictsByProvince(provinceName)
-
-    setForm((prev) => ({
-      ...prev,
-      province: provinceName,
-      district: '',
-      sector: '',
-      cell: '',
-      village: '',
-    }))
-    setDistricts(nextDistricts)
-    setSectors([])
-    setCells([])
-    setVillages([])
-  }
-
-  function handleDistrictChange(districtName: string) {
-    const nextSectors = loadSectorsByDistrict(form.province, districtName)
-
-    setForm((prev) => ({
-      ...prev,
-      district: districtName,
-      sector: '',
-      cell: '',
-      village: '',
-    }))
-    setSectors(nextSectors)
-    setCells([])
-    setVillages([])
-  }
-
-  function handleSectorChange(sectorName: string) {
-    const nextCells = loadCellsBySector(form.province, form.district, sectorName)
-
-    setForm((prev) => ({
-      ...prev,
-      sector: sectorName,
-      cell: '',
-      village: '',
-    }))
-    setCells(nextCells)
-    setVillages([])
-  }
-
-  function handleCellChange(cellName: string) {
-    const nextVillages = loadVillagesByCell(form.province, form.district, form.sector, cellName)
-
-    setForm((prev) => ({
-      ...prev,
-      cell: cellName,
-      village: '',
-    }))
-    setVillages(nextVillages)
-  }
 
   async function loadEntrepreneurs() {
     setLoading(true)
     setError(null)
 
     try {
-      const [rows, verifiedCount] = await Promise.all([
-        fetchAdminEntrepreneurs(accessToken),
-        fetchAdminVerifiedEntrepreneurs(accessToken),
-      ])
+      const response = await fetch(buildApiUrl('/admin/entrepreneur_applications'), {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      const payload = await parseResponseBody(response)
+
+      if (!response.ok) {
+        throw new Error(getErrorMessage(payload, 'Failed to load entrepreneur applications.'))
+      }
+
+      const rows = Array.isArray((payload as { entrepreneur_applications?: unknown }).entrepreneur_applications)
+        ? ((payload as { entrepreneur_applications: unknown[] }).entrepreneur_applications
+          .filter((item): item is AdminEntrepreneur => !!item && typeof item === 'object'))
+        : []
+
       setEntrepreneurs(rows)
-      setVerifiedProfiles(verifiedCount)
+      const nextDrafts: Record<number, string> = {}
+      rows.forEach((item) => {
+        const status = toText((item as Record<string, unknown>).status).trim().toLowerCase()
+        nextDrafts[item.id] = allowedStatuses.includes(status as (typeof allowedStatuses)[number])
+          ? status
+          : 'pending'
+      })
+      setStatusDraftById(nextDrafts)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Failed to load entrepreneur applications.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleStatusDraftChange(applicationId: number, value: string) {
+    setStatusDraftById((prev) => ({
+      ...prev,
+      [applicationId]: value,
+    }))
+  }
+
+  async function handleUpdateStatus(applicationId: number) {
+    const nextStatus = (statusDraftById[applicationId] ?? '').trim().toLowerCase()
+
+    if (!allowedStatuses.includes(nextStatus as (typeof allowedStatuses)[number])) {
+      setError('Status must be one of: pending, approved, rejected.')
+      return
+    }
+
+    // Get the current entrepreneur to retrieve users_id
+    const entrepreneur = entrepreneurs.find((item) => item.id === applicationId)
+    if (!entrepreneur) {
+      setError('Entrepreneur application not found.')
+      return
+    }
+
+    setConfirmStatusUpdateId(null)
+    setStatusSavingId(applicationId)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch(buildApiUrl(`/admin/entrepreneur_applications/${applicationId}`), {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          users_id: entrepreneur.users_id,
+          status: nextStatus 
+        }),
+      })
+      const payload = await parseResponseBody(response)
+
+      if (!response.ok) {
+        throw new Error(getErrorMessage(payload, 'Failed to update entrepreneur application status.'))
+      }
+
+      setEntrepreneurs((prev) => prev.map((item) => (
+        item.id === applicationId
+          ? ({ ...item, status: nextStatus } as AdminEntrepreneur)
+          : item
+      )))
+      setSuccess(getErrorMessage(payload, 'Entrepreneur application status updated successfully.'))
+    } catch (statusError) {
+      setError(statusError instanceof Error ? statusError.message : 'Failed to update entrepreneur application status.')
+    } finally {
+      setStatusSavingId(null)
     }
   }
 
@@ -284,14 +282,9 @@ export default function EntrepreneurApplicationsPage() {
     setShowForm(false)
     setActiveId(null)
     setForm(emptyForm)
-    setDistricts([])
-    setSectors([])
-    setCells([])
-    setVillages([])
+
     setFormError(null)
-    if (fileRef.current) {
-      fileRef.current.value = ''
-    }
+
   }
 
   function handleSearchChange(value: string) {
@@ -304,61 +297,41 @@ export default function EntrepreneurApplicationsPage() {
     setViewEntrepreneur(null)
   }
 
-  async function openEdit(entrepreneurId: number) {
+  function openEdit(entrepreneurId: number) {
     setFormError(null)
     setError(null)
     setSuccess(null)
 
-    try {
-      const entrepreneur = await fetchAdminEntrepreneurById(entrepreneurId, accessToken)
-      setActiveId(entrepreneur.id)
-      setForm({
-        users_id: String(entrepreneur.users_id ?? ''),
-        first_name: entrepreneur.first_name ?? '',
-        last_name: entrepreneur.last_name ?? '',
-        telephone: entrepreneur.telephone ?? '',
-        date_of_birth: toDateInputValue(entrepreneur.date_of_birth),
-        gender: entrepreneur.gender ?? '',
-        nationality: entrepreneur.nationality ?? '',
-        province: entrepreneur.province ?? '',
-        district: entrepreneur.district ?? '',
-        sector: entrepreneur.sector ?? '',
-        cell: entrepreneur.cell ?? '',
-        village: entrepreneur.village ?? '',
-        id_type: entrepreneur.id_type ?? '',
-        id_number: entrepreneur.id_number ?? '',
-        image: entrepreneur.image ?? '',
-        imageFile: null,
-      })
-      hydrateLocationOptions({
-        province: entrepreneur.province ?? '',
-        district: entrepreneur.district ?? '',
-        sector: entrepreneur.sector ?? '',
-        cell: entrepreneur.cell ?? '',
-      })
-      setShowForm(true)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to load entrepreneur details.')
+    const entrepreneur = entrepreneurs.find((item) => item.id === entrepreneurId)
+    if (!entrepreneur) {
+      setError('Selected entrepreneur application was not found.')
+      return
     }
+
+    setActiveId(entrepreneur.id)
+    const initialForm: EntrepreneurFormState = { users_id: String(entrepreneur.users_id ?? '') }
+    for (const field of editableFields) {
+      initialForm[field.key] = toText((entrepreneur as Record<string, unknown>)[field.key])
+    }
+    setForm(initialForm)
+    setShowForm(true)
   }
 
-  async function openView(entrepreneurId: number) {
+  function openView(entrepreneurId: number) {
     setError(null)
     setSuccess(null)
 
-    try {
-      const entrepreneur = await fetchAdminEntrepreneurById(entrepreneurId, accessToken)
-      setViewEntrepreneur(entrepreneur)
-      setShowViewModal(true)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to load entrepreneur details.')
+    const entrepreneur = entrepreneurs.find((item) => item.id === entrepreneurId)
+    if (!entrepreneur) {
+      setError('Selected entrepreneur application was not found.')
+      return
     }
+
+    setViewEntrepreneur(entrepreneur)
+    setShowViewModal(true)
   }
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null
-    setForm((prev) => ({ ...prev, imageFile: file }))
-  }
+
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -366,7 +339,7 @@ export default function EntrepreneurApplicationsPage() {
     setSuccess(null)
 
     if (!activeId) {
-      setFormError('No entrepreneur is selected for update.')
+      setFormError('No entrepreneur application is selected for update.')
       return
     }
 
@@ -376,41 +349,39 @@ export default function EntrepreneurApplicationsPage() {
       return
     }
 
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.telephone.trim()) {
-      setFormError('first_name, last_name, and telephone are required.')
+    const entrepreneur = entrepreneurs.find((item) => item.id === activeId)
+    if (!entrepreneur) {
+      setFormError('Entrepreneur application not found.')
       return
     }
 
     setSaving(true)
     try {
-      const payload = await updateAdminEntrepreneur(
-        activeId,
-        {
-          users_id: parsedUserId,
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim(),
-          telephone: form.telephone.trim(),
-          date_of_birth: form.date_of_birth.trim(),
-          gender: form.gender.trim(),
-          nationality: form.nationality.trim(),
-          province: form.province.trim(),
-          district: form.district.trim(),
-          sector: form.sector.trim(),
-          cell: form.cell.trim(),
-          village: form.village.trim(),
-          id_type: form.id_type.trim(),
-          id_number: form.id_number.trim(),
-          image: form.image.trim(),
-          imageFile: form.imageFile,
-        },
-        accessToken,
-      )
+      const requestBody = { ...entrepreneur }
+      requestBody.users_id = parsedUserId
+      for (const field of editableFields) {
+        ;(requestBody as Record<string, unknown>)[field.key] = form[field.key]
+      }
 
-      setSuccess(payload.message ?? 'Entrepreneur updated successfully.')
+      const response = await fetch(buildApiUrl(`/admin/entrepreneur_applications/${activeId}`), {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+      const payload = await parseResponseBody(response)
+
+      if (!response.ok) {
+        throw new Error(getErrorMessage(payload, 'Failed to update entrepreneur application.'))
+      }
+
+      setSuccess(getErrorMessage(payload, 'Entrepreneur application updated successfully.'))
       closeForm()
       await loadEntrepreneurs()
     } catch (saveError) {
-      setFormError(saveError instanceof Error ? saveError.message : 'Failed to update entrepreneur.')
+      setFormError(saveError instanceof Error ? saveError.message : 'Failed to update entrepreneur application.')
     } finally {
       setSaving(false)
     }
@@ -473,6 +444,30 @@ export default function EntrepreneurApplicationsPage() {
         </div>
       ) : null}
 
+      {confirmStatusUpdateId !== null ? (
+        <div style={styles.overlay} onClick={() => setConfirmStatusUpdateId(null)}>
+          <div style={styles.confirmModal} onClick={(event) => event.stopPropagation()}>
+            <h3 style={styles.confirmTitle}>Update Application Status?</h3>
+            <p style={styles.confirmText}>
+              This will set status to <strong>{statusDraftById[confirmStatusUpdateId] ?? 'pending'}</strong>.
+            </p>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.cancelBtn} onClick={() => setConfirmStatusUpdateId(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.primaryBtn}
+                disabled={statusSavingId === confirmStatusUpdateId}
+                onClick={() => { void handleUpdateStatus(confirmStatusUpdateId) }}
+              >
+                {statusSavingId === confirmStatusUpdateId ? 'Updating...' : 'Yes, Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {showForm ? (
         <div style={styles.overlay} onClick={closeForm}>
           <div style={styles.modal} onClick={(event) => event.stopPropagation()}>
@@ -485,181 +480,19 @@ export default function EntrepreneurApplicationsPage() {
               {formError ? <p style={styles.formError}>{formError}</p> : null}
 
               <div style={styles.formGrid}>
-                
-                <label style={styles.field}>
-                  <span>First Name *</span>
-                  <input
-                    type="text"
-                    value={form.first_name}
-                    onChange={(event) => setForm((prev) => ({ ...prev, first_name: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Last Name *</span>
-                  <input
-                    type="text"
-                    value={form.last_name}
-                    onChange={(event) => setForm((prev) => ({ ...prev, last_name: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Telephone *</span>
-                  <input
-                    type="text"
-                    value={form.telephone}
-                    onChange={(event) => setForm((prev) => ({ ...prev, telephone: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Date Of Birth</span>
-                  <input
-                    type="date"
-                    value={form.date_of_birth}
-                    onChange={(event) => setForm((prev) => ({ ...prev, date_of_birth: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Gender</span>
-                  <input
-                    type="text"
-                    value={form.gender}
-                    onChange={(event) => setForm((prev) => ({ ...prev, gender: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Nationality</span>
-                  <input
-                    type="text"
-                    value={form.nationality}
-                    onChange={(event) => setForm((prev) => ({ ...prev, nationality: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>Province</span>
-                  <select
-                    value={form.province}
-                    onChange={(event) => handleProvinceChange(event.target.value)}
-                    style={styles.input}
-                    disabled={saving}
-                  >
-                    <option value="">Select Province</option>
-                    {provinces.map((provinceName) => (
-                      <option key={provinceName} value={provinceName}>{provinceName}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={styles.field}>
-                  <span>District</span>
-                  <select
-                    value={form.district}
-                    onChange={(event) => handleDistrictChange(event.target.value)}
-                    style={styles.input}
-                    disabled={saving || !form.province}
-                  >
-                    <option value="">Select District</option>
-                    {districts.map((districtName) => (
-                      <option key={districtName} value={districtName}>{districtName}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={styles.field}>
-                  <span>Sector</span>
-                  <select
-                    value={form.sector}
-                    onChange={(event) => handleSectorChange(event.target.value)}
-                    style={styles.input}
-                    disabled={saving || !form.district}
-                  >
-                    <option value="">Select Sector</option>
-                    {sectors.map((sectorName) => (
-                      <option key={sectorName} value={sectorName}>{sectorName}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={styles.field}>
-                  <span>Cell</span>
-                  <select
-                    value={form.cell}
-                    onChange={(event) => handleCellChange(event.target.value)}
-                    style={styles.input}
-                    disabled={saving || !form.sector}
-                  >
-                    <option value="">Select Cell</option>
-                    {cells.map((cellName) => (
-                      <option key={cellName} value={cellName}>{cellName}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={styles.field}>
-                  <span>Village</span>
-                  <select
-                    value={form.village}
-                    onChange={(event) => setForm((prev) => ({ ...prev, village: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving || !form.cell}
-                  >
-                    <option value="">Select Village</option>
-                    {villages.map((villageName) => (
-                      <option key={villageName} value={villageName}>{villageName}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={styles.field}>
-                  <span>ID Type</span>
-                  <input
-                    type="text"
-                    value={form.id_type}
-                    onChange={(event) => setForm((prev) => ({ ...prev, id_type: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
-                <label style={styles.field}>
-                  <span>ID Number</span>
-                  <input
-                    type="text"
-                    value={form.id_number}
-                    onChange={(event) => setForm((prev) => ({ ...prev, id_number: event.target.value }))}
-                    style={styles.input}
-                    disabled={saving}
-                  />
-                </label>
+                {editableFields.map((field) => (
+                  <label key={field.key} style={styles.field}>
+                    <span>{field.label}</span>
+                    <input
+                      type="text"
+                      value={form[field.key] || ''}
+                      onChange={(event) => setForm((prev) => ({ ...prev, [field.key]: event.target.value }))}
+                      style={styles.input}
+                      disabled={saving}
+                    />
+                  </label>
+                ))}
               </div>
-
-              <label style={styles.field}>
-                <span>Current Image</span>
-                {form.image ? (
-                  <a
-                    href={toImageUrl(form.image)}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={styles.imageLink}
-                    title="Open full image in new tab"
-                  >
-                    <img src={toImageUrl(form.image)} alt="Current entrepreneur profile" style={styles.imagePreview} />
-                    <span style={styles.imageLinkText}>Click image to open full size</span>
-                  </a>
-                ) : (
-                  <div style={styles.noImage}>No image available</div>
-                )}
-              </label>
-
-              <label style={styles.field}>
-                <span>Upload New Image</span>
-                <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={styles.input} disabled={saving} />
-              </label>
 
               <div style={styles.formActions}>
                 <button type="button" style={styles.cancelBtn} onClick={closeForm} disabled={saving}>
@@ -684,10 +517,19 @@ export default function EntrepreneurApplicationsPage() {
 
             <div style={styles.viewBody}>
               <div style={styles.viewImageWrap}>
-                {viewEntrepreneur.image ? (
+                {toText((viewEntrepreneur as Record<string, unknown>).photo_of_business) ? (
                   <div style={styles.viewImageCard}>
-                    <a href={toImageUrl(viewEntrepreneur.image)} target="_blank" rel="noreferrer" style={styles.viewImageLink}>
-                      <img src={toImageUrl(viewEntrepreneur.image)} alt={`${viewEntrepreneur.first_name} ${viewEntrepreneur.last_name}`} style={styles.viewImage} />
+                    <a
+                      href={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).photo_of_business))}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={styles.viewImageLink}
+                    >
+                      <img
+                        src={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).photo_of_business))}
+                        alt={`${viewEntrepreneur.first_name} ${viewEntrepreneur.last_name}`}
+                        style={styles.viewImage}
+                      />
                       <span style={styles.imageLinkText}>Open full-size image</span>
                     </a>
                   </div>
@@ -701,17 +543,63 @@ export default function EntrepreneurApplicationsPage() {
                 <div style={styles.viewItem}><span style={styles.viewLabel}>First Name</span><strong>{viewEntrepreneur.first_name || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Last Name</span><strong>{viewEntrepreneur.last_name || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Telephone</span><strong>{viewEntrepreneur.telephone || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Date Of Birth</span><strong>{toDateInputValue(viewEntrepreneur.date_of_birth) || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Gender</span><strong>{viewEntrepreneur.gender || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Nationality</span><strong>{viewEntrepreneur.nationality || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Province</span><strong>{viewEntrepreneur.province || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>District</span><strong>{viewEntrepreneur.district || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Sector</span><strong>{viewEntrepreneur.sector || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Cell</span><strong>{viewEntrepreneur.cell || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Village</span><strong>{viewEntrepreneur.village || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>ID Type</span><strong>{viewEntrepreneur.id_type || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>ID Number</span><strong>{viewEntrepreneur.id_number || '-'}</strong></div>
-                <div style={styles.viewItem}><span style={styles.viewLabel}>Created At</span><strong>{toDateInputValue(toText(viewEntrepreneur.created_at)) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Status</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).status) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Support Needed</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).support_needed) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Urgency Level</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).urgency_level) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Problem Faced</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).problem_faced) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Experience</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).experience) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Opportunity</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).opportunity) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Product Offers</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).product_offers) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>How It Works</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).how_it_works) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>What Makes Unique</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).what_makes_unique) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Target Customers</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).target_customers) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Customer Location</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).customer_location) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Customer Numbers</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).customer_numbers) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Competitors</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).competitors) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Competitive Advantages</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).competitive_advantages) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Business Idea</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).business_idea) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Monthly Revenue</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).monthly_revenue) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Growth Trend</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).growth_trend) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Key Achievement</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).key_achievement) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Amount Requested</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).amount_requested) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Preferred Type</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).preferred_type) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Funds Be Used</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).funds_be_used) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Expected Impacts</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).expected_impacts) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Financial Record</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).financial_record) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Can Repay Loan</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).can_repay_loan) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Existing Loan</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).existing_loan) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Method Used</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).method_used) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Main Risk</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).main_risk) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Current Challenges</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).current_challenges) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Handle Challenges</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).handle_challenges) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>What Do You Want</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).what_do_you_want) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Preferred Support</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).preferred_support) || '-'}</strong></div>
+                <div style={styles.viewItem}>
+                  <span style={styles.viewLabel}>Business Plan</span>
+                  {toText((viewEntrepreneur as Record<string, unknown>).business_plan)
+                    ? <a href={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).business_plan))} target="_blank" rel="noreferrer">{fileNameFromPath(toText((viewEntrepreneur as Record<string, unknown>).business_plan))}</a>
+                    : <strong>-</strong>}
+                </div>
+                <div style={styles.viewItem}>
+                  <span style={styles.viewLabel}>Pitch Deck</span>
+                  {toText((viewEntrepreneur as Record<string, unknown>).pitch_deck)
+                    ? <a href={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).pitch_deck))} target="_blank" rel="noreferrer">{fileNameFromPath(toText((viewEntrepreneur as Record<string, unknown>).pitch_deck))}</a>
+                    : <strong>-</strong>}
+                </div>
+                <div style={styles.viewItem}>
+                  <span style={styles.viewLabel}>Financial Records</span>
+                  {toText((viewEntrepreneur as Record<string, unknown>).financial_records)
+                    ? <a href={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).financial_records))} target="_blank" rel="noreferrer">{fileNameFromPath(toText((viewEntrepreneur as Record<string, unknown>).financial_records))}</a>
+                    : <strong>-</strong>}
+                </div>
+                <div style={styles.viewItem}>
+                  <span style={styles.viewLabel}>Registration Certificate</span>
+                  {toText((viewEntrepreneur as Record<string, unknown>).registration_certificate)
+                    ? <a href={toImageUrl(toText((viewEntrepreneur as Record<string, unknown>).registration_certificate))} target="_blank" rel="noreferrer">{fileNameFromPath(toText((viewEntrepreneur as Record<string, unknown>).registration_certificate))}</a>
+                    : <strong>-</strong>}
+                </div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Information Is True</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).information_is_true) || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Agree To Share My Data</span><strong>{toText((viewEntrepreneur as Record<string, unknown>).agree_to_share_my_data) || '-'}</strong></div>
               </div>
             </div>
 
@@ -726,7 +614,7 @@ export default function EntrepreneurApplicationsPage() {
         <div style={styles.panelHeader}>
           <div>
             <h3 style={styles.panelTitle}>Application Queue</h3>
-            <p style={styles.panelText}>Live entrepreneur records with one-click actions for view, edit, and cleanup.</p>
+            <p style={styles.panelText}>Live entrepreneur application records from the real API payload.</p>
           </div>
           <div style={styles.panelHeaderActions}>
             <span style={styles.countPill}>{visibleEntrepreneurs.totalItems} records</span>
@@ -764,8 +652,9 @@ export default function EntrepreneurApplicationsPage() {
                   <th style={styles.th}>Name</th>
                   <th style={styles.th}>Email</th>
                   <th style={styles.th}>Telephone</th>
-                  <th style={styles.th}>Nationality</th>
-                  <th style={styles.th}>Image</th>
+                  <th style={styles.th}>Support Needed</th>
+                
+                  <th style={styles.th}>Status</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -784,17 +673,34 @@ export default function EntrepreneurApplicationsPage() {
                     </td>
                     <td style={styles.td}>{item.email}</td>
                     <td style={styles.td}>{item.telephone}</td>
-                    <td style={styles.td}>{item.nationality ?? '-'}</td>
-                    <td style={styles.td}>
-                      {item.image ? (
-                        <img src={toImageUrl(item.image)} alt={`${item.first_name} ${item.last_name}`} style={styles.avatar} />
-                      ) : '-'}
-                    </td>
+                    <td style={styles.td}>{toText((item as Record<string, unknown>).support_needed) || '-'}</td>
+                    
+                    <td style={styles.td}>{toText((item as Record<string, unknown>).status) || '-'}</td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.viewBtn }} onClick={() => openView(item.id)}>
                           View
                         </button>
+                        <div style={styles.statusActionWrap}>
+                          <select
+                            value={statusDraftById[item.id] ?? 'pending'}
+                            onChange={(event) => handleStatusDraftChange(item.id, event.target.value)}
+                            style={styles.statusSelect}
+                            disabled={statusSavingId === item.id}
+                          >
+                            <option value="pending">pending</option>
+                            <option value="approved">approved</option>
+                            <option value="rejected">rejected</option>
+                          </select>
+                          <button
+                            type="button"
+                            style={styles.statusUpdateBtn}
+                            onClick={() => setConfirmStatusUpdateId(item.id)}
+                            disabled={statusSavingId === item.id}
+                          >
+                            {statusSavingId === item.id ? 'Updating...' : 'Update'}
+                          </button>
+                        </div>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.editBtn }} onClick={() => openEdit(item.id)}>
                           Edit
                         </button>
@@ -1073,7 +979,32 @@ const styles: Record<string, CSSProperties> = {
   },
   actions: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: 8,
+  },
+  statusActionWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusSelect: {
+    border: '1px solid #cfe0e3',
+    borderRadius: 8,
+    padding: '7px 10px',
+    background: '#ffffff',
+    color: '#023341',
+    fontWeight: 600,
+    fontSize: 12,
+  },
+  statusUpdateBtn: {
+    border: '1px solid #023341',
+    borderRadius: 8,
+    padding: '7px 10px',
+    background: '#023341',
+    color: '#ffffff',
+    fontWeight: 700,
+    fontSize: 12,
+    cursor: 'pointer',
   },
   primaryBtn: {
     border: 'none',

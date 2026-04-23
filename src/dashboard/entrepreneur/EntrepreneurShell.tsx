@@ -64,7 +64,10 @@ export default function EntrepreneurShell({
           marginLeft: sidebarOpen ? '280px' : '0',
         }}
       >
-        <EntrepreneurHeader onToggleSidebar={() => setSidebarOpen((open) => !open)} />
+        <EntrepreneurHeader
+          onToggleSidebar={() => setSidebarOpen((open) => !open)}
+          onLogout={handleLogout}
+        />
 
         {showHero ? (
           <section style={{ ...styles.heroBanner, ...(heroBackground ? { background: heroBackground } : {}) }}>
@@ -112,7 +115,7 @@ const styles: Record<string, CSSProperties> = {
     marginTop: 18,
     borderRadius: 24,
     padding: '30px 28px',
-    background: 'linear-gradient(140deg, rgba(15,45,92,0.96), rgba(26,64,128,0.92))',
+    background: 'linear-gradient(140deg, rgb(2,49,62), rgb(2,49,62))',
     color: '#ffffff',
     boxShadow: '0 24px 54px rgba(15, 45, 92, 0.2)',
   },

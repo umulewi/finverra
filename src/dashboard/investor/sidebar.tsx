@@ -36,20 +36,21 @@ function PipeIcon(): ReactElement {
 	)
 }
 
-function LoginIcon(): ReactElement {
-	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-			<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
-		</svg>
-	)
-}
-
-
 function SetIcon(): ReactElement {
 	return (
 		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
 			<circle cx="12" cy="12" r="3" />
 			<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+		</svg>
+	)
+}
+
+function FeeIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+			<circle cx="12" cy="12" r="10" />
+			<path d="M12 7v10" />
+			<path d="M9 9.5h4a2.5 2.5 0 0 1 0 5h-4" />
 		</svg>
 	)
 }
@@ -64,6 +65,8 @@ const navSections: NavSection[] = [
 			{ label: 'Edit Profile', icon: SetIcon },
 	
 			{ label: 'My Application', icon: PipeIcon },
+			{ label: 'Application Status', icon: FeeIcon },
+			{ label: 'Service Fees', icon: FeeIcon },
 
 		],
 	},
@@ -77,15 +80,7 @@ export default function InvestorSidebar({ email: _email, activeNav, onNavigate, 
 		<aside style={styles.sidebar}>
 			<div style={styles.sidebarBrand}>
 				<div style={styles.brandLogo}>
-					<svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-						<path d="M14 2L26 8v12L14 26 2 20V8z" fill="#ffec00" opacity="0.16" stroke="#ffec00" strokeWidth="1.5" />
-						<path d="M14 7l8 4.5V17L14 21.5 6 17v-5.5z" fill="#ffec00" opacity="0.44" />
-						<path d="M14 12l4 2.5V17L14 19.5 10 17v-2.5z" fill="#023341" />
-					</svg>
-					<div>
-						<span style={styles.brandName}>Finverra</span>
-						<span style={styles.brandTag}>Finance With Trust</span>
-					</div>
+					<img src="/logo-finverra-white.png" alt="Finverra" style={styles.brandImage} />
 				</div>
 
 				
@@ -143,13 +138,23 @@ const styles: Record<string, CSSProperties> = {
 		boxShadow: '14px 0 28px rgba(2, 51, 65, 0.16)',
 	},
 	sidebarBrand: {
-		padding: '22px 20px 18px',
+		padding: '12px 12px 10px',
 		borderBottom: '1px solid rgba(255,255,255,0.08)',
 	},
 	brandLogo: {
 		display: 'flex',
 		alignItems: 'center',
-		gap: 10,
+		justifyContent: 'center',
+		width: '100%',
+		minHeight: 64,
+	},
+	brandImage: {
+		width: '92%',
+		maxWidth: 240,
+		height: 'auto',
+		maxHeight: 72,
+		objectFit: 'contain',
+		flexShrink: 0,
 	},
 	brandName: {
 		fontSize: 18,
