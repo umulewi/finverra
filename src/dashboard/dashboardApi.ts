@@ -323,30 +323,49 @@ export async function signupInvestor({
 }
 
 export async function verifyInvestorOtp({ email, otp }: InvestorVerifyOtpPayload) {
-  let response: Response
+  const candidatePaths = [
+    '/investor/verify-otp',
+    '/investors/verify-otp',
+    '/investor/verify_otp',
+    '/investors/verify_otp',
+  ]
 
-  try {
-    response = await fetch(buildApiUrl('/investor/verify-otp'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        otp,
-      }),
-    })
-  } catch {
-    throw new Error(`Unable to reach the verification server at ${buildConfiguredApiUrl('/investor/verify-otp')}. Check that the backend is running and allows requests from the frontend.`)
+  let lastPayload: unknown = null
+
+  for (let index = 0; index < candidatePaths.length; index += 1) {
+    const path = candidatePaths[index]
+    let response: Response
+
+    try {
+      response = await fetch(buildApiUrl(path), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          otp,
+        }),
+      })
+    } catch {
+      throw new Error(`Unable to reach the verification server at ${buildConfiguredApiUrl(path)}. Check that the backend is running and allows requests from the frontend.`)
+    }
+
+    const payload = await parseResponseBody(response)
+
+    if (response.ok) {
+      return payload
+    }
+
+    lastPayload = payload
+    const missingRoute = typeof payload === 'string' && /cannot post/i.test(payload)
+
+    if (!missingRoute) {
+      throw new Error(getErrorMessage(payload, 'OTP verification failed.'))
+    }
   }
 
-  const payload = await parseResponseBody(response)
-
-  if (!response.ok) {
-    throw new Error(getErrorMessage(payload, 'OTP verification failed.'))
-  }
-
-  return payload
+  throw new Error(getErrorMessage(lastPayload, 'OTP verification failed. The backend OTP endpoint may be misconfigured.'))
 }
 
 export async function resendInvestorOtp(email: string) {

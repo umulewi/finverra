@@ -19,7 +19,7 @@ type Program = {
 const programs: Program[] = [
   {
     id: 'singirurwanda',
-    name: 'SINGIRURWANDA',
+    name: 'SHINGIRO INITIATIVE',
     status: 'Upcoming',
     launchDate: '5th May 2026',
     competitionPeriod: '1st February - 1st November 2027',
@@ -27,7 +27,7 @@ const programs: Program[] = [
     category: 'Our Own Project',
     summary: 'A structured youth-focused entrepreneurship and innovation program for university students in Rwanda.',
     description:
-      'SINGIRURWANDA is a structured youth-focused program designed by FinVerra to empower university students across Rwanda by fostering innovation, entrepreneurship, and collaboration. It features a nationwide business competition with progressive selection stages from university level to national finals, recognizing and awarding the top three outstanding projects.',
+      'SHINGIRO INITIATIVE is a structured youth-focused program designed by FinVerra to empower university students across Rwanda by fostering innovation, entrepreneurship, and collaboration. It features a nationwide business competition with progressive selection stages from university level to national finals, recognizing and awarding the top three outstanding projects.',
     highlights: [
       'Official launch on 5th May 2026.',
       'Main competition phase from 1st February to 1st November 2027.',

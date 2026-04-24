@@ -13,12 +13,16 @@ type AdminShellProps = {
 
 export default function AdminShell({ title, subtitle, children }: AdminShellProps) {
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
+  const isMobileViewport = typeof window !== 'undefined' ? window.innerWidth <= 960 : false
+  const [isMobile, setIsMobile] = useState<boolean>(isMobileViewport)
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => !isMobileViewport)
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 960) {
-        setSidebarOpen(false)
+      const mobile = window.innerWidth <= 960
+      setIsMobile(mobile)
+      if (!mobile) {
+        setSidebarOpen(true)
       }
     }
 
@@ -40,25 +44,27 @@ export default function AdminShell({ title, subtitle, children }: AdminShellProp
       <div
         style={{
           ...styles.sidebarWrapper,
-          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          ...(isMobile ? styles.sidebarWrapperMobile : styles.sidebarWrapperDesktop),
+          transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
         }}
       >
         <AdminSidebar onLogout={handleLogout} />
       </div>
 
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <button type="button" style={styles.overlay} aria-label="Close menu" onClick={() => setSidebarOpen(false)} />
       )}
 
       <div
         style={{
           ...styles.main,
-          marginLeft: sidebarOpen ? '280px' : '0',
+          marginLeft: !isMobile && sidebarOpen ? '280px' : '0',
+          padding: isMobile ? 12 : 24,
         }}
       >
         <AdminHeader onToggleSidebar={() => setSidebarOpen((open) => !open)} onLogout={handleLogout} />
 
-        <section style={styles.heroBanner}>
+        <section style={{ ...styles.heroBanner, ...(isMobile ? styles.heroBannerMobile : {}) }}>
           <div>
             <span style={styles.heroKicker}>Admin workspace</span>
             <h2 style={styles.pageTitle}>{title}</h2>
@@ -78,12 +84,18 @@ const styles: Record<string, CSSProperties> = {
     background: 'linear-gradient(180deg, #f4fcfd 0%, #eef7f8 100%)',
   },
   sidebarWrapper: {
-    position: 'fixed',
     top: 0,
     left: 0,
     bottom: 0,
     width: 280,
     transition: 'transform 0.25s ease',
+  },
+  sidebarWrapperDesktop: {
+    position: 'fixed',
+    zIndex: 60,
+  },
+  sidebarWrapperMobile: {
+    position: 'fixed',
     zIndex: 100,
   },
   overlay: {
@@ -105,6 +117,11 @@ const styles: Record<string, CSSProperties> = {
     background: 'linear-gradient(140deg, rgba(2,51,65,0.96), rgba(3,71,90,0.92))',
     color: '#ffffff',
     boxShadow: '0 24px 54px rgba(2, 51, 65, 0.2)',
+  },
+  heroBannerMobile: {
+    marginTop: 12,
+    borderRadius: 16,
+    padding: '18px 16px',
   },
   heroKicker: {
     fontSize: 12,

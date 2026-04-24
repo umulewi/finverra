@@ -41,9 +41,9 @@ const processFlows: RoleFlow[] = [
         title: 'Step 2: Submit Your Application',
         description: 'Complete your profile and submit information about your business or idea for evaluation.',
         items: [
-          '2.1 Complete Application Form: Share your business or project details. Our team may invite you for an interview or request additional information.',
-          '2.2 Upload Supporting Documents: Application letter, business registration (if available), business plan, concept note, financial proposal, Memorandum of Association, and any additional supporting documents.',
-          '2.3 Review and Submit: Confirm all details before submission. Once submitted, applications cannot be edited or deleted.',
+          'Complete Application Form: Share your business or project details. Our team may invite you for an interview or request additional information.',
+          'Upload Supporting Documents: Application letter, business registration (if available), business plan, concept note, financial proposal, Memorandum of Association, and any additional supporting documents.',
+          'Review and Submit: Confirm all details before submission. Once submitted, applications cannot be edited or deleted.',
         ],
         note: 'If documents are not available, you may request a guided interview for support (additional service fees may apply).',
       },
@@ -73,8 +73,8 @@ const processFlows: RoleFlow[] = [
       {
         title: 'Step 2: Submit Investment Profile',
         items: [
-          '2.1 Complete Investor Form: Provide your investment interests, preferences, and objectives.',
-          '2.2 Review and Submit: Verify all details before final submission. Once submitted, the application cannot be modified.',
+          'Complete Investor Form: Provide your investment interests, preferences, and objectives.',
+          'Review and Submit: Verify all details before final submission. Once submitted, the application cannot be modified.',
         ],
       },
       {

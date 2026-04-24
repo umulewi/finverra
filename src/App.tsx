@@ -131,12 +131,14 @@ export function Navbar() {
   }, [])
 
   const links = [
-    'How It Works',
-    'Services',
-    'Events',
-    'Programs',
-    'Team',
-    'Contact', // Contact Us last
+    { label: 'Home', to: '/#home' },
+    { label: 'Service', to: '/services' },
+    { label: 'How it works', to: '/how-it-works' },
+    { label: 'Events', to: '/events' },
+    { label: 'Program', to: '/programs' },
+    { label: 'Team', to: '/team' },
+    { label: 'Invest In', to: '/invest-in' },
+    { label: 'Contact us', to: '/#contact' },
   ]
 
   return (
@@ -147,7 +149,7 @@ export function Navbar() {
           className="nav-logo-link"
           aria-label="Go to homepage"
           onClick={() => {
-            setActiveLink('')
+            setActiveLink('Home')
             setMenuOpen(false)
             window.scrollTo({ top: 0, behavior: 'smooth' })
           }}
@@ -155,36 +157,21 @@ export function Navbar() {
           <Logo />
         </Link>
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
-          {links.map(l => (
-            l === 'Contact' ? (
-              <li key={l}>
-                <Link
-                  to="/#contact"
-                  className={activeLink === l ? 'active' : ''}
-                  onClick={() => {
-                    setActiveLink(l)
-                    setMenuOpen(false)
-                  }}
-                >
-                  {l}
-                </Link>
-              </li>
-            ) : (
-              <li key={l}>
-                <Link
-                  to={`/${l.replace(/\s+/g, '-').toLowerCase()}`}
-                  className={activeLink === l ? 'active' : ''}
-                  onClick={() => {
-                    setActiveLink(l)
-                    setMenuOpen(false)
-                  }}
-                >
-                  {l}
-                </Link>
-              </li>
-            )
+          {links.map((link) => (
+            <li key={link.label}>
+              <Link
+                to={link.to}
+                className={activeLink === link.label ? 'active' : ''}
+                onClick={() => {
+                  setActiveLink(link.label)
+                  setMenuOpen(false)
+                }}
+              >
+                {link.label}
+              </Link>
+            </li>
           ))}
-          <li><Link to="/dashboard" className="nav-cta" onClick={() => setMenuOpen(false)}>Join Now</Link></li>
+          <li><Link to="/dashboard" className="nav-cta" onClick={() => setMenuOpen(false)}>Join now</Link></li>
         </ul>
         <button
           className={`hamburger ${menuOpen ? 'open' : ''}`}
@@ -634,7 +621,7 @@ function Appointment() {
             ) : (
               <form className="appt-form" onSubmit={handleSubmit}>
                 {formError && <p className="form-error" style={{ marginBottom: 12 }}>{formError}</p>}
-                <div className="form-row">
+                
                   <input
                     type="text"
                     placeholder="Full Name"
@@ -651,7 +638,7 @@ function Appointment() {
                     required
                     disabled={submitting}
                   />
-                </div>
+                
                 <input
                   type="tel"
                   placeholder="Phone Number"
@@ -688,6 +675,10 @@ function Appointment() {
                   <option>Project Evaluation</option>
                   <option>Partnership Meeting</option>
                   <option>Advisory Session</option>
+                  <option>Office visit</option>
+                  <option>Provide document</option>
+                  <option>Other reasons</option>
+                  
                 </select>
                 <textarea
                   placeholder="Brief description of your purpose / agenda..."
@@ -723,16 +714,16 @@ export function Footer() {
               <Logo />
               <p>Transforming Rwanda's investment ecosystem by connecting entrepreneurs with the capital and expertise they need to grow.</p>
               <div className="footer-socials">
-                <a href="#" aria-label="LinkedIn">
+                <a target='_blank' href="https://www.instagram.com/finverra__rw/" aria-label="LinkedIn">
                   <i className="bi bi-linkedin" aria-hidden="true" />
                 </a>
-                <a href="#" aria-label="Twitter">
+                <a href="https://x.com/finverra__rw" target="_blank" aria-label="Twitter">
                   <i className="bi bi-twitter-x" aria-hidden="true" />
                 </a>
-                <a href="#" aria-label="Facebook">
+                <a href="https://www.facebook.com/finverra__rw" target="_blank" aria-label="Facebook">
                   <i className="bi bi-facebook" aria-hidden="true" />
                 </a>
-                <a href="#" aria-label="Instagram">
+                <a target='blank' href="https://www.instagram.com/finverra__rw/" aria-label="Instagram">
                   <i className="bi bi-instagram" aria-hidden="true" />
                 </a>
               </div>

@@ -230,13 +230,13 @@ select option { background: white; color: var(--text-primary); }
 }
 .nav-links {
   display: flex; align-items: center;
-  gap: 2px; list-style: none;
+  gap: 0; list-style: none;
 }
 .nav-links a {
   font-family: var(--font-head);
-  font-size: 0.87rem; font-weight: 500;
+  font-size: 0.8rem; font-weight: 500;
   color: rgba(255,255,255,0.72);
-  padding: 8px 14px; border-radius: 8px;
+  padding: 8px 10px; border-radius: 8px;
   transition: all var(--transition);
 }
 .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.10); }

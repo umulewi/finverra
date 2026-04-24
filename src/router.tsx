@@ -7,11 +7,13 @@ import SuperUserRoute from './dashboard/SuperUserRoute'
 const PartnershipArticlePage = lazy(() => import('./showcase/PartnershipArticlePage'))
 const HowItWorksPage = lazy(() => import('./showcase/HowItWorksPage'))
 const ProgramsPage = lazy(() => import('./showcase/ProgramsPage'))
+const InvestInPage = lazy(() => import('./showcase/InvestInPage'))
 const ShowcaseServicesPage = lazy(() => import('./showcase/ServicesPage'))
 const ShowcaseEventsPage = lazy(() => import('./showcase/EventsGalleryPage'))
 const TeamStructurePage = lazy(() => import('./showcase/TeamStructurePage'))
 const DashboardChoice = lazy(() => import('./dashboard/DashboardChoice'))
 const AdminAuth = lazy(() => import('./dashboard/admin/AdminAuth'))
+const ProjectsPage = lazy(() => import('./dashboard/admin/ProjectsPage'))
 const ServicesPage = lazy(() => import('./dashboard/admin/ServicesPage'))
 const InvestorsPage = lazy(() => import('./dashboard/admin/InvestorsPage'))
 const EntrepreneursPage = lazy(() => import('./dashboard/admin/EntrepreneursPage'))
@@ -81,6 +83,7 @@ export default function AppRouter() {
           />
           <Route path="/how-it-works" element={<HowItWorksPage />} />
           <Route path="/programs" element={<ProgramsPage />} />
+          <Route path="/invest-in" element={<InvestInPage />} />
           <Route path="/services" element={<ShowcaseServicesPage />} />
           <Route path="/events" element={<ShowcaseEventsPage />} />
           <Route path="/team" element={<TeamStructurePage />} />
@@ -91,6 +94,20 @@ export default function AppRouter() {
           <Route
             path="/dashboard/admin"
             element={<Navigate to="/dashboard/admin/statistics" replace />}
+          />
+          <Route
+            path="/admin/projects"
+            element={(
+              <Navigate to="/dashboard/admin/projects" replace />
+            )}
+          />
+          <Route
+            path="/dashboard/admin/projects"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <ProjectsPage />
+              </ProtectedRoleRoute>
+            )}
           />
           <Route
             path="/dashboard/admin/services"

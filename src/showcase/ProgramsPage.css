@@ -6,7 +6,7 @@
   --program-ink: #072b29;
   --program-muted: #4b6663;
   --program-accent: #0f8b5f;
-  --program-accent-2: #e8a317;
+  --program-accent-2: #ffec00;
   --program-border: rgba(7, 71, 68, 0.16);
   --program-shadow: 0 20px 36px rgba(7, 55, 52, 0.13);
   background: radial-gradient(circle at 12% 8%, #e4f8ef 0, transparent 34%),
@@ -48,7 +48,7 @@
   letter-spacing: 0.18em;
   font-weight: 700;
   margin-bottom: 15px;
-  color: #ffedca;
+  color: #ffec00;
 }
 
 .programs-hero-content h1 {
@@ -86,9 +86,9 @@
 }
 
 .programs-btn-primary {
-  background: linear-gradient(125deg, #ffd68e, #f2a92a);
+  background: #ffec00;
   color: #3f2a05;
-  box-shadow: 0 10px 24px rgba(232, 163, 23, 0.33);
+  
 }
 
 .programs-btn-secondary {
@@ -113,7 +113,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.78rem;
-  color: #0f8b5f;
+  color: #ffec00;
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -271,9 +271,9 @@
 }
 
 .status-upcoming {
-  background: rgba(232, 163, 23, 0.15);
-  color: #8d5b00;
-  border: 1px solid rgba(232, 163, 23, 0.3);
+  background: #ffec00;
+  color: #3f2a05;
+  border: 1px solid #ffec00;
 }
 
 .status-active {

@@ -12,10 +12,24 @@ export default function AdminHeader({ onToggleSidebar, onLogout }: AdminHeaderPr
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isPhone, setIsPhone] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 640 : false)
   const session = getAuthSession()
 
   const adminEmail = session?.email || 'admin@finverra.co'
   const initials = useMemo(() => adminEmail.slice(0, 2).toUpperCase(), [adminEmail])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPhone(window.innerWidth <= 640)
+    }
+
+    window.addEventListener('resize', handleResize)
+    handleResize()
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -40,8 +54,8 @@ export default function AdminHeader({ onToggleSidebar, onLogout }: AdminHeaderPr
   }, [])
 
   return (
-    <header style={styles.topbar}>
-      <div style={styles.leftWrap}>
+    <header style={{ ...styles.topbar, ...(isPhone ? styles.topbarPhone : {}) }}>
+      <div style={{ ...styles.leftWrap, ...(isPhone ? styles.leftWrapPhone : {}) }}>
         <button type="button" style={styles.hamburger} onClick={onToggleSidebar} aria-label="Toggle menu">
           <svg width="18" height="18" fill="none" stroke="#023341" strokeWidth="2" viewBox="0 0 24 24">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -49,27 +63,27 @@ export default function AdminHeader({ onToggleSidebar, onLogout }: AdminHeaderPr
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <div>
-          <span style={styles.kicker}>Finverra Admin</span>
-          <h1 style={styles.title}>Platform Content Dashboard</h1>
+        <div style={styles.titleWrap}>
+          {!isPhone ? <span style={styles.kicker}>Finverra Admin</span> : null}
+          <h1 style={{ ...styles.title, ...(isPhone ? styles.titlePhone : {}) }}>Platform Content Dashboard</h1>
         </div>
       </div>
 
-      <div style={styles.profileWrap} ref={menuRef}>
+      <div style={{ ...styles.profileWrap, ...(isPhone ? styles.profileWrapPhone : {}) }} ref={menuRef}>
         <button
           type="button"
-          style={styles.avatarWrap}
+          style={{ ...styles.avatarWrap, ...(isPhone ? styles.avatarWrapPhone : {}) }}
           onClick={() => setMenuOpen((open) => !open)}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           aria-label="Open admin menu"
         >
           <div style={styles.avatar}>{initials}</div>
-          <div style={styles.avatarMeta}>
-            <span style={styles.avatarRole}>Administrator</span>
+          <div style={{ ...styles.avatarMeta, ...(isPhone ? styles.avatarMetaPhone : {}) }}>
+            {!isPhone ? <span style={styles.avatarRole}>Administrator</span> : null}
             <strong style={styles.avatarName}>{adminEmail}</strong>
           </div>
-          <span style={styles.menuChevron}>▾</span>
+          {!isPhone ? <span style={styles.menuChevron}>▾</span> : null}
         </button>
 
         {menuOpen ? (
@@ -116,10 +130,22 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: '0 18px 40px rgba(2, 51, 65, 0.08)',
     zIndex: 50,
   },
+  topbarPhone: {
+    padding: '12px',
+    gap: 10,
+  },
   leftWrap: {
     display: 'flex',
     alignItems: 'center',
     gap: 16,
+    minWidth: 0,
+    flex: 1,
+  },
+  leftWrapPhone: {
+    gap: 10,
+  },
+  titleWrap: {
+    minWidth: 0,
   },
   hamburger: {
     background: 'linear-gradient(135deg, #fffde6, #ffffff)',
@@ -143,9 +169,18 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 18,
     color: '#023341',
     fontWeight: 700,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  titlePhone: {
+    fontSize: 15,
   },
   profileWrap: {
     position: 'relative',
+  },
+  profileWrapPhone: {
+    minWidth: 'auto',
   },
   avatarWrap: {
     display: 'flex',
@@ -157,6 +192,12 @@ const styles: Record<string, CSSProperties> = {
     border: '1px solid rgba(2, 51, 65, 0.1)',
     boxShadow: '0 10px 24px rgba(2, 51, 65, 0.06)',
     cursor: 'pointer',
+    maxWidth: 220,
+  },
+  avatarWrapPhone: {
+    padding: '6px',
+    borderRadius: 14,
+    maxWidth: 48,
   },
   avatar: {
     width: 38,
@@ -174,6 +215,10 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
+    minWidth: 0,
+  },
+  avatarMetaPhone: {
+    display: 'none',
   },
   avatarRole: {
     fontSize: 11,
@@ -185,6 +230,9 @@ const styles: Record<string, CSSProperties> = {
   avatarName: {
     fontSize: 13,
     color: '#023341',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   menuChevron: {
     fontSize: 12,

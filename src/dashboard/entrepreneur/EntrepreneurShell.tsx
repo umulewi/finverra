@@ -21,12 +21,16 @@ export default function EntrepreneurShell({
   heroBackground,
 }: EntrepreneurShellProps) {
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
+  const isMobileViewport = typeof window !== 'undefined' ? window.innerWidth <= 960 : false
+  const [isMobile, setIsMobile] = useState<boolean>(isMobileViewport)
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => !isMobileViewport)
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 960) {
-        setSidebarOpen(false)
+      const mobile = window.innerWidth <= 960
+      setIsMobile(mobile)
+      if (!mobile) {
+        setSidebarOpen(true)
       }
     }
 
@@ -48,20 +52,22 @@ export default function EntrepreneurShell({
       <div
         style={{
           ...styles.sidebarWrapper,
-          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          ...(isMobile ? styles.sidebarWrapperMobile : styles.sidebarWrapperDesktop),
+          transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
         }}
       >
         <EntrepreneurSidebar onLogout={handleLogout} />
       </div>
 
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <button type="button" style={styles.overlay} aria-label="Close menu" onClick={() => setSidebarOpen(false)} />
       )}
 
       <div
         style={{
           ...styles.main,
-          marginLeft: sidebarOpen ? '280px' : '0',
+          marginLeft: !isMobile && sidebarOpen ? '280px' : '0',
+          padding: isMobile ? 12 : 24,
         }}
       >
         <EntrepreneurHeader
@@ -91,12 +97,18 @@ const styles: Record<string, CSSProperties> = {
     background: 'linear-gradient(180deg, #f3f6fb 0%, #eef3fa 100%)',
   },
   sidebarWrapper: {
-    position: 'fixed',
     top: 0,
     left: 0,
     bottom: 0,
     width: 280,
     transition: 'transform 0.25s ease',
+  },
+  sidebarWrapperDesktop: {
+    position: 'fixed',
+    zIndex: 60,
+  },
+  sidebarWrapperMobile: {
+    position: 'fixed',
     zIndex: 100,
   },
   overlay: {

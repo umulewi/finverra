@@ -3,7 +3,7 @@
 .services-page {
   --services-bg: #f4f8fc;
   --services-ink: #0a2f47;
-  --services-accent: #023341;
+  --services-accent: #ffec00;
   background: radial-gradient(circle at 8% 10%, #dff1ff 0, transparent 36%),
     radial-gradient(circle at 90% 18%, #fff2d6 0, transparent 30%),
     var(--services-bg);
@@ -42,7 +42,7 @@
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-weight: 700;
-  color: #d6f4ff;
+  color: #ffec00;
   margin-bottom: 14px;
 }
 
@@ -81,7 +81,7 @@
 }
 
 .services-btn-primary {
-  background: linear-gradient(125deg, #ffd89f, #f3b340);
+  background: #ffec00;
   color: #4e3300;
 }
 

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { buildApiUrl } from '../../config/api'
+import { getAuthSession } from '../authStorage'
 
 type InvestorHeaderProps = {
 	onToggleSidebar: () => void
@@ -15,9 +17,84 @@ export default function InvestorHeader({
 	onLogout,
 }: InvestorHeaderProps) {
 	const navigate = useNavigate()
+	const session = getAuthSession()
 	const menuRef = useRef<HTMLDivElement>(null)
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
+	const [investorName, setInvestorName] = useState('Finverra')
+	const [avatarInitials, setAvatarInitials] = useState('IV')
+
+	const email = session?.email ?? ''
+
+	function resolveToken() {
+		if (!session || typeof session.payload !== 'object' || session.payload === null) {
+			return ''
+		}
+
+		const payload = session.payload as { token?: unknown; accessToken?: unknown }
+		if (typeof payload.token === 'string') {
+			return payload.token
+		}
+		if (typeof payload.accessToken === 'string') {
+			return payload.accessToken
+		}
+		return ''
+	}
+
+	function getInitials(fullName: string) {
+		const parts = fullName
+			.split(' ')
+			.map((part) => part.trim())
+			.filter(Boolean)
+
+		if (parts.length === 0) return 'IV'
+		if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+		return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+	}
+
+	useEffect(() => {
+		if (!email) {
+			return
+		}
+
+		let isMounted = true
+
+		async function loadInvestorName() {
+			try {
+				const token = resolveToken()
+				const response = await fetch(buildApiUrl(`/investors/name-by-email/${encodeURIComponent(email)}`), {
+					headers: {
+						...(token ? { Authorization: `Bearer ${token}` } : {}),
+					},
+				})
+
+				const payload = await response.json().catch(() => null)
+				if (!response.ok || !payload || typeof payload !== 'object') {
+					return
+				}
+
+				const investor = (payload as { investor?: { first_name?: unknown; last_name?: unknown } }).investor
+				const firstName = typeof investor?.first_name === 'string' ? investor.first_name.trim() : ''
+				const lastName = typeof investor?.last_name === 'string' ? investor.last_name.trim() : ''
+				const fullName = [firstName, lastName].filter(Boolean).join(' ').trim()
+
+				if (!isMounted || !fullName) {
+					return
+				}
+
+				setInvestorName(fullName)
+				setAvatarInitials(getInitials(fullName))
+			} catch {
+				// Keep the default label when the API is unavailable.
+			}
+		}
+
+		void loadInvestorName()
+
+		return () => {
+			isMounted = false
+		}
+	}, [email])
 
 	useEffect(() => {
 		const handleResize = () => setViewportWidth(window.innerWidth)
@@ -116,10 +193,10 @@ export default function InvestorHeader({
 						aria-expanded={menuOpen}
 						aria-label="Open investor menu"
 					>
-						<div style={avatarStyle}>IV</div>
+						<div style={avatarStyle}>{avatarInitials}</div>
 						<div style={avatarMetaStyle}>
 							<span style={styles.avatarRole}>Investor</span>
-							<strong style={styles.avatarName}>Finverra</strong>
+							<strong style={styles.avatarName}>{investorName}</strong>
 						</div>
 						<span style={styles.menuChevron}>▾</span>
 					</button>

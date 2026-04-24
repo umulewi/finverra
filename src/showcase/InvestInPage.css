@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
+
+.invest-in-page {
+  --invest-bg: #f4f8fb;
+  --invest-ink: #082633;
+  --invest-muted: #4a6570;
+  --invest-accent: #ffec00;
+  --invest-card: #ffffff;
+  --invest-border: rgba(5, 56, 77, 0.14);
+  --invest-shadow: 0 22px 44px rgba(2, 42, 58, 0.12);
+  background:
+    radial-gradient(circle at 8% 8%, #ffec00 0, transparent 28%),
+    radial-gradient(circle at 90% 22%, rgba(8, 120, 160, 0.12), transparent 26%),
+    var(--invest-bg);
+  color: var(--invest-ink);
+  font-family: 'Manrope', sans-serif;
+}
+
+.invest-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 130px 0 76px;
+}
+
+.invest-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(125deg, #012631 0%, #023341 52%, #045470 100%),
+    repeating-linear-gradient(
+      -35deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.08) 3px,
+      transparent 3px,
+      transparent 20px
+    );
+}
+
+.invest-hero-content {
+  max-width: 920px;
+  color: #ffffff;
+}
+
+.invest-eyebrow,
+.invest-summary-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #ffec00;
+  margin-bottom: 16px;
+}
+
+.invest-hero-content h1,
+.invest-section-head h2,
+.invest-summary-card h2,
+.invest-cta-inner h2 {
+  font-family: 'Sora', sans-serif;
+}
+
+.invest-hero-content h1 {
+  font-size: clamp(2.2rem, 4.4vw, 3.95rem);
+  line-height: 1.03;
+  margin-bottom: 18px;
+}
+
+.invest-hero-content p {
+  max-width: 760px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.invest-actions,
+.invest-card-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.invest-actions {
+  margin-top: 26px;
+}
+
+.invest-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.invest-btn:hover {
+  transform: translateY(-2px);
+}
+
+.invest-btn-primary {
+  background: #ffec00;
+  color: #201204;
+  box-shadow: 0 10px 24px rgba(255, 236, 0, 0.24);
+}
+
+.invest-projects {
+  padding-top: 10px;
+}
+
+.invest-section-head {
+  margin-bottom: 22px;
+}
+
+.invest-section-head h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+
+.invest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.invest-card {
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.invest-card-image {
+  display: block;
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+
+.invest-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invest-card-btn {
+  width: fit-content;
+}
+
+.invest-card h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.35rem;
+}
+
+.invest-summary {
+  font-size: 0.98rem;
+}
+
+@media (max-width: 1024px) {
+  .invest-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .invest-hero {
+    padding-top: 118px;
+  }
+
+  .invest-card-body {
+    padding: 20px;
+  }
+
+  .invest-card-btn {
+    width: 100%;
+  }
+
+  .invest-card-image {
+    height: 200px;
+  }
+
+  .invest-actions {
+    flex-direction: column;
+  }
+}

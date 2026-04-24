@@ -130,8 +130,24 @@ export default function StatisticsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState<string | null>(null)
+  const [isTablet, setIsTablet] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 1024 : false)
+  const [isPhone, setIsPhone] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 640 : false)
 
   useEffect(() => { loadStatistics() }, [])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsTablet(window.innerWidth <= 1024)
+      setIsPhone(window.innerWidth <= 640)
+    }
+
+    window.addEventListener('resize', handleResize)
+    handleResize()
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   async function loadStatistics() {
     setLoading(true)
@@ -209,10 +225,10 @@ export default function StatisticsPage() {
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <AdminShell title="Dashboard Statistics" subtitle="Overview of all platform components">
-      <div style={styles.page}>
+      <div style={{ ...styles.page, ...(isPhone ? styles.pagePhone : {}) }}>
 
         {/* ── KPI row ── */}
-        <div style={styles.kpiGrid}>
+        <div style={{ ...styles.kpiGrid, ...(isTablet ? styles.kpiGridTablet : {}), ...(isPhone ? styles.kpiGridPhone : {}) }}>
           <KpiCard
             label="Entrepreneurs"
             left={{ label: 'Active', value: stats.entrepreneurs }}
@@ -228,14 +244,14 @@ export default function StatisticsPage() {
         </div>
 
         {/* ── Charts 2×2 ── */}
-        <div style={styles.chartsGrid}>
+        <div style={{ ...styles.chartsGrid, ...(isTablet ? styles.chartsGridTablet : {}) }}>
 
           {/* Bar — all components */}
           <ChartCard title="All components overview" dot={BRAND.dark}>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={isPhone ? 220 : 260}>
               <BarChart data={allComponentsData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke={BRAND.border} vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} angle={-35} textAnchor="end" height={60} />
+                <XAxis dataKey="name" tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} angle={isPhone ? -20 : -35} textAnchor="end" height={isPhone ? 50 : 60} />
                 <YAxis tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<BrandTooltip />} cursor={{ fill: 'rgba(2,51,65,0.04)' }} />
                 <Bar dataKey="value" name="Count" fill={BRAND.dark} radius={[6, 6, 0, 0]} />
@@ -245,13 +261,13 @@ export default function StatisticsPage() {
 
           {/* Pie — distribution */}
           <ChartCard title="Component distribution" dot={BRAND.yellow}>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={isPhone ? 200 : 220}>
               <PieChart>
                 <Pie
                   data={platformComponentsData}
                   cx="50%" cy="50%"
-                  innerRadius={55}
-                  outerRadius={85}
+                  innerRadius={isPhone ? 40 : 55}
+                  outerRadius={isPhone ? 68 : 85}
                   paddingAngle={3}
                   dataKey="value"
                   labelLine={false}
@@ -277,7 +293,7 @@ export default function StatisticsPage() {
 
           {/* Line — users vs applications */}
           <ChartCard title="Users & applications ratio" dot={BRAND.light}>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={isPhone ? 220 : 260}>
               <LineChart data={conversionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={BRAND.border} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -305,7 +321,7 @@ export default function StatisticsPage() {
 
           {/* Bar — ecosystem */}
           <ChartCard title="Platform ecosystem" dot={BRAND.mid}>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={isPhone ? 220 : 260}>
               <BarChart data={platformComponentsData} barCategoryGap="35%">
                 <CartesianGrid strokeDasharray="3 3" stroke={BRAND.border} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -323,10 +339,10 @@ export default function StatisticsPage() {
         </div>
 
         {/* ── Bottom row: table + grouped bar ── */}
-        <div style={styles.bottomRow}>
+        <div style={{ ...styles.bottomRow, ...(isTablet ? styles.bottomRowTablet : {}) }}>
 
           {/* Detailed table */}
-          <div style={styles.tableCard}>
+          <div style={{ ...styles.tableCard, ...(isPhone ? styles.cardPhone : {}) }}>
             <div style={styles.chartHeader}>
               <span style={{ ...styles.chartDot, background: BRAND.dark }} />
               <h3 style={styles.chartTitle}>Detailed statistics</h3>
@@ -345,7 +361,7 @@ export default function StatisticsPage() {
 
           {/* Grouped bar — conversion */}
           <ChartCard title="Conversion overview" dot={BRAND.yellow}>
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={isPhone ? 230 : 280}>
               <BarChart data={conversionData} barCategoryGap="30%" barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke={BRAND.border} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: BRAND.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -383,6 +399,9 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 20,
     fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
+  },
+  pagePhone: {
+    gap: 14,
   },
 
   /* Top bar */
@@ -428,6 +447,13 @@ const styles: Record<string, CSSProperties> = {
     gridTemplateColumns: 'repeat(2, minmax(260px, 360px))',
     justifyContent: 'center',
     gap: 14,
+  },
+  kpiGridTablet: {
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  },
+  kpiGridPhone: {
+    gridTemplateColumns: '1fr',
+    gap: 10,
   },
   kpiCard: {
     background: BRAND.white,
@@ -475,6 +501,10 @@ const styles: Record<string, CSSProperties> = {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 16,
+  },
+  chartsGridTablet: {
+    gridTemplateColumns: '1fr',
+    gap: 12,
   },
   chartCard: {
     background: BRAND.white,
@@ -529,11 +559,19 @@ const styles: Record<string, CSSProperties> = {
     gridTemplateColumns: '1fr 1.5fr',
     gap: 16,
   },
+  bottomRowTablet: {
+    gridTemplateColumns: '1fr',
+    gap: 12,
+  },
   tableCard: {
     background: BRAND.white,
     border: `1px solid ${BRAND.border}`,
     borderRadius: 12,
     padding: '18px 20px',
+  },
+  cardPhone: {
+    borderRadius: 10,
+    padding: '14px 14px',
   },
 
   /* Stat rows */

@@ -107,6 +107,20 @@ const investorMenu: MenuItem[] = [
 
 const websiteMenu: MenuItem[] = [
   {
+    label: 'Projects',
+    path: '/dashboard/admin/projects',
+    groupKey: 'website',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 7h16" />
+        <path d="M4 12h16" />
+        <path d="M4 17h16" />
+        <path d="M8 4v6" />
+        <path d="M16 10V4" />
+      </svg>
+    ),
+  },
+  {
     label: 'Services',
     path: '/dashboard/admin/services',
     groupKey: 'website',

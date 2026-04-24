@@ -4,7 +4,7 @@
   --flow-bg: #f3f8fb;
   --flow-ink: #0a2a38;
   --flow-muted: #4c6570;
-  --flow-accent: #ff8a00;
+  --flow-accent: #ffec00;
   --flow-accent-soft: #ffd7ad;
   --flow-card: #ffffff;
   --flow-border: rgba(5, 56, 77, 0.16);
@@ -87,9 +87,9 @@
 }
 
 .flow-btn-primary {
-  background: linear-gradient(120deg, var(--flow-accent), #ffb256);
+  background: #ffec00;
   color: #1f1303;
-  box-shadow: 0 10px 24px rgba(255, 138, 0, 0.28);
+ 
 }
 
 .flow-btn-secondary {
