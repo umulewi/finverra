@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { getAuthSession } from '../authStorage'
 import { isSuperUserSession } from './superUser'

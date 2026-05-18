@@ -19,12 +19,7 @@ type ChargeRequestPayload = {
 
 type XentripaySuccessResponse = {
   reply?: string
-  url?: string
-  success?: number
-  authkey?: string
-  tid?: string
   refid?: string
-  retcode?: number
 }
 
 type XentripayStatusResponse = {
@@ -113,11 +108,6 @@ export default function PaymentsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [gatewayResponse, setGatewayResponse] = useState<XentripaySuccessResponse | null>(null)
-  const [paymentRefId, setPaymentRefId] = useState('')
-  const [paymentStatus, setPaymentStatus] = useState('')
-  const [paymentStatusUpdatedAt, setPaymentStatusUpdatedAt] = useState('')
-  const [paymentStatusHttpStatus, setPaymentStatusHttpStatus] = useState<number | null>(null)
   const [checkingPayment, setCheckingPayment] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(0)
 
@@ -178,11 +168,6 @@ export default function PaymentsPage() {
 
     setError(null)
     setSuccess(null)
-    setGatewayResponse(null)
-    setPaymentRefId('')
-    setPaymentStatus('')
-    setPaymentStatusUpdatedAt('')
-    setPaymentStatusHttpStatus(null)
 
     if (!msisdn.trim()) {
       setError('Please enter MSISDN.')
@@ -229,14 +214,10 @@ export default function PaymentsPage() {
       }
 
       const gateway = (body && typeof body === 'object' ? body : null) as XentripaySuccessResponse | null
-      setGatewayResponse(gateway)
       setSuccess(gateway?.reply ?? 'Payment initiated successfully! Waiting for payment confirmation...')
 
       const referenceId = gateway?.refid?.trim() ?? ''
       if (referenceId) {
-        setPaymentRefId(referenceId)
-        setPaymentStatus('PENDING')
-        setPaymentStatusUpdatedAt('')
         const token = resolveToken(session?.payload)
         setCheckingPayment(true)
         setCountdownSeconds(PAYMENT_STATUS_TIMEOUT_SECONDS)
@@ -272,9 +253,6 @@ export default function PaymentsPage() {
 
             const statusPayload = statusResult.payload
             const status = typeof statusPayload?.status === 'string' ? statusPayload.status.trim().toUpperCase() : ''
-            setPaymentStatusHttpStatus(statusResult.httpStatus)
-            setPaymentStatus(status || 'PENDING')
-            setPaymentStatusUpdatedAt(statusPayload?.updatedAt ?? '')
             console.log('Xentripay status response:', statusResult)
 
             if (!statusResult.ok) {
@@ -317,18 +295,11 @@ export default function PaymentsPage() {
               break
             }
 
-            if (!status) {
-              setPaymentStatus('PENDING')
-            }
-
             if (attempt < attempts - 1) {
               await wait(PAYMENT_STATUS_POLL_INTERVAL_MS)
             }
           }
 
-          if (pollingTimedOut) {
-            setPaymentStatus('PENDING')
-          }
         } catch (err: any) {
           setError(err?.message ?? 'Unable to verify payment status.')
         } finally {
