@@ -23,41 +23,78 @@ type InvestorSidebarProps = {
 
 function DashIcon(): ReactElement {
 	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-			<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-		</svg>
-	)
-}
-function PipeIcon(): ReactElement {
-	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-			<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" />
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M3 13h4v8H3zM10 7h4v14h-4zM17 3h4v18h-4z" />
 		</svg>
 	)
 }
 
-function SetIcon(): ReactElement {
+function ProfileIcon(): ReactElement {
 	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-			<circle cx="12" cy="12" r="3" />
-			<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+			<circle cx="12" cy="7" r="4" />
 		</svg>
 	)
 }
 
-function FeeIcon(): ReactElement {
+function FileTextIcon(): ReactElement {
 	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-			<circle cx="12" cy="12" r="10" />
-			<path d="M12 7v10" />
-			<path d="M9 9.5h4a2.5 2.5 0 0 1 0 5h-4" />
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+			<path d="M14 2v6h6" />
+			<path d="M8 13h8M8 17h8" />
+		</svg>
+	)
+}
+
+function ClipboardCheckIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M9 11l2 2 4-4" />
+			<path d="M16 4h-1.5a2 2 0 0 0-3.9 0H9a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
+		</svg>
+	)
+}
+
+function BriefcaseIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<rect x="2" y="7" width="20" height="13" rx="2" ry="2" />
+			<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+		</svg>
+	)
+}
+
+function FolderIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+		</svg>
+	)
+}
+
+function CreditCardIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
+			<path d="M2 10h20" />
+		</svg>
+	)
+}
+
+function DollarIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+			<path d="M12 1v22" />
+			<path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H15a3.5 3.5 0 0 1 0 7H6" />
 		</svg>
 	)
 }
 
 function CalendarIcon(): ReactElement {
 	return (
-		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+		<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
 			<rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
 			<path d="M16 2v4M8 2v4" />
 			<path d="M3 10h18" />
@@ -72,15 +109,15 @@ const navSections: NavSection[] = [
 		title: 'Core',
 		items: [
 			{ label: 'Dashboard', icon: DashIcon },
-			{ label: 'My Profile', icon: SetIcon },
-	
-			{ label: 'Application Form', icon: PipeIcon },
-			{ label: 'Application Status', icon: FeeIcon },
-			{ label: 'Project to Invest in', icon: FeeIcon },
-			{ label: 'Project I have applied in', icon: FeeIcon },
-			{ label: 'Payment', icon: FeeIcon },
+			{ label: 'My Profile', icon: ProfileIcon },
+
+			{ label: 'Application Form', icon: FileTextIcon },
+			{ label: 'Application Status', icon: ClipboardCheckIcon },
+			{ label: 'Project to Invest in', icon: BriefcaseIcon },
+			{ label: 'Project I have applied in', icon: FolderIcon },
+			{ label: 'Payment', icon: CreditCardIcon },
 			{ label: 'Book Appointment', icon: CalendarIcon },
-			{ label: 'Service Fees', icon: FeeIcon },
+			{ label: 'Service Fees', icon: DollarIcon },
 
 		],
 	},
