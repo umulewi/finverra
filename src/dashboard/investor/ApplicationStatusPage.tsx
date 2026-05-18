@@ -130,7 +130,7 @@ const statusSteps: StatusStep[] = [
     label: 'Profile',
     icon: '◈',
     description: 'Core application identity and status',
-    fields: ['id', 'users_id', 'status', 'email', 'investor_type', 'residence_country'],
+    fields: ['status', 'email', 'investor_type', 'residence_country'],
   },
   {
     label: 'Capacity',

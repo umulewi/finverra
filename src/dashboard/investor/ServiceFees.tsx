@@ -1,6 +1,74 @@
+import { useEffect, useState } from 'react'
 import InvestorLayout, { investorCardStyle } from './InvestorLayout'
+import { buildApiUrl } from '../../config/api'
+import { getAuthSession } from '../authStorage'
+
+interface ApplicationFee {
+  id: number
+  details: string
+  amount: string
+}
+
+interface DurationAmount {
+  id: number
+  duration: string
+  amount: string
+}
+
+interface TransactionFee {
+  id: number
+  details: string
+  percentage: string | number
+}
 
 export default function ServiceFees() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [applicationFees, setApplicationFees] = useState<ApplicationFee[]>([])
+  const [investmentMentorships, setInvestmentMentorships] = useState<DurationAmount[]>([])
+  const [partnerBusiness, setPartnerBusiness] = useState<DurationAmount[]>([])
+  const [specialOccasions, setSpecialOccasions] = useState<ApplicationFee[]>([])
+  const [transactionFees, setTransactionFees] = useState<TransactionFee[]>([])
+  const [wholeBusiness, setWholeBusiness] = useState<DurationAmount[]>([])
+
+  useEffect(() => {
+    async function fetchAll() {
+      setLoading(true)
+      setError(null)
+      const token = (getAuthSession()?.payload as { token?: string } | undefined)?.token ?? ''
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
+
+      try {
+        const endpoints = [
+          ['/admin/i_application_fees', 'i_application_fees'],
+          ['/admin/i_investment_mentorships', 'i_investment_mentorships'],
+          ['/admin/i_partner_business_management', 'i_partner_business_management'],
+          ['/admin/i_special_occasion', 'i_special_occasion'],
+          ['/admin/i_transaction_fees', 'i_transaction_fees'],
+          ['/admin/i_whole_business_management', 'i_whole_business_management'],
+        ] as const
+
+        const fetches = endpoints.map(([path]) => fetch(buildApiUrl(path), { headers }))
+        const responses = await Promise.all(fetches)
+        const bodies = await Promise.all(responses.map((r) => r.json()))
+
+        setApplicationFees(bodies[0]?.i_application_fees ?? [])
+        setInvestmentMentorships(bodies[1]?.i_investment_mentorships ?? [])
+        setPartnerBusiness(bodies[2]?.i_partner_business_management ?? [])
+        setSpecialOccasions(bodies[3]?.i_special_occasion ?? [])
+        setTransactionFees(bodies[4]?.i_transaction_fees ?? [])
+        setWholeBusiness(bodies[5]?.i_whole_business_management ?? [])
+      } catch (err: any) {
+        setError(err?.message ?? 'Failed to fetch service fees')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void fetchAll()
+  }, [])
+
   return (
     <InvestorLayout>
       <section style={investorCardStyle}>
@@ -12,6 +80,9 @@ export default function ServiceFees() {
           </p>
         </div>
 
+        {loading && <p>Loading service fees...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>1. Application fees</h3>
           <table style={styles.table}>
@@ -22,10 +93,20 @@ export default function ServiceFees() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td style={styles.td}>Application Fees</td>
-                <td style={styles.td}>20,000frw</td>
-              </tr>
+              {applicationFees.length === 0 ? (
+                <tr>
+                  <td style={styles.td} colSpan={2}>
+                    No application fees configured
+                  </td>
+                </tr>
+              ) : (
+                applicationFees.map((f) => (
+                  <tr key={f.id}>
+                    <td style={styles.td}>{f.details}</td>
+                    <td style={styles.td}>{f.amount}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -40,14 +121,20 @@ export default function ServiceFees() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td style={styles.td}>Investment Transaction Success fees</td>
-                <td style={styles.td}>15%</td>
-              </tr>
-              <tr>
-                <td style={styles.td}>Dividends Transaction fees</td>
-                <td style={styles.td}>2%</td>
-              </tr>
+                {transactionFees.length === 0 ? (
+                  <tr>
+                    <td style={styles.td} colSpan={2}>
+                      No transaction fees configured
+                    </td>
+                  </tr>
+                ) : (
+                  transactionFees.map((t) => (
+                    <tr key={t.id}>
+                      <td style={styles.td}>{t.details}</td>
+                      <td style={styles.td}>{String(t.percentage)}%</td>
+                    </tr>
+                  ))
+                )}
             </tbody>
           </table>
         </div>
@@ -62,14 +149,20 @@ export default function ServiceFees() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td style={styles.td}>Attending Business High Level Pitching Conference</td>
-                <td style={styles.td}>100,000frw - 300,000frw</td>
-              </tr>
-              <tr>
-                <td style={styles.td}>Other Conference</td>
-                <td style={styles.td}>50,000Frw - 150,000Frw</td>
-              </tr>
+                {specialOccasions.length === 0 ? (
+                  <tr>
+                    <td style={styles.td} colSpan={2}>
+                      No special occasion fees configured
+                    </td>
+                  </tr>
+                ) : (
+                  specialOccasions.map((s) => (
+                    <tr key={s.id}>
+                      <td style={styles.td}>{s.details}</td>
+                      <td style={styles.td}>{s.amount}</td>
+                    </tr>
+                  ))
+                )}
             </tbody>
           </table>
         </div>
@@ -86,16 +179,22 @@ export default function ServiceFees() {
                   <th style={styles.th}>Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td style={styles.td}>5 years</td>
-                  <td style={styles.td}>3,000,000Frw (Paid fully before)</td>
-                </tr>
-                <tr>
-                  <td style={styles.td}>10 years</td>
-                  <td style={styles.td}>7,000,000Frw (Two Installment)</td>
-                </tr>
-              </tbody>
+                <tbody>
+                  {wholeBusiness.length === 0 ? (
+                    <tr>
+                      <td style={styles.td} colSpan={2}>
+                        No whole business management fees configured
+                      </td>
+                    </tr>
+                  ) : (
+                    wholeBusiness.map((w) => (
+                      <tr key={w.id}>
+                        <td style={styles.td}>{w.duration}</td>
+                        <td style={styles.td}>{w.amount}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
             </table>
             <div style={styles.noteBox}>
               <strong>Note:</strong>
@@ -115,28 +214,26 @@ export default function ServiceFees() {
                   <th style={styles.th}>Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td style={styles.td}>Less than 6 months</td>
-                  <td style={styles.td}>300,000frw</td>
-                </tr>
-                <tr>
-                  <td style={styles.td}>1 years</td>
-                  <td style={styles.td}>500,000frw</td>
-                </tr>
-                <tr>
-                  <td style={styles.td}>2 years</td>
-                  <td style={styles.td}>800,000frw</td>
-                </tr>
-                <tr>
-                  <td style={styles.td}>Above 2 years</td>
-                  <td style={styles.td}>1,000,000frw</td>
-                </tr>
-              </tbody>
-            </table>
-            <div style={styles.noteBox}>
-              <strong>Note:</strong> Addition Operation Expenses may be applied and detailed through contract.
-            </div>
+                  <tbody>
+                    {partnerBusiness.length === 0 ? (
+                      <tr>
+                        <td style={styles.td} colSpan={2}>
+                          No partner business management fees configured
+                        </td>
+                      </tr>
+                    ) : (
+                      partnerBusiness.map((p) => (
+                        <tr key={p.id}>
+                          <td style={styles.td}>{p.duration}</td>
+                          <td style={styles.td}>{p.amount}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+                <div style={styles.noteBox}>
+                  <strong>Note:</strong> Addition Operation Expenses may be applied and detailed through contract.
+                </div>
           </div>
 
           <div style={styles.subsection}>
@@ -148,16 +245,22 @@ export default function ServiceFees() {
                   <th style={styles.th}>Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td style={styles.td}>3 Months</td>
-                  <td style={styles.td}>450,000Frw</td>
-                </tr>
-                <tr>
-                  <td style={styles.td}>6 Months</td>
-                  <td style={styles.td}>700,000Frw</td>
-                </tr>
-              </tbody>
+                <tbody>
+                  {investmentMentorships.length === 0 ? (
+                    <tr>
+                      <td style={styles.td} colSpan={2}>
+                        No investment mentorship fees configured
+                      </td>
+                    </tr>
+                  ) : (
+                    investmentMentorships.map((m) => (
+                      <tr key={m.id}>
+                        <td style={styles.td}>{m.duration}</td>
+                        <td style={styles.td}>{m.amount}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
             </table>
           </div>
         </div>

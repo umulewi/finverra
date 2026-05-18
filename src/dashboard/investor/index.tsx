@@ -1,117 +1,167 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { CSSProperties } from 'react'
+import { buildApiUrl } from '../../config/api'
 import { clearAuthSession, getAuthSession } from '../authStorage'
+import { fetchInvestorDisplayName } from './header'
 import InvestorHeader from './header'
 import InvestorSidebar from './sidebar'
 
-const navPathByLabel: Record<string, string> = {
-	Dashboard: '/dashboard/investor',
-	'Edit Profile': '/dashboard/investor/edit-profile',
-	'My Application': '/dashboard/investor/application-form',
-	Pipeline: '/dashboard/investor/pipeline',
-	Portfolio: '/dashboard/investor/portfolio',
-	Login: '/dashboard/investor/login',
-	Register: '/dashboard/investor/signup',
-	Documents: '/dashboard/investor/documents',
-	Messages: '/dashboard/investor/messages',
-	Reports: '/dashboard/investor/reports',
-	Notifications: '/dashboard/investor/notifications',
-	Settings: '/dashboard/investor/settings',
-}
+// ─── Design Tokens ────────────────────────────────────────────────────────────
+const C = {
+	navy:    '#0B1E2D',
+	navy2:   '#112233',
+	slate:   '#1E3448',
+	mid:     '#2D4A62',
+	muted:   '#6B8CA8',
+	subtle:  '#A8BFD0',
+	ghost:   '#D4E2EC',
+	pale:    '#EEF4F8',
+	white:   '#FFFFFF',
+	accent:  '#E8C547',
+	accent2: '#F0D870',
+	text1:   '#0B1E2D',
+	text2:   '#3A5570',
+	text3:   '#6B8CA8',
+	green:   '#1F8A5E',
+	greenBg: '#E8F7F0',
+	blue:    '#2D6CC0',
+	blueBg:  '#EBF3FF',
+	amber:   '#B8720D',
+	amberBg: '#FDF3E3',
+	purple:  '#6B3FA0',
+	purpleBg:'#F0EBF8',
+	red:     '#C0392B',
+	redBg:   '#FDECEA',
+} as const
 
+// ─── Nav config ───────────────────────────────────────────────────────────────
+const navPathByLabel: Record<string, string> = {
+	Dashboard:       '/dashboard/investor',
+	'My Profile':    '/dashboard/investor/edit-profile',
+	'Edit Profile':  '/dashboard/investor/edit-profile',
+	'Application Form': '/dashboard/investor/application-form',
+	'My Application':'/dashboard/investor/application-form',
+	'Application Status': '/dashboard/investor/application-status',
+	'Service Fees':  '/dashboard/investor/service-fees',
+	'Project to Invest in': '/dashboard/investor/project-to-invest',
+	'Project I have applied in': '/dashboard/investor/applied-projects',
+	Payment: '/dashboard/investor/payments',
+	Pipeline:        '/dashboard/investor/pipeline',
+	Portfolio:       '/dashboard/investor/portfolio',
+	Login:           '/dashboard/investor/login',
+	Register:        '/dashboard/investor/signup',
+	Documents:       '/dashboard/investor/documents',
+	Messages:        '/dashboard/investor/messages',
+	Reports:         '/dashboard/investor/reports',
+	Notifications:   '/dashboard/investor/notifications',
+	Settings:        '/dashboard/investor/settings',
+}
 const labelByPath: Record<string, string> = Object.fromEntries(
-	Object.entries(navPathByLabel).map(([label, path]) => [path, label]),
+	Object.entries(navPathByLabel).map(([l, p]) => [p, l]),
 )
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Static data ──────────────────────────────────────────────────────────────
+type Metric = { id: string; badge: string; value: string; title: string; sub: string; delta: string; fill: number; iconBg: string; iconColor: string }
+const metrics = [
+	{ value: '50+',title: 'Entrepreneurs',      sub: 'Active founders across Rwanda',  fill: 78, iconBg: C.blueBg,   iconColor: C.blue   },
 
-const platformSignals = [
-	{
-		label: 'Entrepreneurs on Platform',
-		value: '50+',
-		detail: 'Active founder community across Rwanda',
-		tone: '#ffec00',
-		icon: '🚀',
-		delta: '+12% this month',
-		positive: true,
-	},
-	{
-		label: 'Verified Investors',
-		value: '12+',
-		detail: 'Verified investors currently engaging deals',
-		tone: '#ffec00',
-		icon: '💎',
-		delta: '+3 this quarter',
-		positive: true,
-	},
-	{
-		label: 'Active Projects',
-		value: '20+',
-		detail: 'Projects in active support pipeline',
-		tone: '#ffec00',
-		icon: '📊',
-		delta: '+5 new projects',
-		positive: true,
-	},
-	{
-		label: 'Capital Facilitated',
-		value: 'RWF 2M+',
-		detail: 'Total funding volume on Finverra ecosystem',
-		tone: '#ffec00',
-		icon: '🏦',
-		delta: 'Growing YoY',
-		positive: true,
-	},
+
+
+	{ value: '12+',    title: 'Verified Investors', sub: 'Currently engaging deals',         delta: '+3 Q',  fill: 55, iconBg: C.greenBg,  iconColor: C.green  },
+
+
+	{ id: 'ap', badge: 'AP', value: '20+',    title: 'Active Projects',    sub: 'In support pipeline',              delta: '+5 new',fill: 62, iconBg: C.amberBg,  iconColor: C.amber  },
+	{ id: 'cf', badge: 'CF', value: 'RWF 2M', title: 'Capital Facilitated',sub: 'Total funding volume',             delta: '↑ YoY', fill: 85, iconBg: C.purpleBg, iconColor: C.purple },
+] as Metric[]
+
+const quickSteps = [
+	{ step: '01', title: 'Complete profile',    to: '/dashboard/investor/edit-profile'      },
+	{ step: '02', title: 'Submit application',  to: '/dashboard/investor/application-form'  },
+	{ step: '03', title: 'Check status',        to: '/dashboard/investor/application-status'},
+	{ step: '04', title: 'Make payment',        to: '/dashboard/investor/payments'          },
+	{ step: '05', title: 'Apply for project',   to: '/dashboard/investor/pipeline'          },
 ]
 
-const trustedInstitutions = [
-	{ name: 'RDB', abbr: 'RD' },
-	{ name: 'Bank of Kigali', abbr: 'BK' },
-	{ name: 'BRD', abbr: 'BR' },
-	{ name: 'I&M Bank Rwanda', abbr: 'IM' },
-	{ name: 'Equity Bank Rwanda', abbr: 'EQ' },
-	{ name: 'Africa50', abbr: 'A5' },
+// removed: meetingTypes and recentDeals (panels were removed from UI)
+
+const FALLBACK_PARTNERS = [
+	{ id: 1, image: '/patners/rdb.png',              url: 'https://www.rdb.rw/',                    label: 'RDB' },
+	{ id: 2, image: '/patners/bk.jpg',               url: 'https://bk.rw/',                         label: 'BK'  },
+	{ id: 3, image: '/patners/brd.png',              url: 'https://www.brd.rw/',                    label: 'BRD' },
+	{ id: 4, image: '/patners/im.png',               url: 'https://www.imbankgroup.com/rwanda/',    label: 'IMB' },
+	{ id: 5, image: '/patners/Equity_Group_Logo.png',url: 'https://equitygroupholdings.com/rw/',   label: 'EQT' },
+	{ id: 6, image: '/patners/africa50.jpg',         url: 'https://www.africa50.com/',              label: 'A50' },
 ]
 
-const meetingTypes = [
-	{ type: 'Business Consultation', icon: '🤝', available: true },
-	{ type: 'Investment Discussion', icon: '💼', available: true },
-	{ type: 'Project Evaluation', icon: '🔍', available: false },
-	{ type: 'Partnership Meeting', icon: '🌍', available: true },
-]
-
-const recentDeals = [
-	{ name: 'AgriTech Rwanda', sector: 'Agriculture', stage: 'Seed', amount: 'RWF 120K', status: 'Active', color: '#ffec00' },
-	{ name: 'MobilePay Ltd', sector: 'Fintech', stage: 'Series A', amount: 'RWF 450K', status: 'Due Diligence', color: '#ffec00' },
-	{ name: 'EduConnect', sector: 'EdTech', stage: 'Pre-Seed', amount: 'RWF 80K', status: 'Reviewing', color: '#ffec00' },
-	{ name: 'CleanEnergy Co', sector: 'Energy', stage: 'Seed', amount: 'RWF 200K', status: 'Active', color: '#ffec00' },
-]
+type PartnerApiItem = { id: number; image: string; url: string }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function InvestorDashboardPage() {
-	const navigate = useNavigate()
-	const location = useLocation()
-	const session = getAuthSession()
+	const navigate  = useNavigate()
+	const location  = useLocation()
+	const session   = getAuthSession()
 
-	const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
-	const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
-	const [searchVal, setSearchVal] = useState<string>('')
-	const [activeNav, setActiveNav] = useState<string>('Dashboard')
+	const [sidebarOpen,    setSidebarOpen]    = useState(true)
+	const [viewportWidth,  setViewportWidth]  = useState(window.innerWidth)
+	const [searchVal,      setSearchVal]      = useState('')
+	const [activeNav,      setActiveNav]      = useState('Dashboard')
+	const [greetingName,   setGreetingName]   = useState('Investor')
+	const [greetingPrefix, setGreetingPrefix] = useState('Good morning')
+	const [trustedPartners,setTrustedPartners]= useState<PartnerApiItem[]>(FALLBACK_PARTNERS)
+	const partnersRef = useRef<HTMLDivElement | null>(null)
 
 	useEffect(() => {
 		setActiveNav(labelByPath[location.pathname] ?? 'Dashboard')
 	}, [location.pathname])
 
 	useEffect(() => {
-		const handleResize = () => {
+		const onResize = () => {
 			setViewportWidth(window.innerWidth)
 			if (window.innerWidth <= 960) setSidebarOpen(false)
 		}
-		window.addEventListener('resize', handleResize)
-		handleResize()
-		return () => window.removeEventListener('resize', handleResize)
+		window.addEventListener('resize', onResize)
+		onResize()
+		return () => window.removeEventListener('resize', onResize)
+	}, [])
+
+	useEffect(() => {
+		let mounted = true
+		async function load() {
+			try {
+				const token = typeof session?.payload === 'object' && session.payload !== null
+					? (() => {
+						const p = session.payload as { token?: unknown; accessToken?: unknown }
+						return typeof p.token === 'string' ? p.token
+							 : typeof p.accessToken === 'string' ? p.accessToken : ''
+					})() : ''
+				const fullName = await fetchInvestorDisplayName(session?.email ?? '', token)
+				if (!mounted) return
+				const h = new Date().getHours()
+				setGreetingPrefix(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
+				setGreetingName(fullName || 'Investor')
+			} catch {
+				if (!mounted) return
+				const h = new Date().getHours()
+				setGreetingPrefix(h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening')
+			}
+		}
+		void load()
+		return () => { mounted = false }
+	}, [session])
+
+	useEffect(() => {
+		let mounted = true
+		async function loadPartners() {
+			try {
+				const res = await fetch(buildApiUrl('/admin/partners'))
+				const payload = await res.json().catch(() => null)
+				if (!res.ok || !Array.isArray(payload?.partners)) return
+				if (mounted && payload.partners.length > 0) setTrustedPartners(payload.partners)
+			} catch { /* keep fallback */ }
+		}
+		void loadPartners()
+		return () => { mounted = false }
 	}, [])
 
 	const handleLogout = () => {
@@ -119,75 +169,25 @@ export default function InvestorDashboardPage() {
 		navigate('/dashboard/investor/login', { replace: true })
 	}
 
-	const hour = new Date().getHours()
-	const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-	const isPhone = viewportWidth <= 640
+	const isPhone  = viewportWidth <= 640
 	const isTablet = viewportWidth <= 992
 
-	const bodyStyle: CSSProperties = {
-		...styles.body,
-		padding: isPhone ? '14px 12px 16px' : isTablet ? '20px 16px 18px' : '28px 28px 20px',
-	}
-
-	const heroBannerStyle: CSSProperties = {
-		...styles.heroBanner,
-		gridTemplateColumns: isPhone ? '1fr' : isTablet ? '1fr' : '1.4fr 0.6fr',
-		padding: isPhone ? '20px 16px' : isTablet ? '26px 22px' : '36px 40px',
-		gap: isPhone ? 14 : isTablet ? 18 : 24,
-	}
-
-	const sectionHeaderStyle: CSSProperties = {
-		...styles.sectionHeader,
-		flexDirection: isPhone ? 'column' : 'row',
-		alignItems: isPhone ? 'flex-start' : 'flex-end',
-		gap: isPhone ? 8 : 0,
-	}
-
-	const signalGridStyle: CSSProperties = {
-		...styles.signalGrid,
-		gridTemplateColumns: isPhone
-			? '1fr'
-			: isTablet
-				? 'repeat(2, minmax(0, 1fr))'
-				: 'repeat(auto-fit, minmax(220px, 1fr))',
-	}
-
-	const bottomRowStyle: CSSProperties = {
-		...styles.bottomRow,
-		gridTemplateColumns: isPhone ? '1fr' : isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)',
-	}
-
-	const instGridStyle: CSSProperties = {
-		...styles.instGrid,
-		gridTemplateColumns: isPhone ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
-	}
-
-	const footerStripStyle: CSSProperties = {
-		...styles.footerStrip,
-		flexDirection: isPhone ? 'column' : 'row',
-		alignItems: isPhone ? 'flex-start' : 'center',
-		gap: isPhone ? 8 : 0,
+	const scrollPartners = (dir: number) => {
+		if (!partnersRef.current) return
+		partnersRef.current.scrollBy({ left: dir * 320, behavior: 'smooth' })
 	}
 
 	return (
-		<main style={styles.root}>
-			{/* Ambient background effects */}
-			<div style={styles.bgOrb1} />
-			<div style={styles.bgOrb2} />
-			<div style={styles.bgOrb3} />
-			<div style={styles.bgGrid} />
-
-			<div style={{
-				...styles.sidebarWrapper,
-				transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-			}}>
+		<main style={s.root}>
+			{/* ── Sidebar ─────────────────────────────────────────────────── */}
+			<div style={{ ...s.sidebarWrapper, transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)' }}>
 				<InvestorSidebar
 					email={session?.email}
 					activeNav={activeNav}
 					onNavigate={(label) => {
 						setActiveNav(label)
-						const targetPath = navPathByLabel[label]
-						if (targetPath) navigate(targetPath)
+						const p = navPathByLabel[label]
+						if (p) navigate(p)
 						if (window.innerWidth <= 960) setSidebarOpen(false)
 					}}
 					onLogout={handleLogout}
@@ -195,777 +195,665 @@ export default function InvestorDashboardPage() {
 			</div>
 
 			{sidebarOpen && (
-				<button
-					type="button"
-					style={styles.overlay}
-					aria-label="Close menu"
-					onClick={() => setSidebarOpen(false)}
-				/>
+				<button type="button" style={s.overlay} aria-label="Close menu" onClick={() => setSidebarOpen(false)} />
 			)}
 
-			<div style={{
-				...styles.main,
-				marginLeft: sidebarOpen && viewportWidth > 960 ? '280px' : '0',
-			}}>
+			{/* ── Main ────────────────────────────────────────────────────── */}
+			<div style={{ ...s.main, marginLeft: sidebarOpen && viewportWidth > 960 ? 280 : 0 }}>
 				<InvestorHeader
-					onToggleSidebar={() => setSidebarOpen((o) => !o)}
+					onToggleSidebar={() => setSidebarOpen(o => !o)}
 					searchVal={searchVal}
 					onSearchChange={setSearchVal}
 					onLogout={handleLogout}
 				/>
 
-				<div style={bodyStyle}>
+				<div style={{
+					...s.body,
+					padding: isPhone ? '16px 14px' : isTablet ? '22px 18px' : '28px 32px',
+				}}>
 
-					{/* ── Hero Welcome Banner ─────────────────────────────────── */}
-					<section style={heroBannerStyle}>
-						<div style={styles.heroShimmer} />
-						<div style={styles.heroNoise} />
+					{/* ── Hero ──────────────────────────────────────────────── */}
+					<section style={{
+						...s.hero,
+						gridTemplateColumns: isPhone ? '1fr' : isTablet ? '1fr' : '1fr auto',
+						padding: isPhone ? '24px 22px' : isTablet ? '30px 28px' : '36px 40px',
+					}}>
+						<div style={s.heroBg1} />
+						<div style={s.heroBg2} />
 
-						<div style={styles.heroLeft}>
-							<div style={styles.heroStatusPill}>
-								<span style={styles.heroStatusDot} />
-								<span>Live Market Intelligence</span>
+						<div style={{ position: 'relative', zIndex: 1 }}>
+							<div style={s.heroEyebrow}>
+								<span style={s.heroEyebrowDot} />
+								Rwanda Investment Intelligence
 							</div>
-							<h1 style={{ ...styles.heroTitle, fontSize: isPhone ? 28 : isTablet ? 32 : 38 }}>
-								{greeting},{' '}
-								<span style={styles.heroNameAccent}>
-									{session?.email?.split('@')[0] ?? 'Investor'}
-								</span>
+							<h1 style={{ ...s.heroH1, fontSize: isPhone ? 28 : isTablet ? 32 : 36 }}>
+								{greetingPrefix},<br />
+								<em style={s.heroEm}>{greetingName}</em>
 							</h1>
-							<p style={{ ...styles.heroCopy, maxWidth: isPhone ? '100%' : 520 }}>
-								Rwanda's premier investment intelligence platform — connecting capital with Africa's most promising ventures. Your deal flow, live and curated.
+							<p style={s.heroCopy}>
+								Rwanda's premier investment platform — connecting capital with Africa's most promising ventures. Your deal flow, live and curated.
 							</p>
-							<div style={{ ...styles.heroActions, flexWrap: isPhone ? 'wrap' : 'nowrap' }}>
-								<button type="button" style={styles.heroCTA}>
-									Browse Pipeline →
-								</button>
-								<button type="button" style={styles.heroSecondary}>
-									View Portfolio
-								</button>
-							</div>
 						</div>
 
-						<div style={{ ...styles.heroRight, width: isPhone ? '100%' : 'auto' }}>
-							<div style={styles.heroStatBox}>
-								<span style={styles.heroStatBoxLabel}>Total Deal Value</span>
-								<span style={styles.heroStatBoxValue}>RWF 2M+</span>
-								<span style={styles.heroStatBoxSub}>↑ Facilitated on platform</span>
+						<div style={{ ...s.heroStats, width: isPhone ? '100%' : 'auto', zIndex: 1 }}>
+							<div style={s.heroStatBox}>
+								<span style={s.heroStatLabel}>Total Facilitated</span>
+								<span style={{ ...s.heroStatValue, color: C.accent }}>RWF 2M+</span>
+								<span style={s.heroStatSub}>Growing year over year</span>
 							</div>
-							<div style={{ ...styles.heroStatBox, background: 'rgba(255,236,0,0.13)', borderColor: 'rgba(255,236,0,0.28)' }}>
-								<span style={styles.heroStatBoxLabel}>Active Deals</span>
-								<span style={{ ...styles.heroStatBoxValue, color: '#ffec00' }}>20+</span>
-								<span style={styles.heroStatBoxSub}>Across 6 sectors</span>
+							<div style={s.heroStatBox}>
+								<span style={s.heroStatLabel}>Active Projects</span>
+								<span style={s.heroStatValue}>20+</span>
+								<span style={s.heroStatSub}>Ready for investment</span>
 							</div>
 						</div>
 					</section>
 
-					{/* ── Signal Cards ─────────────────────────────────────────── */}
-					<section style={styles.signalSection}>
-						<div style={sectionHeaderStyle}>
-							<div>
-								<p style={styles.sectionEyebrow}>PLATFORM INTELLIGENCE</p>
-								<h2 style={styles.sectionTitle}>Ecosystem Snapshot</h2>
-							</div>
-							<span style={styles.syncBadge}>
-								<span style={styles.syncDot} />
-								Synced · api.finverra.co
-							</span>
+					{/* ── Quick Steps ───────────────────────────────────────── */}
+					<section style={s.stepsSection}>
+						<p style={s.sectionEyebrow}>Application Steps</p>
+						<div style={{
+							display: 'grid',
+							gridTemplateColumns: isPhone ? '1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
+							gap: 8,
+						}}>
+							{quickSteps.map(step => (
+								<button
+									key={step.step}
+									type="button"
+									onClick={() => navigate(step.to)}
+									style={s.stepBtn}
+									onMouseEnter={e => {
+										const el = e.currentTarget
+										el.style.borderColor = C.subtle
+										el.style.boxShadow   = '0 4px 12px rgba(11,30,45,0.08)'
+										el.style.transform   = 'translateY(-1px)'
+									}}
+									onMouseLeave={e => {
+										const el = e.currentTarget
+										el.style.borderColor = C.ghost
+										el.style.boxShadow   = 'none'
+										el.style.transform   = 'none'
+									}}
+								>
+									<div style={s.stepNum}>{step.step}</div>
+									<span style={s.stepLabel}>{step.title}</span>
+								</button>
+							))}
 						</div>
+					</section>
 
-						<div style={signalGridStyle}>
-							{platformSignals.map((signal, i) => (
-								<article key={signal.label} style={{
-									...styles.signalCard,
-									animationDelay: `${i * 80}ms`,
-								}}>
-									<div style={styles.signalCardGlow} />
-									<div style={styles.signalCardTop}>
-										<span style={styles.signalIcon}>{signal.icon}</span>
-										<span style={{
-											...styles.signalDelta,
-											color: signal.positive ? '#ffec00' : '#ef5350',
-											background: signal.positive ? 'rgba(255,236,0,0.12)' : 'rgba(239,83,80,0.12)',
-										}}>
-											{signal.delta}
-										</span>
+					{/* ── Metrics ───────────────────────────────────────────── */}
+					<section style={s.metricsSection}>
+						<div style={{
+							display: 'grid',
+							gridTemplateColumns: isPhone ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+							gap: 12,
+						}}>
+							{metrics.map(m => (
+								<article key={m.id} style={s.metricCard}>
+									<div style={s.metricTop}>
+										<div style={{ ...s.metricIcon, background: m.iconBg, color: m.iconColor }}>
+											{m.badge}
+										</div>
+										<span style={s.metricDelta}>{m.delta}</span>
 									</div>
-									<strong style={{ ...styles.signalValue, color: signal.tone }}>
-										{signal.value}
-									</strong>
-									<p style={styles.signalLabel}>{signal.label}</p>
-									<p style={styles.signalDetail}>{signal.detail}</p>
-									<div style={{ ...styles.signalBar, background: `linear-gradient(90deg, ${signal.tone}, transparent)` }} />
+									<div style={s.metricValue}>{m.value}</div>
+									<div style={s.metricTitle}>{m.title}</div>
+									<div style={s.metricSub}>{m.sub}</div>
+									<div style={s.metricBar}>
+										<div style={{ ...s.metricBarFill, width: `${m.fill}%` }} />
+									</div>
 								</article>
 							))}
 						</div>
 					</section>
 
-					{/* ── Bottom Row: Institutions + Advisory + Deals ───────── */}
-					<div style={bottomRowStyle}>
+					{/* ── Bottom Row ────────────────────────────────────────── */}
+					<div style={{
+						...s.bottomRow,
+						gridTemplateColumns: isPhone ? '1fr' : isTablet ? '1fr 1fr' : '1fr 1fr 1.2fr',
+					}}>
 
-						{/* Trusted Institutions */}
-						<div style={styles.panelCard}>
-							<div style={styles.panelHeader}>
-								<span style={styles.panelDot} />
-								<h3 style={styles.panelTitle}>Trusted Institutions</h3>
+						{/* Partners (full-width, horizontal scroller) */}
+						<div style={{ ...s.panel, gridColumn: '1 / -1' }}>
+							<div style={s.panelHeader}>
+								<div>
+									<h3 style={s.panelTitle}>Trusted Partners</h3>
+									<p style={s.panelSub}>Platform registry · {trustedPartners.length} partners</p>
+								</div>
+								<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+									<button type="button" aria-label="Scroll left" onClick={() => scrollPartners(-1)} style={s.scrollBtn}>{'‹'}</button>
+									<span style={s.panelBadge}>Verified</span>
+									<button type="button" aria-label="Scroll right" onClick={() => scrollPartners(1)} style={s.scrollBtn}>{'›'}</button>
+								</div>
 							</div>
-							<p style={styles.panelSub}>Financial partners supporting the ecosystem</p>
-							<div style={instGridStyle}>
-								{trustedInstitutions.map((inst) => (
-									<div key={inst.name} style={styles.instTile}>
-										<div style={styles.instAvatar}>{inst.abbr}</div>
-										<span style={styles.instName}>{inst.name}</span>
-									</div>
-								))}
-							</div>
-						</div>
-
-						{/* Advisory Access */}
-						<div style={styles.panelCard}>
-							<div style={styles.panelHeader}>
-								<span style={{ ...styles.panelDot, background: '#ffec00' }} />
-								<h3 style={styles.panelTitle}>Advisory Access</h3>
-							</div>
-							<p style={styles.panelSub}>Schedule a session with our expert network</p>
-							<div style={styles.meetingList}>
-								{meetingTypes.map((m) => (
-									<div key={m.type} style={styles.meetingItem}>
-										<span style={styles.meetingIcon}>{m.icon}</span>
-										<span style={styles.meetingText}>{m.type}</span>
-										<span style={{
-											...styles.meetingStatus,
-											color: m.available ? '#ffec00' : '#ef9a9a',
-											background: m.available ? 'rgba(255,236,0,0.12)' : 'rgba(239,154,154,0.12)',
-										}}>
-											{m.available ? 'Available' : 'Booked'}
-										</span>
-									</div>
-								))}
-							</div>
-						</div>
-
-						{/* Recent Deals */}
-						<div style={{ ...styles.panelCard, gridColumn: 'span 1' }}>
-							<div style={styles.panelHeader}>
-								<span style={{ ...styles.panelDot, background: '#ffec00' }} />
-								<h3 style={styles.panelTitle}>Pipeline Highlights</h3>
-							</div>
-							<p style={styles.panelSub}>Latest deals matching your investment profile</p>
-							<div style={styles.dealList}>
-								{recentDeals.map((deal) => (
-									<div
-										key={deal.name}
-										style={{
-											...styles.dealRow,
-											flexWrap: isPhone ? 'wrap' : 'nowrap',
-											alignItems: isPhone ? 'flex-start' : 'center',
-										}}
+							<div ref={partnersRef} style={{
+								display: 'flex',
+								flexDirection: 'row',
+								gap: 8,
+								overflowX: 'auto',
+								paddingBottom: 6,
+								WebkitOverflowScrolling: 'touch',
+								scrollSnapType: 'x mandatory',
+								scrollBehavior: 'smooth',
+							}}>
+								{trustedPartners.map(partner => (
+									<a
+										key={partner.id}
+										href={partner.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										style={{ ...s.partnerTile, flex: '0 0 auto', minWidth: 140, scrollSnapAlign: 'start' }}
+										aria-label="Visit partner website"
 									>
-										<div style={{ ...styles.dealAvatar, background: `${deal.color}22`, border: `1px solid ${deal.color}44` }}>
-											<span style={{ color: deal.color, fontSize: 11, fontWeight: 800 }}>
-												{deal.name.slice(0, 2).toUpperCase()}
-											</span>
-										</div>
-										<div style={styles.dealInfo}>
-											<span style={styles.dealName}>{deal.name}</span>
-											<span style={styles.dealMeta}>{deal.sector} · {deal.stage}</span>
-										</div>
-										<div style={{ ...styles.dealRight, alignItems: isPhone ? 'flex-start' : 'flex-end' }}>
-											<span style={styles.dealAmount}>{deal.amount}</span>
-											<span style={{
-												...styles.dealStatus,
-												color: '#ffec00',
-												background: 'rgba(255,236,0,0.1)',
-											}}>{deal.status}</span>
-										</div>
-									</div>
+										<img
+											src={buildApiUrl(partner.image)}
+											alt="Partner logo"
+											style={s.partnerLogo}
+											loading="lazy"
+											decoding="async"
+											onError={e => {
+												const img = e.currentTarget
+												img.style.display = 'none'
+												const fallback = img.nextElementSibling as HTMLElement | null
+												if (fallback) fallback.style.display = 'flex'
+											}}
+										/>
+										<span style={{ ...s.partnerFallback, display: 'none' }}>
+											{(partner as PartnerApiItem & { label?: string }).label ?? '?'}
+										</span>
+									</a>
 								))}
 							</div>
 						</div>
+
+						{/* Advisory */}
+
 					</div>
 
-					{/* ── Footer strip ─────────────────────────────────────── */}
-					<div style={footerStripStyle}>
-						<span style={styles.footerText}>Finverra · Rwanda Investment Intelligence Platform</span>
-						<span style={styles.footerText}>Data refreshed in real-time · api.finverra.co</span>
+					{/* ── Footer ────────────────────────────────────────────── */}
+					<div style={{
+						...s.footer,
+						flexDirection: isPhone ? 'column' : 'row',
+						gap: isPhone ? 4 : 0,
+					}}>
+						<span style={s.footerText}>Finverra · Rwanda Investment Intelligence Platform</span>
+						<span style={s.footerText}>Data refreshed in real-time · api.finverra.co</span>
 					</div>
-
 				</div>
 			</div>
 
 			<style>{`
 				@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-
-				@keyframes fadeSlideUp {
-					from { opacity: 0; transform: translateY(18px); }
-					to { opacity: 1; transform: translateY(0); }
-				}
-				@keyframes pulse {
-					0%, 100% { opacity: 1; transform: scale(1); }
-					50% { opacity: 0.6; transform: scale(0.9); }
-				}
-				@keyframes shimmer {
-					0% { transform: translateX(-100%) skewX(-12deg); }
-					100% { transform: translateX(200%) skewX(-12deg); }
-				}
-				@keyframes orbFloat {
-					0%, 100% { transform: translate(0, 0) scale(1); }
-					33% { transform: translate(20px, -30px) scale(1.04); }
-					66% { transform: translate(-15px, 20px) scale(0.97); }
-				}
-				@keyframes dotPulse {
-					0%, 100% { box-shadow: 0 0 0 0 rgba(255,236,0,0.5); }
-					50% { box-shadow: 0 0 0 6px rgba(255,236,0,0); }
-				}
+				@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+				@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 			`}</style>
 		</main>
 	)
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles: Record<string, CSSProperties> = {
+const s: Record<string, CSSProperties> = {
 	root: {
-		display: 'flex',
-		minHeight: '100vh',
-		background: '#FFFFFF',
+		display:    'flex',
+		minHeight:  '100vh',
+		background: C.pale,
 		fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-		fontSize: 14,
-		color: '#023341',
-		position: 'relative',
-		overflow: 'hidden',
+		fontSize:   14,
+		color:      C.text1,
+		position:   'relative',
 	},
 
-	// Ambient background
-	bgOrb1: {
-		display: 'none',
-		position: 'fixed',
-		top: '-15vh',
-		left: '10vw',
-		width: '55vw',
-		height: '55vh',
-		borderRadius: '50%',
-		background: 'radial-gradient(circle, rgba(14,30,76,0.9) 0%, transparent 70%)',
-		pointerEvents: 'none',
-		zIndex: 0,
-		animation: 'orbFloat 18s ease-in-out infinite',
-	},
-	bgOrb2: {
-		display: 'none',
-		position: 'fixed',
-		bottom: '-10vh',
-		right: '5vw',
-		width: '45vw',
-		height: '50vh',
-		borderRadius: '50%',
-		background: 'radial-gradient(circle, rgba(230,168,23,0.06) 0%, transparent 70%)',
-		pointerEvents: 'none',
-		zIndex: 0,
-		animation: 'orbFloat 22s ease-in-out infinite reverse',
-	},
-	bgOrb3: {
-		display: 'none',
-		position: 'fixed',
-		top: '40vh',
-		left: '30vw',
-		width: '40vw',
-		height: '40vh',
-		borderRadius: '50%',
-		background: 'radial-gradient(circle, rgba(79,195,247,0.04) 0%, transparent 70%)',
-		pointerEvents: 'none',
-		zIndex: 0,
-	},
-	bgGrid: {
-		display: 'none',
-		position: 'fixed',
-		inset: 0,
-		backgroundImage: `
-			linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)
-		`,
-		backgroundSize: '48px 48px',
-		pointerEvents: 'none',
-		zIndex: 0,
-	},
-
+	// ── Layout
 	sidebarWrapper: {
-		position: 'fixed',
-		top: 0,
-		left: 0,
-		bottom: 0,
-		width: 280,
-		zIndex: 100,
+		position:   'fixed',
+		top:        0,
+		left:       0,
+		bottom:     0,
+		width:      280,
+		zIndex:     100,
 		transition: 'transform 0.26s cubic-bezier(0.4,0,0.2,1)',
 	},
 	overlay: {
-		position: 'fixed',
-		inset: 0,
-		background: 'rgba(9,23,44,0.18)',
+		position:   'fixed',
+		inset:      0,
+		background: 'rgba(9,23,44,0.2)',
 		backdropFilter: 'blur(1.5px)',
-		zIndex: 99,
-		border: 'none',
-		cursor: 'default',
+		zIndex:     99,
+		border:     'none',
+		cursor:     'default',
 	},
 	main: {
-		flex: 1,
+		flex:       1,
 		transition: 'margin-left 0.24s cubic-bezier(0.4,0,0.2,1)',
-		minHeight: '100vh',
-		display: 'flex',
+		minHeight:  '100vh',
+		display:    'flex',
 		flexDirection: 'column',
-		position: 'relative',
-		zIndex: 1,
 	},
 	body: {
-		padding: '28px 28px 20px',
-		maxWidth: 1320,
-		width: '100%',
+		padding:  '28px 32px',
+		maxWidth: 1360,
+		width:    '100%',
+		animation:'fadeUp 0.4s ease both',
 	},
 
-	// ── Hero Banner ──────────────────────────────────────────────────────────────
-	heroBanner: {
-		display: 'grid',
-		gridTemplateColumns: '1.4fr 0.6fr',
-		gap: 24,
-		padding: '36px 40px',
-		borderRadius: 28,
-		background: 'linear-gradient(135deg, #023341 0%, #034756 55%, #045666 100%)',
-		border: '1px solid rgba(255,236,0,0.24)',
-		boxShadow: '0 0 0 1px rgba(255,255,255,0.03) inset, 0 14px 30px rgba(2,51,65,0.2)',
-		marginBottom: 24,
-		position: 'relative',
-		overflow: 'hidden',
-		animation: 'fadeSlideUp 0.5s ease both',
+	// ── Hero
+	hero: {
+		display:        'grid',
+		gridTemplateColumns: '1fr auto',
+		gap:            24,
+		padding:        '36px 40px',
+		borderRadius:   20,
+		background:     C.navy,
+		border:         `1px solid rgba(255,255,255,0.05)`,
+		marginBottom:   20,
+		position:       'relative',
+		overflow:       'hidden',
+		alignItems:     'center',
 	},
-	heroShimmer: {
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		width: '50%',
-		height: '100%',
-		background: 'linear-gradient(90deg, transparent, rgba(255,236,0,0.12), transparent)',
-		animation: 'shimmer 4s ease-in-out infinite',
-		pointerEvents: 'none',
-	},
-	heroNoise: {
-		position: 'absolute',
-		inset: 0,
-		backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.03\'/%3E%3C/svg%3E")',
-		backgroundSize: '200px',
-		opacity: 0.4,
-		pointerEvents: 'none',
-	},
-	heroLeft: {
-		position: 'relative',
-		zIndex: 1,
-	},
-	heroStatusPill: {
-		display: 'inline-flex',
-		alignItems: 'center',
-		gap: 7,
-		padding: '6px 14px',
-		borderRadius: 999,
-		background: 'rgba(255,236,0,0.12)',
-		border: '1px solid rgba(255,236,0,0.28)',
-		color: '#ffec00',
-		fontSize: 12,
-		fontWeight: 600,
-		letterSpacing: 0.3,
-		marginBottom: 20,
-	},
-	heroStatusDot: {
-		width: 7,
-		height: 7,
+	heroBg1: {
+		position:     'absolute',
+		top:          -60,
+		right:        -40,
+		width:        320,
+		height:       320,
 		borderRadius: '50%',
-		background: '#ffec00',
-		animation: 'pulse 2s ease-in-out infinite',
+		background:   'radial-gradient(circle, rgba(232,197,71,0.07) 0%, transparent 70%)',
+		pointerEvents:'none',
 	},
-	heroTitle: {
-		fontFamily: "'Sora', sans-serif",
-		fontSize: 38,
+	heroBg2: {
+		position:     'absolute',
+		bottom:       -80,
+		left:         60,
+		width:        200,
+		height:       200,
+		borderRadius: '50%',
+		background:   'radial-gradient(circle, rgba(29,74,120,0.6) 0%, transparent 70%)',
+		pointerEvents:'none',
+	},
+	heroEyebrow: {
+		display:      'inline-flex',
+		alignItems:   'center',
+		gap:          7,
+		fontSize:     11,
+		fontWeight:   600,
+		letterSpacing:'1.1px',
+		textTransform:'uppercase',
+		color:        C.accent,
+		marginBottom: 14,
+	},
+	heroEyebrowDot: {
+		width:        5,
+		height:       5,
+		borderRadius: '50%',
+		background:   C.accent,
+		opacity:      0.8,
+		animation:    'pulse 2s infinite',
+	},
+	heroH1: {
+		fontFamily:  "'Sora', sans-serif",
+		fontSize:    36,
+		fontWeight:  400,
+		color:       C.white,
+		lineHeight:  1.15,
+		letterSpacing: '-0.5px',
+		margin:      '0 0 12px',
+	},
+	heroEm: {
+		fontStyle:  'normal',
 		fontWeight: 800,
-		lineHeight: 1.12,
-		color: '#F0F6FF',
-		margin: '0 0 14px',
-		letterSpacing: -0.8,
-	},
-	heroNameAccent: {
-		background: 'linear-gradient(90deg, #ffec00, #fff799)',
-		WebkitBackgroundClip: 'text',
-		WebkitTextFillColor: 'transparent',
-		backgroundClip: 'text',
+		color:      C.accent2,
 	},
 	heroCopy: {
-		margin: '0 0 28px',
-		fontSize: 15,
+		fontSize:   14,
+		color:      'rgba(255,255,255,0.5)',
 		lineHeight: 1.7,
-		color: 'rgba(210,225,245,0.7)',
-		maxWidth: 520,
+		maxWidth:   420,
+		fontWeight: 300,
+		margin:     0,
 	},
-	heroActions: {
-		display: 'flex',
-		gap: 12,
-		alignItems: 'center',
-	},
-	heroCTA: {
-		padding: '12px 26px',
-		borderRadius: 14,
-		background: 'linear-gradient(135deg, #ffec00 0%, #e7d500 100%)',
-		color: '#023341',
-		fontWeight: 800,
-		fontSize: 14,
-		border: 'none',
-		cursor: 'pointer',
-		boxShadow: '0 6px 16px rgba(255,236,0,0.22)',
-		letterSpacing: 0.2,
-	},
-	heroSecondary: {
-		padding: '12px 24px',
-		borderRadius: 14,
-		background: 'rgba(255,255,255,0.07)',
-		color: '#C8D8EE',
-		fontWeight: 600,
-		fontSize: 14,
-		border: '1px solid rgba(255,255,255,0.1)',
-		cursor: 'pointer',
-		letterSpacing: 0.2,
-	},
-	heroRight: {
-		position: 'relative',
-		zIndex: 1,
-		display: 'flex',
+	heroStats: {
+		display:       'flex',
 		flexDirection: 'column',
-		gap: 14,
-		justifyContent: 'center',
+		gap:           12,
+		position:      'relative',
 	},
 	heroStatBox: {
-		padding: '20px 22px',
-		borderRadius: 18,
-		background: 'rgba(255,255,255,0.06)',
-		border: '1px solid rgba(255,255,255,0.1)',
-		backdropFilter: 'blur(12px)',
+		background:   'rgba(255,255,255,0.05)',
+		border:       '1px solid rgba(255,255,255,0.08)',
+		borderRadius: 14,
+		padding:      '18px 22px',
+		minWidth:     168,
 	},
-	heroStatBoxLabel: {
-		display: 'block',
-		fontSize: 11,
-		fontWeight: 700,
-		letterSpacing: 1.1,
+	heroStatLabel: {
+		display:       'block',
+		fontSize:      10,
+		fontWeight:    600,
+		letterSpacing: '1.1px',
 		textTransform: 'uppercase',
-		color: 'rgba(190,210,235,0.6)',
-		marginBottom: 8,
+		color:         'rgba(255,255,255,0.35)',
+		marginBottom:  8,
 	},
-	heroStatBoxValue: {
-		display: 'block',
-		fontFamily: "'Sora', sans-serif",
-		fontSize: 32,
-		fontWeight: 800,
-		color: '#F0F6FF',
-		letterSpacing: -1,
-		lineHeight: 1,
-		marginBottom: 6,
+	heroStatValue: {
+		display:      'block',
+		fontFamily:   "'Sora', sans-serif",
+		fontSize:     28,
+		color:        C.white,
+		lineHeight:   1,
+		letterSpacing:'-0.5px',
+		marginBottom: 4,
 	},
-	heroStatBoxSub: {
-		display: 'block',
-		fontSize: 12,
-		color: 'rgba(140,180,220,0.65)',
+	heroStatSub: {
+		display:    'block',
+		fontSize:   11,
+		color:      'rgba(255,255,255,0.3)',
+		fontWeight: 400,
 	},
 
-	// ── Section common ───────────────────────────────────────────────────────────
-	sectionHeader: {
-		display: 'flex',
-		justifyContent: 'space-between',
-		alignItems: 'flex-end',
-		marginBottom: 18,
+	// ── Steps
+	stepsSection: {
+		marginBottom: 20,
+		padding:      '18px 20px',
+		borderRadius: 16,
+		background:   C.white,
+		border:       `1px solid ${C.ghost}`,
 	},
 	sectionEyebrow: {
-		margin: 0,
-		fontSize: 11,
-		fontWeight: 800,
-		letterSpacing: 1.4,
+		margin:        '0 0 12px',
+		fontSize:      10,
+		fontWeight:    700,
+		letterSpacing: '1.4px',
 		textTransform: 'uppercase',
-		color: '#ffec00',
+		color:         C.muted,
+	},
+	stepBtn: {
+		display:      'flex',
+		alignItems:   'center',
+		gap:          10,
+		padding:      '12px 14px',
+		borderRadius: 10,
+		background:   C.pale,
+		border:       `1px solid ${C.ghost}`,
+		cursor:       'pointer',
+		textAlign:    'left',
+		width:        '100%',
+		transition:   'all 0.18s',
+	},
+	stepNum: {
+		width:       28,
+		height:      28,
+		borderRadius:7,
+		background:  C.white,
+		border:      `1px solid ${C.ghost}`,
+		display:     'flex',
+		alignItems:  'center',
+		justifyContent:'center',
+		fontSize:    11,
+		fontWeight:  700,
+		color:       C.muted,
+		flexShrink:  0,
+	},
+	stepLabel: {
+		fontSize:   12,
+		fontWeight: 600,
+		color:      C.text1,
+	},
+
+	// ── Metrics
+	metricsSection: {
+		marginBottom: 20,
+	},
+	metricCard: {
+		background:   C.white,
+		border:       `1px solid ${C.ghost}`,
+		borderRadius: 16,
+		padding:      '22px',
+		position:     'relative',
+		overflow:     'hidden',
+		transition:   'transform 0.2s, box-shadow 0.2s',
+	},
+	metricTop: {
+		display:        'flex',
+		justifyContent: 'space-between',
+		alignItems:     'flex-start',
+		marginBottom:   16,
+	},
+	metricIcon: {
+		width:       36,
+		height:      36,
+		borderRadius:10,
+		display:     'flex',
+		alignItems:  'center',
+		justifyContent:'center',
+		fontSize:    12,
+		fontWeight:  800,
+		flexShrink:  0,
+	},
+	metricDelta: {
+		fontSize:    11,
+		fontWeight:  600,
+		padding:     '4px 9px',
+		borderRadius:999,
+		background:  C.greenBg,
+		color:       C.green,
+	},
+	metricValue: {
+		fontFamily:   "'Sora', sans-serif",
+		fontSize:     32,
+		fontWeight:   400,
+		color:        C.navy,
+		letterSpacing:'-0.5px',
+		lineHeight:   1,
 		marginBottom: 4,
 	},
-	sectionTitle: {
-		margin: 0,
-		fontFamily: "'Sora', sans-serif",
-		fontSize: 22,
-		fontWeight: 700,
-		color: '#EDF4FF',
-		letterSpacing: -0.3,
+	metricTitle: {
+		fontSize:     13,
+		fontWeight:   500,
+		color:        C.text2,
+		marginBottom: 2,
 	},
-	syncBadge: {
-		display: 'inline-flex',
-		alignItems: 'center',
-		gap: 6,
-		fontSize: 11,
-		fontWeight: 600,
-		color: 'rgba(140,180,220,0.7)',
-		background: 'rgba(255,255,255,0.04)',
-		border: '1px solid rgba(255,255,255,0.08)',
-		padding: '6px 12px',
-		borderRadius: 999,
+	metricSub: {
+		fontSize:     11,
+		color:        C.text3,
+		lineHeight:   1.4,
+		marginBottom: 14,
 	},
-	syncDot: {
-		width: 6,
-		height: 6,
-		borderRadius: '50%',
-		background: '#ffec00',
-		animation: 'dotPulse 2s ease infinite',
+	metricBar: {
+		position:     'absolute',
+		bottom:       0,
+		left:         0,
+		right:        0,
+		height:       2,
+		background:   C.ghost,
+	},
+	metricBarFill: {
+		height:     '100%',
+		background: `linear-gradient(90deg, ${C.accent}, ${C.accent2})`,
 	},
 
-	// ── Signal Cards ─────────────────────────────────────────────────────────────
-	signalSection: {
-		marginBottom: 24,
-		animation: 'fadeSlideUp 0.5s 0.1s ease both',
-	},
-	signalGrid: {
-		display: 'grid',
-		gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-		gap: 14,
-	},
-	signalCard: {
-		position: 'relative',
-		padding: '20px 20px 16px',
-		borderRadius: 20,
-		background: 'linear-gradient(160deg, rgba(2,51,65,0.96) 0%, rgba(2,63,80,0.92) 100%)',
-		border: '1px solid rgba(255,255,255,0.07)',
-		boxShadow: '0 6px 18px rgba(2,51,65,0.16)',
-		overflow: 'hidden',
-		animation: 'fadeSlideUp 0.5s ease both',
-		transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-	},
-	signalCardGlow: {
-		position: 'absolute',
-		inset: 0,
-		background: 'radial-gradient(circle at 80% 20%, rgba(255,236,0,0.12), transparent 60%)',
-		pointerEvents: 'none',
-	},
-	signalCardTop: {
-		display: 'flex',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 12,
-	},
-	signalIcon: {
-		fontSize: 22,
-	},
-	signalDelta: {
-		fontSize: 11,
-		fontWeight: 700,
-		padding: '3px 9px',
-		borderRadius: 999,
-	},
-	signalValue: {
-		display: 'block',
-		fontFamily: "'Sora', sans-serif",
-		fontSize: 34,
-		fontWeight: 800,
-		lineHeight: 1,
-		letterSpacing: -1,
-		marginBottom: 6,
-	},
-	signalLabel: {
-		margin: '0 0 4px',
-		fontSize: 13,
-		fontWeight: 600,
-		color: '#A8BDD4',
-	},
-	signalDetail: {
-		margin: 0,
-		fontSize: 11.5,
-		lineHeight: 1.5,
-		color: 'rgba(140,175,210,0.6)',
-	},
-	signalBar: {
-		position: 'absolute',
-		bottom: 0,
-		left: 0,
-		height: 2,
-		width: '100%',
-		opacity: 0.5,
-	},
-
-	// ── Bottom Row ───────────────────────────────────────────────────────────────
+	// ── Bottom row
 	bottomRow: {
-		display: 'grid',
-		gridTemplateColumns: 'repeat(3, 1fr)',
-		gap: 14,
-		marginBottom: 24,
-		animation: 'fadeSlideUp 0.5s 0.2s ease both',
+		display:             'grid',
+		gridTemplateColumns: '1fr 1fr 1.2fr',
+		gap:                 14,
+		marginBottom:        20,
 	},
-	panelCard: {
-		padding: '22px',
-		borderRadius: 20,
-		background: 'linear-gradient(160deg, rgba(2,51,65,0.96) 0%, rgba(2,63,80,0.92) 100%)',
-		border: '1px solid rgba(255,255,255,0.07)',
-		boxShadow: '0 6px 18px rgba(2,51,65,0.16)',
+	panel: {
+		padding:      22,
+		borderRadius: 16,
+		background:   C.white,
+		border:       `1px solid ${C.ghost}`,
 	},
 	panelHeader: {
-		display: 'flex',
-		alignItems: 'center',
-		gap: 9,
-		marginBottom: 4,
-	},
-	panelDot: {
-		width: 8,
-		height: 8,
-		borderRadius: '50%',
-		background: '#ffec00',
-		flexShrink: 0,
+		display:        'flex',
+		alignItems:     'flex-start',
+		justifyContent: 'space-between',
+		marginBottom:   16,
 	},
 	panelTitle: {
-		margin: 0,
+		margin:     0,
 		fontFamily: "'Sora', sans-serif",
-		fontSize: 15,
+		fontSize:   14,
 		fontWeight: 700,
-		color: '#EDF4FF',
+		color:      C.navy,
 	},
 	panelSub: {
-		margin: '0 0 16px',
-		fontSize: 12,
-		color: 'rgba(140,175,210,0.55)',
-		paddingLeft: 17,
+		margin:     '2px 0 0',
+		fontSize:   11,
+		color:      C.text3,
+	},
+	panelBadge: {
+		fontSize:     10,
+		fontWeight:   600,
+		letterSpacing:'0.5px',
+		padding:      '4px 9px',
+		borderRadius: 6,
+		background:   C.pale,
+		color:        C.muted,
+		border:       `1px solid ${C.ghost}`,
+		flexShrink:   0,
 	},
 
-	// Institutions
-	instGrid: {
-		display: 'grid',
-		gridTemplateColumns: 'repeat(3, 1fr)',
-		gap: 10,
+	// Partners
+	partnerTile: {
+		background:     C.pale,
+		border:         `1px solid ${C.ghost}`,
+		borderRadius:   10,
+		padding:        '12px 8px',
+		display:        'flex',
+		alignItems:     'center',
+		justifyContent: 'center',
+		minHeight:      52,
+		minWidth:       140,
+		flex:           '0 0 auto',
+		textDecoration: 'none',
+		transition:     'border-color 0.15s',
 	},
-	instTile: {
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		gap: 6,
-		padding: '12px 8px',
-		borderRadius: 12,
-		background: 'rgba(255,255,255,0.04)',
-		border: '1px solid rgba(255,255,255,0.07)',
-		transition: 'background 0.2s',
-	},
-	instAvatar: {
-		width: 38,
-		height: 38,
-		borderRadius: 10,
-		background: 'linear-gradient(135deg, rgba(255,236,0,0.26), rgba(2,51,65,0.42))',
-		border: '1px solid rgba(255,236,0,0.28)',
-		display: 'flex',
+	scrollBtn: {
+		appearance: 'none',
+		border: 'none',
+		background: 'rgba(11,30,45,0.06)',
+		width: 34,
+		height: 34,
+		borderRadius: 8,
+		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
-		fontSize: 11,
-		fontWeight: 800,
-		color: '#ffec00',
-		letterSpacing: 0.5,
+		cursor: 'pointer',
+		fontSize: 18,
+		color: C.text1,
 	},
-	instName: {
-		fontSize: 10,
-		fontWeight: 600,
-		color: 'rgba(180,205,230,0.7)',
-		textAlign: 'center' as const,
+	partnerLogo: {
+		maxWidth:   '100%',
+		maxHeight:  38,
+		objectFit:  'contain',
+		display:    'block',
 	},
-
-	// Advisory meeting list
-	meetingList: {
-		display: 'flex',
-		flexDirection: 'column' as const,
-		gap: 8,
-	},
-	meetingItem: {
-		display: 'flex',
-		alignItems: 'center',
-		gap: 10,
-		padding: '10px 12px',
-		borderRadius: 12,
-		background: 'rgba(255,255,255,0.035)',
-		border: '1px solid rgba(255,255,255,0.06)',
-	},
-	meetingIcon: {
-		fontSize: 16,
-		flexShrink: 0,
-	},
-	meetingText: {
-		flex: 1,
-		fontSize: 13,
-		fontWeight: 500,
-		color: '#C5D8EE',
-	},
-	meetingStatus: {
-		fontSize: 11,
+	partnerFallback: {
+		fontSize:   10,
 		fontWeight: 700,
-		padding: '3px 9px',
-		borderRadius: 999,
+		color:      C.muted,
+		letterSpacing:'0.5px',
 	},
 
-	// Pipeline deals
-	dealList: {
-		display: 'flex',
-		flexDirection: 'column' as const,
-		gap: 8,
+	// Shared list styles
+	listStack: {
+		display:       'flex',
+		flexDirection: 'column',
+		gap:           7,
+	},
+	meetItem: {
+		display:     'flex',
+		alignItems:  'center',
+		gap:         10,
+		padding:     '10px 12px',
+		borderRadius:10,
+		border:      `1px solid ${C.ghost}`,
+		background:  C.pale,
+	},
+	meetBadge: {
+		width:       28,
+		height:      28,
+		borderRadius:7,
+		display:     'flex',
+		alignItems:  'center',
+		justifyContent:'center',
+		fontSize:    10,
+		fontWeight:  800,
+		flexShrink:  0,
+	},
+	meetLabel: {
+		flex:       1,
+		fontSize:   12,
+		fontWeight: 500,
+		color:      C.text2,
+	},
+	statusPill: {
+		fontSize:    11,
+		fontWeight:  600,
+		padding:     '3px 9px',
+		borderRadius:999,
+		flexShrink:  0,
 	},
 	dealRow: {
-		display: 'flex',
-		alignItems: 'center',
-		gap: 12,
-		padding: '10px 12px',
-		borderRadius: 12,
-		background: 'rgba(255,255,255,0.035)',
-		border: '1px solid rgba(255,255,255,0.06)',
+		display:     'flex',
+		alignItems:  'center',
+		gap:         11,
+		padding:     '10px 12px',
+		borderRadius:10,
+		border:      `1px solid ${C.ghost}`,
+		background:  C.pale,
 	},
 	dealAvatar: {
-		width: 36,
-		height: 36,
-		borderRadius: 10,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		flexShrink: 0,
+		width:       34,
+		height:      34,
+		borderRadius:9,
+		display:     'flex',
+		alignItems:  'center',
+		justifyContent:'center',
+		fontSize:    11,
+		fontWeight:  800,
+		flexShrink:  0,
 	},
 	dealInfo: {
-		flex: 1,
-		display: 'flex',
-		flexDirection: 'column' as const,
-		gap: 2,
+		flex:          1,
+		display:       'flex',
+		flexDirection: 'column',
+		gap:           2,
 	},
 	dealName: {
-		fontSize: 13,
+		fontSize:   12,
 		fontWeight: 600,
-		color: '#D8E8F8',
+		color:      C.navy,
 	},
 	dealMeta: {
-		fontSize: 11,
-		color: 'rgba(140,175,210,0.55)',
+		fontSize: 10,
+		color:    C.text3,
 	},
 	dealRight: {
-		display: 'flex',
-		flexDirection: 'column' as const,
-		alignItems: 'flex-end',
-		gap: 3,
+		display:       'flex',
+		flexDirection: 'column',
+		alignItems:    'flex-end',
+		gap:           3,
 	},
 	dealAmount: {
-		fontSize: 12,
+		fontSize:   12,
 		fontWeight: 700,
-		color: '#ffec00',
-	},
-	dealStatus: {
-		fontSize: 10,
-		fontWeight: 700,
-		padding: '2px 8px',
-		borderRadius: 999,
+		color:      C.navy,
 	},
 
-	// ── Footer ───────────────────────────────────────────────────────────────────
-	footerStrip: {
-		display: 'flex',
+	// ── Footer
+	footer: {
+		display:        'flex',
 		justifyContent: 'space-between',
-		alignItems: 'center',
-		padding: '14px 0',
-		borderTop: '1px solid rgba(255,255,255,0.06)',
+		alignItems:     'center',
+		padding:        '14px 0',
+		borderTop:      `1px solid ${C.ghost}`,
 	},
 	footerText: {
-		fontSize: 11,
-		color: 'rgba(140,175,210,0.4)',
-		fontWeight: 500,
-		letterSpacing: 0.2,
+		fontSize:   11,
+		color:      C.subtle,
+		fontWeight: 400,
 	},
 }

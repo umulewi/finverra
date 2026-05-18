@@ -55,6 +55,16 @@ function FeeIcon(): ReactElement {
 	)
 }
 
+function CalendarIcon(): ReactElement {
+	return (
+		<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+			<rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+			<path d="M16 2v4M8 2v4" />
+			<path d="M3 10h18" />
+		</svg>
+	)
+}
+
 // ─── Nav config ───────────────────────────────────────────────────────────────
 
 const navSections: NavSection[] = [
@@ -62,10 +72,14 @@ const navSections: NavSection[] = [
 		title: 'Core',
 		items: [
 			{ label: 'Dashboard', icon: DashIcon },
-			{ label: 'Edit Profile', icon: SetIcon },
+			{ label: 'My Profile', icon: SetIcon },
 	
-			{ label: 'My Application', icon: PipeIcon },
+			{ label: 'Application Form', icon: PipeIcon },
 			{ label: 'Application Status', icon: FeeIcon },
+			{ label: 'Project to Invest in', icon: FeeIcon },
+			{ label: 'Project I have applied in', icon: FeeIcon },
+			{ label: 'Payment', icon: FeeIcon },
+			{ label: 'Book Appointment', icon: CalendarIcon },
 			{ label: 'Service Fees', icon: FeeIcon },
 
 		],
@@ -128,9 +142,10 @@ export default function InvestorSidebar({ email: _email, activeNav, onNavigate, 
 
 const styles: Record<string, CSSProperties> = {
 	sidebar: {
-		width: 280,
+		width: '100%',
+		maxWidth: 280,
 		height: '100%',
-		background: 'linear-gradient(180deg, #023341 0%, #034756 52%, #045666 100%)',
+		background: 'linear-gradient(180deg, #023341 0%, #023341 52%, #023341 100%)',
 		borderRight: '1px solid rgba(255, 255, 255, 0.08)',
 		display: 'flex',
 		flexDirection: 'column',

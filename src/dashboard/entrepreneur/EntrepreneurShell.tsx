@@ -53,7 +53,7 @@ export default function EntrepreneurShell({
         style={{
           ...styles.sidebarWrapper,
           ...(isMobile ? styles.sidebarWrapperMobile : styles.sidebarWrapperDesktop),
-          transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >
         <EntrepreneurSidebar onLogout={handleLogout} />

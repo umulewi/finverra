@@ -124,6 +124,7 @@ export default function EntrepreneurApplicationsPage() {
   const [confirmStatusUpdateId, setConfirmStatusUpdateId] = useState<number | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [approvalFilter, setApprovalFilter] = useState<'all' | 'approved' | 'not_approved'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null)
   const [statusDraftById, setStatusDraftById] = useState<Record<number, string>>({})
@@ -147,8 +148,16 @@ export default function EntrepreneurApplicationsPage() {
 
     const sorted = [...entrepreneurs].sort((left, right) => left.id - right.id)
 
+    const approvalFiltered =
+      approvalFilter === 'all'
+        ? sorted
+        : sorted.filter((item) => {
+          const status = toText((item as Record<string, unknown>).status).trim().toLowerCase()
+          return approvalFilter === 'approved' ? status === 'approved' : status !== 'approved'
+        })
+
     const filtered = query
-      ? sorted.filter((item) => (
+      ? approvalFiltered.filter((item) => (
         [
           item.id,
           item.users_id,
@@ -163,7 +172,7 @@ export default function EntrepreneurApplicationsPage() {
           .filter((value) => value !== null && value !== undefined)
           .some((value) => String(value).toLowerCase().includes(query))
       ))
-      : sorted
+      : approvalFiltered
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
     const safePage = Math.min(currentPage, totalPages)
@@ -175,7 +184,7 @@ export default function EntrepreneurApplicationsPage() {
       totalItems: filtered.length,
       currentPage: safePage,
     }
-  }, [entrepreneurs, searchQuery, currentPage])
+  }, [entrepreneurs, searchQuery, currentPage, approvalFilter])
 
 
 
@@ -632,6 +641,19 @@ export default function EntrepreneurApplicationsPage() {
             placeholder="Search by name, email, phone, location, or ID..."
             style={styles.searchInput}
           />
+          <select
+            value={approvalFilter}
+            onChange={(event) => {
+              setApprovalFilter(event.target.value as 'all' | 'approved' | 'not_approved')
+              setCurrentPage(1)
+            }}
+            style={{ ...styles.input, width: 180 }}
+            aria-label="Filter by approval status"
+          >
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="not_approved">Not Approved</option>
+          </select>
           <span style={styles.searchHint}>
             Showing {visibleEntrepreneurs.items.length} of {visibleEntrepreneurs.totalItems}
           </span>

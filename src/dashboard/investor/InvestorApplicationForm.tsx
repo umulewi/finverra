@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { buildApiUrl } from '../../config/api'
 import { getAuthSession } from '../authStorage'
 import InvestorLayout from './InvestorLayout'
@@ -102,16 +103,6 @@ function toText(value: unknown) {
   return typeof value === 'string' ? value : value == null ? '' : String(value)
 }
 
-function toBool(value: unknown) {
-  if (typeof value === 'boolean') return value
-  if (typeof value === 'number') return value === 1
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase()
-    return normalized === '1' || normalized === 'true' || normalized === 'yes'
-  }
-  return false
-}
-
 async function parseResponseBody(response: Response) {
   const contentType = response.headers.get('content-type') ?? ''
   if (contentType.includes('application/json')) return response.json()
@@ -206,9 +197,10 @@ function CheckboxOption({
   )
 }
 
-export default function ApplicationFoam() {
+export default function ApplicationForm() {
   const session = getAuthSession()
   const email = session?.email ?? ''
+  const navigate = useNavigate()
 
   const [viewportWidth, setViewportWidth] = useState<number>(window.innerWidth)
 
@@ -233,6 +225,7 @@ export default function ApplicationFoam() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
+  const [showCreatePrompt, setShowCreatePrompt] = useState(false)
 
   const isFirstStep = stepIndex === 0
   const isLastStep = stepIndex === STEPS.length - 1
@@ -393,74 +386,36 @@ export default function ApplicationFoam() {
     async function loadExistingApplication() {
       setIsLoadingApplication(true)
       try {
-        const response = await fetch(buildApiUrl(`/investor_application/${userId}`), {
-          headers: authHeader(),
+        const response = await fetch(buildApiUrl('/investors/check_application'), {
+          method: 'POST',
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
         })
         const payload = await parseResponseBody(response)
 
         if (!response.ok) {
-          if (response.status === 404) {
-            if (mounted) {
-              setHasExistingApplication(false)
-              setApplicationId(null)
-            }
-            return
-          }
-          throw new Error(getErrorMessage(payload, 'Failed to fetch investor application.'))
+          throw new Error(getErrorMessage(payload, 'Failed to check investor application.'))
         }
 
-        const record = payload && typeof payload === 'object' && 'data' in payload
-          ? (payload as { data?: unknown }).data
-          : payload
-
-        if (!record || typeof record !== 'object') {
-          throw new Error('Invalid application payload returned by the server.')
-        }
-
-        const row = record as Record<string, unknown>
-        const resolvedApplicationId = Number(row.id)
+        const exists = Boolean((payload as { exists?: unknown })?.exists)
 
         if (mounted) {
-          setHasExistingApplication(true)
-          setApplicationId(Number.isFinite(resolvedApplicationId) ? resolvedApplicationId : null)
-          setForm({
-            investor_type: toText(row.investor_type),
-            residence_country: toText(row.residence_country),
-            investment_budget: toText(row.investment_budget),
-            investment_size: toText(row.investment_size),
-            how_many_business_you_can_invest: toText(row.how_many_business_you_can_invest),
-            type_of_investment: toText(row.type_of_investment),
-            sectors_do_you_prefer: toText(row.sectors_do_you_prefer),
-            where_do_you_want_to_invest: toText(row.where_do_you_want_to_invest),
-            stage_do_you_prefer: toText(row.stage_do_you_prefer),
-            risk_level: toText(row.risk_level),
-            return_type: toText(row.return_type),
-            investment_duration: toText(row.investment_duration),
-            what_do_you_look_in_business: toText(row.what_do_you_look_in_business),
-            minimum_requirements: toText(row.minimum_requirements),
-            how_involved_do_you_want: toText(row.how_involved_do_you_want),
-            have_you_invested_before: toText(row.have_you_invested_before),
-            number_of_investments: toText(row.number_of_investments),
-            invested_sector: toText(row.invested_sector),
-            success_stories: toText(row.success_stories),
-            preferred_contact: toText(row.preferred_contact),
-            availability: toText(row.availability),
-            confirm_the_information_is_accurate: toBool(row.confirm_the_information_is_accurate),
-            i_agree_to_terms: toBool(row.i_agree_to_terms),
-            i_consent_to_be_matched_with_entrepreneurs: toBool(row.i_consent_to_be_matched_with_entrepreneurs),
-          })
-          setExistingFiles({
-            company_registration: toText(row.company_registration),
-            proof_of_funds: toText(row.proof_of_funds),
-            kyc: toText(row.kyc),
-            identification_document: toText(row.identification_document),
-            cv: toText(row.cv),
-          })
+          setHasExistingApplication(exists)
+          setShowCreatePrompt(!exists)
+          setApplicationId(null)
+          if (!exists) {
+            setForm(initialForm)
+            setExistingFiles(initialFiles)
+          }
         }
       } catch (loadError) {
         if (mounted) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load investor application.')
+          setError(loadError instanceof Error ? loadError.message : 'Failed to check investor application.')
           setHasExistingApplication(false)
+          setShowCreatePrompt(true)
           setApplicationId(null)
         }
       } finally {
@@ -592,7 +547,6 @@ export default function ApplicationFoam() {
         ? Array.from(new Set([...current, sectorLabel]))
         : current.filter((sector) => sector !== sectorLabel)
 
-      // Clearing "Other" should also clear free-typed sectors.
       const normalized = checked || sectorLabel !== 'Other'
         ? next
         : next.filter((sector) => PREFERRED_SECTOR_OPTIONS.includes(sector))
@@ -605,20 +559,17 @@ export default function ApplicationFoam() {
     const missing: string[] = []
 
     if (step === 0) {
-      // Profile
       if (!form.investor_type) missing.push('Investor Type')
       if (!form.residence_country) missing.push('Country of Residence')
     }
 
     if (step === 1) {
-      // Capacity
       if (!form.investment_budget) missing.push('Investment Budget')
       if (!form.investment_size) missing.push('Investment Size per Deal')
       if (!form.how_many_business_you_can_invest) missing.push('How Many Businesses per Period')
     }
 
     if (step === 2) {
-      // Preference
       if (!form.type_of_investment) missing.push('Investment Type')
       if (!form.sectors_do_you_prefer) missing.push('Preferred Sectors')
       if (!form.where_do_you_want_to_invest) missing.push('Geographic Preference')
@@ -626,7 +577,6 @@ export default function ApplicationFoam() {
     }
 
     if (step === 3) {
-      // Risk & Returns
       if (!form.risk_level) missing.push('Risk Level')
       if (!form.return_type) missing.push('Expected Return Type')
       if (!form.investment_duration) missing.push('Investment Duration')
@@ -635,7 +585,6 @@ export default function ApplicationFoam() {
     }
 
     if (step === 4) {
-      // Experience
       if (!form.have_you_invested_before) missing.push('Have You Invested Before')
       if (form.have_you_invested_before === 'Yes') {
         if (!form.number_of_investments) missing.push('Number of Past Investments')
@@ -644,7 +593,6 @@ export default function ApplicationFoam() {
     }
 
     if (step === 5) {
-      // Docs & Verify
       if (!identificationDocumentFile && !existingFiles.identification_document) {
         missing.push('Identification Document')
       }
@@ -677,6 +625,15 @@ export default function ApplicationFoam() {
     setStepIndex((p) => Math.min(p + 1, STEPS.length - 1))
   }
 
+  function handleStartNewApplication() {
+    setShowCreatePrompt(false)
+    setHasExistingApplication(false)
+    setApplicationId(null)
+    setStepIndex(0)
+    setError(null)
+    setSuccess(null)
+  }
+
   return (
     <InvestorLayout>
       <div style={responsivePageStyle}>
@@ -689,6 +646,26 @@ export default function ApplicationFoam() {
 
         {isBusy ? <div style={s.infoCard}>Loading application data...</div> : null}
         {success ? <div style={{ ...s.infoCard, ...s.successCard }}>{success}</div> : null}
+
+        {!isBusy && showCreatePrompt && hasExistingApplication === false ? (
+          <div style={s.createPromptBackdrop} role="presentation">
+            <div style={s.createPromptCard} role="dialog" aria-modal="true" aria-labelledby="create-prompt-title">
+              <div style={s.createPromptBadge}>New Application</div>
+              <h2 id="create-prompt-title" style={s.createPromptTitle}>No investor application found</h2>
+              <p style={s.createPromptText}>
+                You do not have an application yet. Would you like to start a new investor application now?
+              </p>
+              <div style={s.createPromptActions}>
+                <button type="button" style={s.btnSecondary} onClick={() => navigate('/dashboard/investor')}>
+                  Not now
+                </button>
+                <button type="button" style={s.btnPrimary} onClick={handleStartNewApplication}>
+                  Yes, start application
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Error Modal */}
         {error ? (
@@ -719,668 +696,682 @@ export default function ApplicationFoam() {
 
         <style>{injectStyles}</style>
 
-        <form style={s.formShell} onSubmit={handleSubmit}>
-          {/* ── Stepper ──────────────────────────────────────────────────────── */}
-          <div style={s.stepper}>
-            <div style={responsiveStepperInnerStyle}>
-              {STEPS.map((step, idx) => {
-                const active = idx === stepIndex
-                const done = idx < stepIndex
-                return (
-                  <button
-                    key={step.label}
-                    type="button"
-                    style={{
-                      ...responsiveStepBtnStyle,
-                      ...(active ? s.stepBtnActive : {}),
-                      ...(done ? s.stepBtnDone : {}),
-                    }}
-                    onClick={() => handleStepChange(idx)}
-                  >
-                    <span style={{ ...s.stepIcon, ...(active ? s.stepIconActive : {}), ...(done ? s.stepIconDone : {}) }}>
-                      {done ? '✓' : step.icon}
-                    </span>
-                    <span style={s.stepLabel}>{step.label}</span>
-                  </button>
-                )
-              })}
+        {hasExistingApplication === true ? (
+          <div style={{ ...s.infoCard, ...s.successCard, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <strong>You already have an investor application.</strong>
+            <span>You do not need to start this form again. You can view or update your status instead.</span>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" style={s.btnPrimary} onClick={() => navigate('/dashboard/investor/application-status')}>
+                View Application Status
+              </button>
+              <button type="button" style={s.btnSecondary} onClick={() => navigate('/dashboard/investor')}>
+                Back to Dashboard
+              </button>
             </div>
-            <div style={s.progressRail}>
-              <div style={{ ...s.progressBar, width: `${progressPct}%` }} />
-            </div>
-            <p style={s.stepMeta}>
-              Step {stepIndex + 1} of {STEPS.length} — <strong>{STEPS[stepIndex].description}</strong>
-            </p>
           </div>
+        ) : !showCreatePrompt ? (
+          <form style={s.formShell} onSubmit={handleSubmit}>
+            {/* ── Stepper ──────────────────────────────────────────────────────── */}
+            <div style={s.stepper}>
+              <div style={responsiveStepperInnerStyle}>
+                {STEPS.map((step, idx) => {
+                  const active = idx === stepIndex
+                  const done = idx < stepIndex
+                  return (
+                    <button
+                      key={step.label}
+                      type="button"
+                      style={{
+                        ...responsiveStepBtnStyle,
+                        ...(active ? s.stepBtnActive : {}),
+                        ...(done ? s.stepBtnDone : {}),
+                      }}
+                      onClick={() => handleStepChange(idx)}
+                    >
+                      <span style={{ ...s.stepIcon, ...(active ? s.stepIconActive : {}), ...(done ? s.stepIconDone : {}) }}>
+                        {done ? '✓' : step.icon}
+                      </span>
+                      <span style={s.stepLabel}>{step.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={s.progressRail}>
+                <div style={{ ...s.progressBar, width: `${progressPct}%` }} />
+              </div>
+              <p style={s.stepMeta}>
+                Step {stepIndex + 1} of {STEPS.length} — <strong>{STEPS[stepIndex].description}</strong>
+              </p>
+            </div>
 
-          {/* ── STEP 0: Profile ──────────────────────────────────────────── */}
-          {stepIndex === 0 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="01" title="Investor Profile" subtitle="Your basic information (auto-filled).">
-                <Field>
-                  <FieldLabel>Full Name / Company Name</FieldLabel>
-                  <input
-                    value={fullName || basicInfo?.email || ''}
-                    readOnly
-                    style={{ ...responsiveInputStyle, ...s.inputMuted }}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Email</FieldLabel>
-                  <input
-                    value={basicInfo?.email || email || ''}
-                    readOnly
-                    style={{ ...responsiveInputStyle, ...s.inputMuted }}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Contact Number</FieldLabel>
-                  <input
-                    value={basicInfo?.telephone || ''}
-                    readOnly
-                    style={{ ...responsiveInputStyle, ...s.inputMuted }}
-                  />
-                </Field>
-              </SectionCard>
+            {/* ── STEP 0: Profile ──────────────────────────────────────────── */}
+            {stepIndex === 0 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="01" title="Investor Profile" subtitle="Your basic information (auto-filled).">
+                  <Field>
+                    <FieldLabel>Full Name / Company Name</FieldLabel>
+                    <input
+                      value={fullName || basicInfo?.email || ''}
+                      readOnly
+                      style={{ ...responsiveInputStyle, ...s.inputMuted }}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel>Email</FieldLabel>
+                    <input
+                      value={basicInfo?.email || email || ''}
+                      readOnly
+                      style={{ ...responsiveInputStyle, ...s.inputMuted }}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel>Contact Number</FieldLabel>
+                    <input
+                      value={basicInfo?.telephone || ''}
+                      readOnly
+                      style={{ ...responsiveInputStyle, ...s.inputMuted }}
+                    />
+                  </Field>
+                </SectionCard>
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="02" title="Investor Type" subtitle="Select your investor category.">
-                <Field full>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Individual"
-                      checked={form.investor_type === 'Individual'}
-                      onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Individual' }))}
-                    />
-                    <CheckboxOption
-                      label="Company"
-                      checked={form.investor_type === 'Company'}
-                      onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Company' }))}
-                    />
-                    <CheckboxOption
-                      label="Investment Firm"
-                      checked={form.investor_type === 'Investment Firm'}
-                      onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Investment Firm' }))}
-                    />
-                    <CheckboxOption
-                      label="Angel Investor"
-                      checked={form.investor_type === 'Angel Investor'}
-                      onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Angel Investor' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="03" title="Location" subtitle="Where are you based.">
-                <Field full>
-                  <FieldLabel>Country of Residence</FieldLabel>
-                  <input
-                    value={form.residence_country}
-                    onChange={handleTextChange('residence_country')}
-                    placeholder="Enter your country"
-                    style={s.input}
-                  />
-                </Field>
-              </SectionCard>
-            </>
-          )}
-
-          {/* ── STEP 1: Capacity ──────────────────────────────────────────── */}
-          {stepIndex === 1 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="04" title="Investment Budget" subtitle="Your total investment capacity.">
-                <Field full>
-                  <FieldLabel>Available Investment Budget</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Under 10,000,000 RWF"
-                      checked={form.investment_budget === 'Under 10,000,000 RWF'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'Under 10,000,000 RWF' }))}
-                    />
-                    <CheckboxOption
-                      label="RWF 10,000,000 – RWF 50,000,000"
-                      checked={form.investment_budget === 'RWF 10,000,000 – RWF 50,000,000'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 10,000,000 – RWF 50,000,000' }))}
-                    />
-                    <CheckboxOption
-                      label="RWF 50,000,000 – RWF 100,000,000"
-                      checked={form.investment_budget === 'RWF 50,000,000 – RWF 100,000,000'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 50,000,000 – RWF 100,000,000' }))}
-                    />
-                    <CheckboxOption
-                      label="RWF 100,000,000+"
-                      checked={form.investment_budget === 'RWF 100,000,000+'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 100,000,000+' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="05" title="Investment Size per Deal" subtitle="Your typical investment amount.">
-                <Field full>
-                  <FieldLabel>Preferred Investment Size</FieldLabel>
-                  <input
-                    value={form.investment_size}
-                    onChange={handleTextChange('investment_size')}
-                    placeholder="Example: 5,000,000 RWF"
-                    style={s.input}
-                  />
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="06" title="Deal Frequency" subtitle="How many businesses can you invest in.">
-                <Field full>
-                  <FieldLabel>Businesses per Investment Period</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="1"
-                      checked={form.how_many_business_you_can_invest === '1'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '1' }))}
-                    />
-                    <CheckboxOption
-                      label="2–5"
-                      checked={form.how_many_business_you_can_invest === '2–5'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '2–5' }))}
-                    />
-                    <CheckboxOption
-                      label="5+"
-                      checked={form.how_many_business_you_can_invest === '5+'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '5+' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-            </>
-          )}
-
-          {/* ── STEP 2: Preference ───────────────────────────────────────── */}
-          {stepIndex === 2 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="07" title="Investment Type" subtitle="What type of returns are you looking for.">
-                <Field full>
-                  <FieldLabel>Preferred Investment Method</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Equity (ownership shares)"
-                      checked={form.type_of_investment === 'Equity'}
-                      onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Equity' }))}
-                    />
-                    <CheckboxOption
-                      label="Loan (interest-based return)"
-                      checked={form.type_of_investment === 'Loan'}
-                      onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Loan' }))}
-                    />
-                    <CheckboxOption
-                      label="Grant / Impact funding"
-                      checked={form.type_of_investment === 'Grant'}
-                      onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Grant' }))}
-                    />
-                    <CheckboxOption
-                      label="Revenue-sharing"
-                      checked={form.type_of_investment === 'Revenue-sharing'}
-                      onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Revenue-sharing' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="08" title="Sector Interest" subtitle="Industries you prefer to invest in.">
-                <Field full>
-                  <FieldLabel>Preferred Sectors</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    {PREFERRED_SECTOR_OPTIONS.map((sectorLabel) => (
+                <SectionCard gridStyle={responsiveGridStyle} badge="02" title="Investor Type" subtitle="Select your investor category.">
+                  <Field full>
+                    <div style={s.checkboxGroup}>
                       <CheckboxOption
-                        key={sectorLabel}
-                        label={sectorLabel}
-                        checked={selectedSectors.includes(sectorLabel)}
-                        onChange={(checked) => handlePreferredSectorChange(sectorLabel, checked)}
+                        label="Individual"
+                        checked={form.investor_type === 'Individual'}
+                        onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Individual' }))}
                       />
-                    ))}
-                  </div>
-                </Field>
-              </SectionCard>
+                      <CheckboxOption
+                        label="Company"
+                        checked={form.investor_type === 'Company'}
+                        onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Company' }))}
+                      />
+                      <CheckboxOption
+                        label="Investment Firm"
+                        checked={form.investor_type === 'Investment Firm'}
+                        onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Investment Firm' }))}
+                      />
+                      <CheckboxOption
+                        label="Angel Investor (Investment in early-stage startups)"
+                        checked={form.investor_type === 'Angel Investor'}
+                        onChange={() => setForm((prev) => ({ ...prev, investor_type: 'Angel Investor' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="09" title="Geographic Preference" subtitle="Where you want to invest.">
-                <Field full>
-                  <FieldLabel>Preferred Investment Regions</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Rwanda"
-                      checked={form.where_do_you_want_to_invest === 'Rwanda'}
-                      onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Rwanda' }))}
+                <SectionCard gridStyle={responsiveGridStyle} badge="03" title="Location" subtitle="Where are you based.">
+                  <Field full>
+                    <FieldLabel>Country of Residence</FieldLabel>
+                    <input
+                      value={form.residence_country}
+                      onChange={handleTextChange('residence_country')}
+                      placeholder="Enter your country"
+                      style={s.input}
                     />
-                    <CheckboxOption
-                      label="East Africa"
-                      checked={form.where_do_you_want_to_invest === 'East Africa'}
-                      onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'East Africa' }))}
-                    />
-                    <CheckboxOption
-                      label="Africa-wide"
-                      checked={form.where_do_you_want_to_invest === 'Africa-wide'}
-                      onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Africa-wide' }))}
-                    />
-                    <CheckboxOption
-                      label="Global"
-                      checked={form.where_do_you_want_to_invest === 'Global'}
-                      onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Global' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
+                  </Field>
+                </SectionCard>
+              </>
+            )}
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="10" title="Business Stage" subtitle="What growth stage interests you.">
-                <Field full>
-                  <FieldLabel>Preferred Business Stage</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Idea Stage"
-                      checked={form.stage_do_you_prefer === 'Idea Stage'}
-                      onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Idea Stage' }))}
-                    />
-                    <CheckboxOption
-                      label="Startup"
-                      checked={form.stage_do_you_prefer === 'Startup'}
-                      onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Startup' }))}
-                    />
-                    <CheckboxOption
-                      label="Growth"
-                      checked={form.stage_do_you_prefer === 'Growth'}
-                      onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Growth' }))}
-                    />
-                    <CheckboxOption
-                      label="Established"
-                      checked={form.stage_do_you_prefer === 'Established'}
-                      onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Established' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-            </>
-          )}
+            {/* ── STEP 1: Capacity ──────────────────────────────────────────── */}
+            {stepIndex === 1 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="04" title="Investment Budget" subtitle="Your total investment capacity.">
+                  <Field full>
+                    <FieldLabel>Available Investment Budget</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Under 10,000,000 RWF"
+                        checked={form.investment_budget === 'Under 10,000,000 RWF'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'Under 10,000,000 RWF' }))}
+                      />
+                      <CheckboxOption
+                        label="RWF 10,000,000 – RWF 50,000,000"
+                        checked={form.investment_budget === 'RWF 10,000,000 – RWF 50,000,000'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 10,000,000 – RWF 50,000,000' }))}
+                      />
+                      <CheckboxOption
+                        label="RWF 50,000,000 – RWF 100,000,000"
+                        checked={form.investment_budget === 'RWF 50,000,000 – RWF 100,000,000'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 50,000,000 – RWF 100,000,000' }))}
+                      />
+                      <CheckboxOption
+                        label="RWF 100,000,000+"
+                        checked={form.investment_budget === 'RWF 100,000,000+'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_budget: 'RWF 100,000,000+' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
 
-          {/* ── STEP 3: Risk & Returns ───────────────────────────────────– */}
-          {stepIndex === 3 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="11" title="Risk Appetite" subtitle="Your comfort level with investment risk.">
-                <Field full>
-                  <FieldLabel>Risk Level</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Low (safe, stable businesses)"
-                      checked={form.risk_level === 'Low'}
-                      onChange={() => setForm((prev) => ({ ...prev, risk_level: 'Low' }))}
+                <SectionCard gridStyle={responsiveGridStyle} badge="05" title="Investment Size per Deal" subtitle="Your typical investment amount.">
+                  <Field full>
+                    <FieldLabel>Preferred Investment Size</FieldLabel>
+                    <input
+                      value={form.investment_size}
+                      onChange={handleTextChange('investment_size')}
+                      placeholder="Example: 5,000,000 RWF"
+                      style={s.input}
                     />
-                    <CheckboxOption
-                      label="Medium (growing businesses)"
-                      checked={form.risk_level === 'Medium'}
-                      onChange={() => setForm((prev) => ({ ...prev, risk_level: 'Medium' }))}
-                    />
-                    <CheckboxOption
-                      label="High (startups, high risk/high return)"
-                      checked={form.risk_level === 'High'}
-                      onChange={() => setForm((prev) => ({ ...prev, risk_level: 'High' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
+                  </Field>
+                </SectionCard>
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="12" title="Expected Returns" subtitle="Your return expectations.">
-                <Field full>
-                  <FieldLabel>Expected Return Type</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Fixed interest"
-                      checked={form.return_type === 'Fixed interest'}
-                      onChange={() => setForm((prev) => ({ ...prev, return_type: 'Fixed interest' }))}
-                    />
-                    <CheckboxOption
-                      label="Profit share"
-                      checked={form.return_type === 'Profit share'}
-                      onChange={() => setForm((prev) => ({ ...prev, return_type: 'Profit share' }))}
-                    />
-                    <CheckboxOption
-                      label="Equity growth"
-                      checked={form.return_type === 'Equity growth'}
-                      onChange={() => setForm((prev) => ({ ...prev, return_type: 'Equity growth' }))}
-                    />
-                  </div>
-                </Field>
+                <SectionCard gridStyle={responsiveGridStyle} badge="06" title="Deal Frequency" subtitle="How many businesses can you invest in.">
+                  <Field full>
+                    <FieldLabel>Businesses per Investment Period</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="1"
+                        checked={form.how_many_business_you_can_invest === '1'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '1' }))}
+                      />
+                      <CheckboxOption
+                        label="2–5"
+                        checked={form.how_many_business_you_can_invest === '2–5'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '2–5' }))}
+                      />
+                      <CheckboxOption
+                        label="5+"
+                        checked={form.how_many_business_you_can_invest === '5+'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_many_business_you_can_invest: '5+' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
+              </>
+            )}
 
-                <Field full>
-                  <FieldLabel>Preferred Investment Duration</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Short-term (0–1 year)"
-                      checked={form.investment_duration === 'Short-term (0–1 year)'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Short-term (0–1 year)' }))}
-                    />
-                    <CheckboxOption
-                      label="Medium-term (1–3 years)"
-                      checked={form.investment_duration === 'Medium-term (1–3 years)'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Medium-term (1–3 years)' }))}
-                    />
-                    <CheckboxOption
-                      label="Long-term (3+ years)"
-                      checked={form.investment_duration === 'Long-term (3+ years)'}
-                      onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Long-term (3+ years)' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
+            {/* ── STEP 2: Preference ───────────────────────────────────────── */}
+            {stepIndex === 2 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="07" title="Investment Type" subtitle="What type of returns are you looking for.">
+                  <Field full>
+                    <FieldLabel>Preferred Investment Method</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Equity (ownership shares)"
+                        checked={form.type_of_investment === 'Equity'}
+                        onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Equity' }))}
+                      />
+                      <CheckboxOption
+                        label="Loan (interest-based return)"
+                        checked={form.type_of_investment === 'Loan'}
+                        onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Loan' }))}
+                      />
+                      <CheckboxOption
+                        label="Grant / Impact funding"
+                        checked={form.type_of_investment === 'Grant'}
+                        onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Grant' }))}
+                      />
+                      <CheckboxOption
+                        label="Revenue-sharing"
+                        checked={form.type_of_investment === 'Revenue-sharing'}
+                        onChange={() => setForm((prev) => ({ ...prev, type_of_investment: 'Revenue-sharing' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="13" title="Investment Criteria" subtitle="What makes a business attractive to you.">
-                <Field full>
-                  <FieldLabel>What do you look for in a business?</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Strong financial records"
-                      checked={form.what_do_you_look_in_business.includes('Strong financial')}
-                      onChange={(checked) => {
-                        const value = checked
-                          ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Strong financial records` : 'Strong financial records'
-                          : form.what_do_you_look_in_business.replace(', Strong financial records', '').replace('Strong financial records', '')
-                        setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Experienced team"
-                      checked={form.what_do_you_look_in_business.includes('Experienced team')}
-                      onChange={(checked) => {
-                        const value = checked
-                          ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Experienced team` : 'Experienced team'
-                          : form.what_do_you_look_in_business.replace(', Experienced team', '').replace('Experienced team', '')
-                        setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="High growth potential"
-                      checked={form.what_do_you_look_in_business.includes('High growth')}
-                      onChange={(checked) => {
-                        const value = checked
-                          ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, High growth potential` : 'High growth potential'
-                          : form.what_do_you_look_in_business.replace(', High growth potential', '').replace('High growth potential', '')
-                        setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
-                      }}
-                    />
-                    <CheckboxOption
-                      label="Social impact"
-                      checked={form.what_do_you_look_in_business.includes('Social impact')}
-                      onChange={(checked) => {
-                        const value = checked
-                          ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Social impact` : 'Social impact'
-                          : form.what_do_you_look_in_business.replace(', Social impact', '').replace('Social impact', '')
-                        setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
-                      }}
-                    />
-                  </div>
-                </Field>
+                <SectionCard gridStyle={responsiveGridStyle} badge="08" title="Sector Interest" subtitle="Industries you prefer to invest in.">
+                  <Field full>
+                    <FieldLabel>Preferred Sectors</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      {PREFERRED_SECTOR_OPTIONS.map((sectorLabel) => (
+                        <CheckboxOption
+                          key={sectorLabel}
+                          label={sectorLabel}
+                          checked={selectedSectors.includes(sectorLabel)}
+                          onChange={(checked) => handlePreferredSectorChange(sectorLabel, checked)}
+                        />
+                      ))}
+                    </div>
+                  </Field>
+                </SectionCard>
 
-                <Field full>
-                  <FieldLabel>Minimum Requirements (optional)</FieldLabel>
-                  <textarea
-                    value={form.minimum_requirements}
-                    onChange={handleTextChange('minimum_requirements')}
-                    placeholder="E.g., minimum revenue floor, team size, financial audits..."
-                    style={s.textarea}
-                  />
-                </Field>
-              </SectionCard>
+                <SectionCard gridStyle={responsiveGridStyle} badge="09" title="Geographic Preference" subtitle="Where you want to invest.">
+                  <Field full>
+                    <FieldLabel>Preferred Investment Regions</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Rwanda"
+                        checked={form.where_do_you_want_to_invest === 'Rwanda'}
+                        onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Rwanda' }))}
+                      />
+                      <CheckboxOption
+                        label="East Africa"
+                        checked={form.where_do_you_want_to_invest === 'East Africa'}
+                        onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'East Africa' }))}
+                      />
+                      <CheckboxOption
+                        label="Africa-wide"
+                        checked={form.where_do_you_want_to_invest === 'Africa-wide'}
+                        onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Africa-wide' }))}
+                      />
+                      <CheckboxOption
+                        label="Global"
+                        checked={form.where_do_you_want_to_invest === 'Global'}
+                        onChange={() => setForm((prev) => ({ ...prev, where_do_you_want_to_invest: 'Global' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
 
-              <SectionCard gridStyle={responsiveGridStyle} badge="14" title="Involvement Level" subtitle="How hands-on do you want to be.">
-                <Field full>
-                  <FieldLabel>Your Investment Involvement Style</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Passive (just invest)"
-                      checked={form.how_involved_do_you_want === 'Passive'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Passive' }))}
-                    />
-                    <CheckboxOption
-                      label="Advisory role"
-                      checked={form.how_involved_do_you_want === 'Advisory'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Advisory' }))}
-                    />
-                    <CheckboxOption
-                      label="Active involvement"
-                      checked={form.how_involved_do_you_want === 'Active'}
-                      onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Active' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-            </>
-          )}
+                <SectionCard gridStyle={responsiveGridStyle} badge="10" title="Business Stage" subtitle="What growth stage interests you.">
+                  <Field full>
+                    <FieldLabel>Preferred Business Stage</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Idea Stage"
+                        checked={form.stage_do_you_prefer === 'Idea Stage'}
+                        onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Idea Stage' }))}
+                      />
+                      <CheckboxOption
+                        label="Startup"
+                        checked={form.stage_do_you_prefer === 'Startup'}
+                        onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Startup' }))}
+                      />
+                      <CheckboxOption
+                        label="Growth"
+                        checked={form.stage_do_you_prefer === 'Growth'}
+                        onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Growth' }))}
+                      />
+                      <CheckboxOption
+                        label="Established"
+                        checked={form.stage_do_you_prefer === 'Established'}
+                        onChange={() => setForm((prev) => ({ ...prev, stage_do_you_prefer: 'Established' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
+              </>
+            )}
 
-          {/* ── STEP 4: Experience ──────────────────────────────────────── */}
-          {stepIndex === 4 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="15" title="Investment Experience" subtitle="Your track record as an investor.">
-                <Field full>
-                  <FieldLabel>Have you invested before?</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Yes"
-                      checked={form.have_you_invested_before === 'Yes'}
-                      onChange={() => setForm((prev) => ({ ...prev, have_you_invested_before: 'Yes' }))}
-                    />
-                    <CheckboxOption
-                      label="No"
-                      checked={form.have_you_invested_before === 'No'}
-                      onChange={() => setForm((prev) => ({ ...prev, have_you_invested_before: 'No' }))}
-                    />
-                  </div>
-                </Field>
+            {/* ── STEP 3: Risk & Returns ───────────────────────────────────── */}
+            {stepIndex === 3 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="11" title="Risk Appetite" subtitle="Your comfort level with investment risk.">
+                  <Field full>
+                    <FieldLabel>Risk Level</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Low (safe, stable businesses)"
+                        checked={form.risk_level === 'Low'}
+                        onChange={() => setForm((prev) => ({ ...prev, risk_level: 'Low' }))}
+                      />
+                      <CheckboxOption
+                        label="Medium (growing businesses)"
+                        checked={form.risk_level === 'Medium'}
+                        onChange={() => setForm((prev) => ({ ...prev, risk_level: 'Medium' }))}
+                      />
+                      <CheckboxOption
+                        label="High (startups, high risk/high return)"
+                        checked={form.risk_level === 'High'}
+                        onChange={() => setForm((prev) => ({ ...prev, risk_level: 'High' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
 
-                {form.have_you_invested_before === 'Yes' && (
-                  <>
-                    <Field>
-                      <FieldLabel>Number of Past Investments</FieldLabel>
+                <SectionCard gridStyle={responsiveGridStyle} badge="12" title="Expected Returns" subtitle="Your return expectations.">
+                  <Field full>
+                    <FieldLabel>Expected Return Type</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Fixed interest"
+                        checked={form.return_type === 'Fixed interest'}
+                        onChange={() => setForm((prev) => ({ ...prev, return_type: 'Fixed interest' }))}
+                      />
+                      <CheckboxOption
+                        label="Profit share"
+                        checked={form.return_type === 'Profit share'}
+                        onChange={() => setForm((prev) => ({ ...prev, return_type: 'Profit share' }))}
+                      />
+                      <CheckboxOption
+                        label="Equity growth"
+                        checked={form.return_type === 'Equity growth'}
+                        onChange={() => setForm((prev) => ({ ...prev, return_type: 'Equity growth' }))}
+                      />
+                    </div>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>Preferred Investment Duration</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Short-term (0–1 year)"
+                        checked={form.investment_duration === 'Short-term (0–1 year)'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Short-term (0–1 year)' }))}
+                      />
+                      <CheckboxOption
+                        label="Medium-term (1–3 years)"
+                        checked={form.investment_duration === 'Medium-term (1–3 years)'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Medium-term (1–3 years)' }))}
+                      />
+                      <CheckboxOption
+                        label="Long-term (3+ years)"
+                        checked={form.investment_duration === 'Long-term (3+ years)'}
+                        onChange={() => setForm((prev) => ({ ...prev, investment_duration: 'Long-term (3+ years)' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
+
+                <SectionCard gridStyle={responsiveGridStyle} badge="13" title="Investment Criteria" subtitle="What makes a business attractive to you.">
+                  <Field full>
+                    <FieldLabel>What do you look for in a business?</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Strong financial records"
+                        checked={form.what_do_you_look_in_business.includes('Strong financial')}
+                        onChange={(checked) => {
+                          const value = checked
+                            ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Strong financial records` : 'Strong financial records'
+                            : form.what_do_you_look_in_business.replace(', Strong financial records', '').replace('Strong financial records', '')
+                          setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
+                        }}
+                      />
+                      <CheckboxOption
+                        label="Experienced team"
+                        checked={form.what_do_you_look_in_business.includes('Experienced team')}
+                        onChange={(checked) => {
+                          const value = checked
+                            ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Experienced team` : 'Experienced team'
+                            : form.what_do_you_look_in_business.replace(', Experienced team', '').replace('Experienced team', '')
+                          setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
+                        }}
+                      />
+                      <CheckboxOption
+                        label="High growth potential"
+                        checked={form.what_do_you_look_in_business.includes('High growth')}
+                        onChange={(checked) => {
+                          const value = checked
+                            ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, High growth potential` : 'High growth potential'
+                            : form.what_do_you_look_in_business.replace(', High growth potential', '').replace('High growth potential', '')
+                          setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
+                        }}
+                      />
+                      <CheckboxOption
+                        label="Social impact"
+                        checked={form.what_do_you_look_in_business.includes('Social impact')}
+                        onChange={(checked) => {
+                          const value = checked
+                            ? form.what_do_you_look_in_business ? `${form.what_do_you_look_in_business}, Social impact` : 'Social impact'
+                            : form.what_do_you_look_in_business.replace(', Social impact', '').replace('Social impact', '')
+                          setForm((prev) => ({ ...prev, what_do_you_look_in_business: value }))
+                        }}
+                      />
+                    </div>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>Minimum Requirements (optional)</FieldLabel>
+                    <textarea
+                      value={form.minimum_requirements}
+                      onChange={handleTextChange('minimum_requirements')}
+                      placeholder="E.g., minimum revenue floor, team size, financial audits..."
+                      style={s.textarea}
+                    />
+                  </Field>
+                </SectionCard>
+
+                <SectionCard gridStyle={responsiveGridStyle} badge="14" title="Involvement Level" subtitle="How hands-on do you want to be.">
+                  <Field full>
+                    <FieldLabel>Your Investment Involvement Style</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Passive (just invest)"
+                        checked={form.how_involved_do_you_want === 'Passive'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Passive' }))}
+                      />
+                      <CheckboxOption
+                        label="Advisory role"
+                        checked={form.how_involved_do_you_want === 'Advisory'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Advisory' }))}
+                      />
+                      <CheckboxOption
+                        label="Active involvement"
+                        checked={form.how_involved_do_you_want === 'Active'}
+                        onChange={() => setForm((prev) => ({ ...prev, how_involved_do_you_want: 'Active' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
+              </>
+            )}
+
+            {/* ── STEP 4: Experience ──────────────────────────────────────── */}
+            {stepIndex === 4 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="15" title="Investment Experience" subtitle="Your track record as an investor.">
+                  <Field full>
+                    <FieldLabel>Have you invested before?</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Yes"
+                        checked={form.have_you_invested_before === 'Yes'}
+                        onChange={() => setForm((prev) => ({ ...prev, have_you_invested_before: 'Yes' }))}
+                      />
+                      <CheckboxOption
+                        label="No"
+                        checked={form.have_you_invested_before === 'No'}
+                        onChange={() => setForm((prev) => ({ ...prev, have_you_invested_before: 'No' }))}
+                      />
+                    </div>
+                  </Field>
+
+                  {form.have_you_invested_before === 'Yes' && (
+                    <>
+                      <Field>
+                        <FieldLabel>Number of Past Investments</FieldLabel>
+                        <input
+                          value={form.number_of_investments}
+                          onChange={handleTextChange('number_of_investments')}
+                          placeholder="Example: 12"
+                          style={s.input}
+                        />
+                      </Field>
+
+                      <Field full>
+                        <FieldLabel>Previously Invested Sectors</FieldLabel>
+                        <input
+                          value={form.invested_sector}
+                          onChange={handleTextChange('invested_sector')}
+                          placeholder="E.g., Tech, Agriculture, Retail..."
+                          style={s.input}
+                        />
+                      </Field>
+
+                      <Field full>
+                        <FieldLabel>Success Stories (optional)</FieldLabel>
+                        <textarea
+                          value={form.success_stories}
+                          onChange={handleTextChange('success_stories')}
+                          placeholder="Share notable exits, returns, or outcomes from your investments..."
+                          style={s.textarea}
+                        />
+                      </Field>
+                    </>
+                  )}
+                </SectionCard>
+              </>
+            )}
+
+            {/* ── STEP 5: Docs & Verify ────────────────────────────────────── */}
+            {stepIndex === 5 && (
+              <>
+                <SectionCard gridStyle={responsiveGridStyle} badge="16" title="Verification & Compliance" subtitle="Upload documents for verification (Identification Document is required).">
+                  <Field full>
+                    <FieldLabel>Company Registration / ID (optional)</FieldLabel>
+                    <label style={s.uploadRow}>
+                      <span style={s.uploadLabel}>Company Registration or Government ID</span>
                       <input
-                        value={form.number_of_investments}
-                        onChange={handleTextChange('number_of_investments')}
-                        placeholder="Example: 12"
-                        style={s.input}
+                        type="file"
+                        onChange={(event) => setCompanyRegistrationFile(event.target.files?.[0] ?? null)}
+                        style={s.fileInput}
                       />
-                    </Field>
-
-                    <Field full>
-                      <FieldLabel>Previously Invested Sectors</FieldLabel>
-                      <input
-                        value={form.invested_sector}
-                        onChange={handleTextChange('invested_sector')}
-                        placeholder="E.g., Tech, Agriculture, Retail..."
-                        style={s.input}
-                      />
-                    </Field>
-
-                    <Field full>
-                      <FieldLabel>Success Stories (optional)</FieldLabel>
-                      <textarea
-                        value={form.success_stories}
-                        onChange={handleTextChange('success_stories')}
-                        placeholder="Share notable exits, returns, or outcomes from your investments..."
-                        style={s.textarea}
-                      />
-                    </Field>
-                  </>
-                )}
-              </SectionCard>
-            </>
-          )}
-
-          {/* ── STEP 5: Docs & Verify ────────────────────────────────────– */}
-          {stepIndex === 5 && (
-            <>
-              <SectionCard gridStyle={responsiveGridStyle} badge="16" title="Verification & Compliance" subtitle="Upload documents for verification (Identification Document is required).">
-                <Field full>
-                  <FieldLabel>Company Registration / ID (optional)</FieldLabel>
-                  <label style={s.uploadRow}>
-                    <span style={s.uploadLabel}>Company Registration or Government ID</span>
-                    <input
-                      type="file"
-                      onChange={(event) => setCompanyRegistrationFile(event.target.files?.[0] ?? null)}
-                      style={s.fileInput}
-                    />
-                    {existingFiles.company_registration ? (
-                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.company_registration)}</small>
-                    ) : null}
-                  </label>
-                </Field>
-
-                <Field full>
-                  <FieldLabel>Proof of Funds (optional)</FieldLabel>
-                  <label style={s.uploadRow}>
-                    <span style={s.uploadLabel}>Bank Balance Confirmation or Bank Statement</span>
-                    <input
-                      type="file"
-                      onChange={(event) => setProofOfFundsFile(event.target.files?.[0] ?? null)}
-                      style={s.fileInput}
-                    />
-                    {existingFiles.proof_of_funds ? (
-                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.proof_of_funds)}</small>
-                    ) : null}
-                  </label>
-                </Field>
-
-                <Field full>
-                  <FieldLabel>KYC Verification (optional)</FieldLabel>
-                  <label style={s.uploadRow}>
-                    <span style={s.uploadLabel}>KYC Document (Know Your Customer Verification)</span>
-                    <input
-                      type="file"
-                      onChange={(event) => setKycFile(event.target.files?.[0] ?? null)}
-                      style={s.fileInput}
-                    />
-                    {existingFiles.kyc ? (
-                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.kyc)}</small>
-                    ) : null}
-                  </label>
-                </Field>
-
-                <Field full>
-                  <FieldLabel>Identification Document</FieldLabel>
-                  <label style={s.uploadRow}>
-                    <span style={s.uploadLabel}>Passport, National ID, or Driver's License</span>
-                    <input
-                      type="file"
-                      onChange={(event) => setIdentificationDocumentFile(event.target.files?.[0] ?? null)}
-                      style={s.fileInput}
-                    />
-                    {existingFiles.identification_document ? (
-                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.identification_document)}</small>
-                    ) : null}
-                  </label>
-                </Field>
-
-                <Field full>
-                  <FieldLabel>Curriculum Vitae (optional)</FieldLabel>
-                  <label style={s.uploadRow}>
-                    <span style={s.uploadLabel}>Your CV or Professional Resume</span>
-                    <input
-                      type="file"
-                      onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
-                      style={s.fileInput}
-                    />
-                    {existingFiles.cv ? (
-                      <small style={s.fileHint}>Current: {fileLabel(existingFiles.cv)}</small>
-                    ) : null}
-                  </label>
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="17" title="Communication" subtitle="How we can reach you.">
-                <Field>
-                  <FieldLabel>Preferred Contact Method</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Email"
-                      checked={form.preferred_contact === 'Email'}
-                      onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'Email' }))}
-                    />
-                    <CheckboxOption
-                      label="Phone call"
-                      checked={form.preferred_contact === 'Phone call'}
-                      onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'Phone call' }))}
-                    />
-                    <CheckboxOption
-                      label="WhatsApp"
-                      checked={form.preferred_contact === 'WhatsApp'}
-                      onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'WhatsApp' }))}
-                    />
-                  </div>
-                </Field>
-
-                <Field full>
-                  <FieldLabel>Availability</FieldLabel>
-                  <div style={s.checkboxGroup}>
-                    <CheckboxOption
-                      label="Weekdays"
-                      checked={form.availability === 'Weekdays'}
-                      onChange={() => setForm((prev) => ({ ...prev, availability: 'Weekdays' }))}
-                    />
-                    <CheckboxOption
-                      label="Weekends"
-                      checked={form.availability === 'Weekends'}
-                      onChange={() => setForm((prev) => ({ ...prev, availability: 'Weekends' }))}
-                    />
-                  </div>
-                </Field>
-              </SectionCard>
-
-              <SectionCard gridStyle={responsiveGridStyle} badge="18" title="Declaration" subtitle="Confirm your details and consent.">
-                <Field full>
-                  <div style={s.checkboxGroup}>
-                    <label style={s.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={form.confirm_the_information_is_accurate}
-                        onChange={handleBooleanChange('confirm_the_information_is_accurate')}
-                        style={s.checkboxInput}
-                      />
-                      <span>I confirm the information provided is accurate.</span>
+                      {existingFiles.company_registration ? (
+                        <small style={s.fileHint}>Current: {fileLabel(existingFiles.company_registration)}</small>
+                      ) : null}
                     </label>
-                    <label style={s.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={form.i_agree_to_terms}
-                        onChange={handleBooleanChange('i_agree_to_terms')}
-                        style={s.checkboxInput}
-                      />
-                      <span>I agree to FinVerra's terms and conditions.</span>
-                    </label>
-                    <label style={s.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={form.i_consent_to_be_matched_with_entrepreneurs}
-                        onChange={handleBooleanChange('i_consent_to_be_matched_with_entrepreneurs')}
-                        style={s.checkboxInput}
-                      />
-                      <span>I consent to be matched with entrepreneurs on the platform.</span>
-                    </label>
-                  </div>
-                </Field>
-              </SectionCard>
-            </>
-          )}
+                  </Field>
 
-          {/* ── Navigation ──────────────────────────────────────────────── */}
-          <div style={s.navRow}>
-            <button
-              type="button"
-              style={{ ...s.btnSecondary, ...responsiveButtonBase, ...(isFirstStep ? s.btnDisabled : {}) }}
-              onClick={() => setStepIndex((p) => Math.max(p - 1, 0))}
-              disabled={isFirstStep}
-            >
-              ← Previous
-            </button>
-            {!isLastStep ? (
+                  <Field full>
+                    <FieldLabel>Proof of Funds (optional)</FieldLabel>
+                    <label style={s.uploadRow}>
+                      <span style={s.uploadLabel}>Bank Balance Confirmation or Bank Statement</span>
+                      <input
+                        type="file"
+                        onChange={(event) => setProofOfFundsFile(event.target.files?.[0] ?? null)}
+                        style={s.fileInput}
+                      />
+                      {existingFiles.proof_of_funds ? (
+                        <small style={s.fileHint}>Current: {fileLabel(existingFiles.proof_of_funds)}</small>
+                      ) : null}
+                    </label>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>KYC Verification (optional)</FieldLabel>
+                    <label style={s.uploadRow}>
+                      <span style={s.uploadLabel}>KYC Document (Know Your Customer Verification)</span>
+                      <input
+                        type="file"
+                        onChange={(event) => setKycFile(event.target.files?.[0] ?? null)}
+                        style={s.fileInput}
+                      />
+                      {existingFiles.kyc ? (
+                        <small style={s.fileHint}>Current: {fileLabel(existingFiles.kyc)}</small>
+                      ) : null}
+                    </label>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>Identification Document</FieldLabel>
+                    <label style={s.uploadRow}>
+                      <span style={s.uploadLabel}>Passport, National ID, or Driver's License</span>
+                      <input
+                        type="file"
+                        onChange={(event) => setIdentificationDocumentFile(event.target.files?.[0] ?? null)}
+                        style={s.fileInput}
+                      />
+                      {existingFiles.identification_document ? (
+                        <small style={s.fileHint}>Current: {fileLabel(existingFiles.identification_document)}</small>
+                      ) : null}
+                    </label>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>Curriculum Vitae (optional)</FieldLabel>
+                    <label style={s.uploadRow}>
+                      <span style={s.uploadLabel}>Your CV or Professional Resume</span>
+                      <input
+                        type="file"
+                        onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
+                        style={s.fileInput}
+                      />
+                      {existingFiles.cv ? (
+                        <small style={s.fileHint}>Current: {fileLabel(existingFiles.cv)}</small>
+                      ) : null}
+                    </label>
+                  </Field>
+                </SectionCard>
+
+                <SectionCard gridStyle={responsiveGridStyle} badge="17" title="Communication" subtitle="How we can reach you.">
+                  <Field>
+                    <FieldLabel>Preferred Contact Method</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Email"
+                        checked={form.preferred_contact === 'Email'}
+                        onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'Email' }))}
+                      />
+                      <CheckboxOption
+                        label="Phone call"
+                        checked={form.preferred_contact === 'Phone call'}
+                        onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'Phone call' }))}
+                      />
+                      <CheckboxOption
+                        label="WhatsApp"
+                        checked={form.preferred_contact === 'WhatsApp'}
+                        onChange={() => setForm((prev) => ({ ...prev, preferred_contact: 'WhatsApp' }))}
+                      />
+                    </div>
+                  </Field>
+
+                  <Field full>
+                    <FieldLabel>Availability</FieldLabel>
+                    <div style={s.checkboxGroup}>
+                      <CheckboxOption
+                        label="Weekdays"
+                        checked={form.availability === 'Weekdays'}
+                        onChange={() => setForm((prev) => ({ ...prev, availability: 'Weekdays' }))}
+                      />
+                      <CheckboxOption
+                        label="Weekends"
+                        checked={form.availability === 'Weekends'}
+                        onChange={() => setForm((prev) => ({ ...prev, availability: 'Weekends' }))}
+                      />
+                    </div>
+                  </Field>
+                </SectionCard>
+
+                <SectionCard gridStyle={responsiveGridStyle} badge="18" title="Declaration" subtitle="Confirm your details and consent.">
+                  <Field full>
+                    <div style={s.checkboxGroup}>
+                      <label style={s.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={form.confirm_the_information_is_accurate}
+                          onChange={handleBooleanChange('confirm_the_information_is_accurate')}
+                          style={s.checkboxInput}
+                        />
+                        <span>I confirm the information provided is accurate.</span>
+                      </label>
+                      <label style={s.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={form.i_agree_to_terms}
+                          onChange={handleBooleanChange('i_agree_to_terms')}
+                          style={s.checkboxInput}
+                        />
+                        <span>I agree to FinVerra's terms and conditions.</span>
+                      </label>
+                      <label style={s.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={form.i_consent_to_be_matched_with_entrepreneurs}
+                          onChange={handleBooleanChange('i_consent_to_be_matched_with_entrepreneurs')}
+                          style={s.checkboxInput}
+                        />
+                        <span>I consent to be matched with entrepreneurs on the platform.</span>
+                      </label>
+                    </div>
+                  </Field>
+                </SectionCard>
+              </>
+            )}
+
+            {/* ── Navigation ──────────────────────────────────────────────── */}
+            <div style={s.navRow}>
               <button
                 type="button"
-                style={{ ...s.btnPrimary, ...responsiveButtonBase }}
-                onClick={handleNextStep}
+                style={{ ...s.btnSecondary, ...responsiveButtonBase, ...(isFirstStep ? s.btnDisabled : {}) }}
+                onClick={() => setStepIndex((p) => Math.max(p - 1, 0))}
+                disabled={isFirstStep}
               >
-                Next Step →
+                ← Previous
               </button>
-            ) : hasExistingApplication === false ? (
+              {!isLastStep ? (
+                <button
+                  type="button"
+                  style={{ ...s.btnPrimary, ...responsiveButtonBase }}
+                  onClick={handleNextStep}
+                >
+                  Next Step →
+                </button>
+              ) : hasExistingApplication === false ? (
                 <button
                   style={{ ...s.btnPrimary, ...s.btnSubmit, ...responsiveButtonBase }}
                   type="submit"
@@ -1388,10 +1379,10 @@ export default function ApplicationFoam() {
                 >
                   {isSaving ? 'Saving…' : 'Create Application'}
                 </button>
-            ) : null
-            }
-          </div>
-        </form>
+              ) : null}
+            </div>
+          </form>
+        ) : null}
       </div>
     </InvestorLayout>
   )
@@ -1400,8 +1391,7 @@ export default function ApplicationFoam() {
 const injectStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
-  input::placeholder, textarea::placeholder { color: #94A3B8; font-style: "DM Sans", sans-serif
-; }
+  input::placeholder, textarea::placeholder { color: #94A3B8; font-style: italic; }
   select option { color: #0F172A; }
 `
 
@@ -1447,8 +1437,60 @@ const s: Record<string, CSSProperties> = {
     background: '#ecfdf3',
     color: '#166534',
   },
-
-  // Error Modal
+  createPromptBackdrop: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 79,
+    background: 'rgba(15, 23, 42, 0.52)',
+    backdropFilter: 'blur(6px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  createPromptCard: {
+    width: 'min(100%, 540px)',
+    borderRadius: 20,
+    background: '#FFFFFF',
+    border: '1px solid rgba(15,45,92,0.12)',
+    boxShadow: '0 28px 80px rgba(15,23,42,0.26)',
+    padding: '26px 24px 22px',
+    textAlign: 'center',
+  },
+  createPromptBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '5px 12px',
+    borderRadius: 999,
+    background: '#EFF6FF',
+    color: '#1D4ED8',
+    border: '1px solid #BFDBFE',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  createPromptTitle: {
+    margin: '0 0 10px',
+    color: '#0F172A',
+    fontSize: 22,
+    fontWeight: 800,
+  },
+  createPromptText: {
+    margin: 0,
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  createPromptActions: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 20,
+    flexWrap: 'wrap',
+  },
   errorModalBackdrop: {
     position: 'fixed',
     inset: 0,
@@ -1512,14 +1554,11 @@ const s: Record<string, CSSProperties> = {
     color: '#FFFFFF',
     background: 'linear-gradient(140deg, #0F2D5C, #1A4080)',
   },
-
   formShell: {
     display: 'flex',
     flexDirection: 'column',
     gap: 20,
   },
-
-  // Stepper
   stepper: {
     background: '#0F172A',
     borderRadius: 20,
@@ -1584,8 +1623,6 @@ const s: Record<string, CSSProperties> = {
     color: '#475569',
     fontSize: 12,
   },
-
-  // Section Cards
   sectionCard: {
     background: '#FFFFFF',
     borderRadius: 16,
@@ -1679,8 +1716,6 @@ const s: Record<string, CSSProperties> = {
     transition: 'border-color 0.15s, box-shadow 0.15s',
     fontFamily: 'inherit',
   },
-
-  // Checkboxes
   checkboxGroup: {
     display: 'flex',
     flexDirection: 'column',
@@ -1708,8 +1743,6 @@ const s: Record<string, CSSProperties> = {
     color: '#374151',
     lineHeight: 1.5,
   },
-
-  // Files
   uploadRow: {
     display: 'flex',
     flexDirection: 'column',
@@ -1730,8 +1763,6 @@ const s: Record<string, CSSProperties> = {
   fileHint: {
     color: '#4b5f80',
   },
-
-  // Navigation
   navRow: {
     display: 'flex',
     justifyContent: 'space-between',

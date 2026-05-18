@@ -1,47 +1,41 @@
 import { useEffect, useRef, useState } from 'react'
 import ServiceCard from './ServiceCard'
+import { buildApiUrl } from '../config/api'
 
 type ServiceItem = {
+  id?: number
+  category: 'Investor' | 'Entrepreneur'
   title: string
   desc: string
+  created_at?: string
 }
-
-const services: ServiceItem[] = [
-  {
-    title: 'Project Preparation',
-    desc: 'We prepare investment-ready projects, support SME growth and expansion, and design, test, and validate ventures to ensure proven profitability and investor readiness',
-  },
-  {
-    title: 'Investment Matching',
-    desc: 'Facilitating strategic connections between entrepreneurs and SMEs with qualified individual and institutional investors through a structured, transparent, and secure platform that ensures alignment, credibility, and efficient capital deployment',
-  },
-  {
-    title: 'Access to Finance',
-    desc: 'Assisting startups and established businesses in securing investment capital, facilitating access to collateral-free financing, and unlocking grant opportunities from both national and international institutions.',
-  },
-  {
-    title: 'Financial Management',
-    desc: 'Providing integrated digital tools for accurate financial record-keeping, expense tracking, tax compliance monitoring, and real-time business performance analysis.',
-  },
-  {
-    title: 'Investment Monitoring',
-    desc: 'Providing real-time, transparent monitoring tools that enable investors to remotely track investment performance, financial progress, and business outcomes with confidence and clarity.',
-  },
-  {
-    title: 'Business Advisory',
-    desc: 'Delivering expert guidance in business strategy, investment readiness, financial planning, and sustainable growth to strengthen performance and long-term success.',
-  },
-  {
-    title: 'Mentorship',
-    desc: 'Providing dedicated mentorship programs that connect entrepreneurs with experienced industry experts and business leaders, offering practical guidance, strategic insights, and continuous support to enhance decision-making, accelerate growth, and build sustainable, investment-ready businesses.',
-  },
-]
 
 export default function ServicesSection() {
   const ref = useRef<HTMLElement>(null)
   const [inView, setInView] = useState(false)
+  const [services, setServices] = useState<ServiceItem[]>([])
 
   useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(buildApiUrl('/admin/services'))
+        const data = await res.json()
+        const arr = Array.isArray(data) ? data : data?.services ?? []
+        const mapped: ServiceItem[] = arr.map((s: any) => ({
+          id: s.id,
+          category: s.category === 'Investor' ? 'Investor' : 'Entrepreneur',
+          title: s.title,
+          desc: s.description ?? s.desc ?? '',
+          created_at: s.created_at,
+        }))
+        if (mapped.length) setServices(mapped)
+      } catch (err) {
+        // API failed — keep services empty
+      }
+    }
+
+    load()
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -66,16 +60,33 @@ export default function ServicesSection() {
           <h2 className="section-title">Comprehensive Financial Services</h2>
           <p className="section-subtitle">A full suite of tools and expertise to take your business from idea to investment-ready</p>
         </div>
-        <div className={`services-grid ${inView ? 'animate-in' : ''}`}>
-          {services.map((service, index) => (
-            <ServiceCard
-              key={service.title}
-              title={service.title}
-              desc={service.desc}
-              delay={`${index * 0.08}s`}
-            />
-          ))}
-        </div>
+
+        {(['Investor', 'Entrepreneur'] as const).map((category) => {
+          const categoryServices = services.filter((service) => service.category === category)
+
+          return (
+            <div key={category} className="services-category-block">
+              <div className="services-category-header">
+                <div>
+                  
+                  <h3 className="services-category-title">{category}s Services</h3>
+                </div>
+                <span className="services-category-count">{categoryServices.length} service{categoryServices.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              <div className={`services-grid ${inView ? 'animate-in' : ''}`}>
+                {categoryServices.map((service, index) => (
+                  <ServiceCard
+                    key={service.id ?? service.title}
+                    title={service.title}
+                    desc={service.desc}
+                    delay={`${index * 0.08}s`}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </section>
   )

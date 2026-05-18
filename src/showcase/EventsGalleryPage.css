@@ -71,7 +71,7 @@
     radial-gradient(circle at 90% 18%, #fff2d6 0, transparent 30%),
     var(--events-bg);
   color: var(--events-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Sora', sans-serif;
 }
 
 .events-hero {

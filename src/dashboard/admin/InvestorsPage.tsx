@@ -3,12 +3,14 @@ import type { ChangeEvent, CSSProperties, FormEvent } from 'react'
 import AdminShell from './AdminShell'
 import { getAuthSession } from '../authStorage'
 import {
+  approveAdminInvestor,
   deleteAdminInvestor,
   fetchAdminInvestorById,
   fetchAdminInvestors,
   fetchAdminVerifiedProfiles,
   type AdminInvestor,
   updateAdminInvestor,
+  unapproveAdminInvestor,
 } from '../dashboardApi'
 import { buildApiUrl } from '../../config/api'
 import {
@@ -107,6 +109,8 @@ export default function InvestorsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [togglingApprovalId, setTogglingApprovalId] = useState<number | null>(null)
+  const [pendingApprovalInvestor, setPendingApprovalInvestor] = useState<AdminInvestor | null>(null)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -123,6 +127,7 @@ export default function InvestorsPage() {
   const [villages, setVillages] = useState<string[]>([])
   const [verifiedProfiles, setVerifiedProfiles] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [approvalFilter, setApprovalFilter] = useState<'all' | 'approved' | 'not_approved'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const fileRef = useRef<HTMLInputElement>(null)
   const pageSize = 10
@@ -143,8 +148,13 @@ export default function InvestorsPage() {
 
     const sorted = [...investors].sort((left, right) => left.id - right.id)
 
+    const approvalFiltered =
+      approvalFilter === 'all'
+        ? sorted
+        : sorted.filter((item) => (approvalFilter === 'approved' ? item.approved === 'yes' : item.approved !== 'yes'))
+
     const filtered = query
-      ? sorted.filter((item) => (
+      ? approvalFiltered.filter((item) => (
         [
           item.id,
           item.users_id,
@@ -160,11 +170,12 @@ export default function InvestorsPage() {
           item.village,
           item.id_type,
           item.id_number,
+          item.approved,
         ]
           .filter((value) => value !== null && value !== undefined)
           .some((value) => String(value).toLowerCase().includes(query))
       ))
-      : sorted
+      : approvalFiltered
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
     const safePage = Math.min(currentPage, totalPages)
@@ -176,7 +187,8 @@ export default function InvestorsPage() {
       totalItems: filtered.length,
       currentPage: safePage,
     }
-  }, [investors, searchQuery, currentPage])
+  }, [investors, searchQuery, currentPage, approvalFilter])
+  
 
   useEffect(() => {
     setProvinces(getProvinces())
@@ -311,6 +323,10 @@ export default function InvestorsPage() {
     setViewInvestor(null)
   }
 
+  function closeApprovalPrompt() {
+    setPendingApprovalInvestor(null)
+  }
+
   async function openEdit(investorId: number) {
     setFormError(null)
     setError(null)
@@ -440,6 +456,27 @@ export default function InvestorsPage() {
     }
   }
 
+  async function handleApprovalToggle(investor: AdminInvestor) {
+    setTogglingApprovalId(investor.id)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const isApproved = investor.approved === 'yes'
+      const payload = isApproved
+        ? await unapproveAdminInvestor(investor.id, accessToken)
+        : await approveAdminInvestor(investor.id, accessToken)
+
+      setSuccess(payload.message ?? (isApproved ? 'Investor unapproved successfully.' : 'Investor approved successfully.'))
+      await loadInvestors()
+    } catch (approvalError) {
+      setError(approvalError instanceof Error ? approvalError.message : 'Failed to update investor approval status.')
+    } finally {
+      setTogglingApprovalId(null)
+      closeApprovalPrompt()
+    }
+  }
+
   return (
     <AdminShell
       title="Investors"
@@ -474,6 +511,38 @@ export default function InvestorsPage() {
                 onClick={() => handleDelete(confirmDeleteId)}
               >
                 {deletingId === confirmDeleteId ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingApprovalInvestor ? (
+        <div style={styles.overlay} onClick={closeApprovalPrompt}>
+          <div style={styles.confirmModal} onClick={(event) => event.stopPropagation()}>
+            <h3 style={styles.confirmTitle}>
+              {pendingApprovalInvestor.approved === 'yes' ? 'Unapprove Investor?' : 'Approve Investor?'}
+            </h3>
+            <p style={styles.confirmText}>
+              {pendingApprovalInvestor.approved === 'yes'
+                ? 'This will remove the approved status for this investor.'
+                : 'This will mark this investor as approved.'}
+            </p>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.cancelBtn} onClick={closeApprovalPrompt}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.primaryBtn}
+                disabled={togglingApprovalId === pendingApprovalInvestor.id}
+                onClick={() => void handleApprovalToggle(pendingApprovalInvestor)}
+              >
+                {togglingApprovalId === pendingApprovalInvestor.id
+                  ? 'Updating...'
+                  : pendingApprovalInvestor.approved === 'yes'
+                    ? 'Unapprove'
+                    : 'Approve'}
               </button>
             </div>
           </div>
@@ -717,6 +786,7 @@ export default function InvestorsPage() {
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Village</span><strong>{viewInvestor.village || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>ID Type</span><strong>{viewInvestor.id_type || '-'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>ID Number</span><strong>{viewInvestor.id_number || '-'}</strong></div>
+                <div style={styles.viewItem}><span style={styles.viewLabel}>Approved</span><strong>{viewInvestor.approved || 'No'}</strong></div>
                 <div style={styles.viewItem}><span style={styles.viewLabel}>Created At</span><strong>{toDateDisplay(viewInvestor.created_at)}</strong></div>
               </div>
             </div>
@@ -750,6 +820,21 @@ export default function InvestorsPage() {
             placeholder="Search by name, email, phone, location, or ID..."
             style={styles.searchInput}
           />
+
+          <select
+            value={approvalFilter}
+            onChange={(event) => {
+              setApprovalFilter(event.target.value as 'all' | 'approved' | 'not_approved')
+              setCurrentPage(1)
+            }}
+            style={{ ...styles.input, width: 180 }}
+            aria-label="Filter by approval status"
+          >
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="not_approved">Not Approved</option>
+          </select>
+
           <span style={styles.searchHint}>
             Showing {visibleInvestors.items.length} of {visibleInvestors.totalItems}
           </span>
@@ -771,6 +856,7 @@ export default function InvestorsPage() {
                   <th style={styles.th}>Email</th>
                   <th style={styles.th}>Telephone</th>
                   <th style={styles.th}>Nationality</th>
+                  <th style={styles.th}>Approved</th>
                   <th style={styles.th}>Image</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
@@ -791,6 +877,7 @@ export default function InvestorsPage() {
                     <td style={styles.td}>{item.email}</td>
                     <td style={styles.td}>{item.telephone}</td>
                     <td style={styles.td}>{item.nationality ?? '-'}</td>
+                    <td style={styles.td}>{item.approved === 'yes' ? 'Yes' : 'No'}</td>
                     <td style={styles.td}>
                       {item.image ? (
                         <img src={toImageUrl(item.image)} alt={`${item.first_name} ${item.last_name}`} style={styles.avatar} />
@@ -798,6 +885,18 @@ export default function InvestorsPage() {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
+                        <button
+                          type="button"
+                          style={{ ...styles.secondaryBtn, ...(item.approved === 'yes' ? styles.unapproveBtn : styles.approveBtn) }}
+                          onClick={() => setPendingApprovalInvestor(item)}
+                          disabled={togglingApprovalId === item.id}
+                        >
+                          {togglingApprovalId === item.id
+                            ? 'Updating...'
+                            : item.approved === 'yes'
+                              ? 'Unapprove'
+                              : 'Approve'}
+                        </button>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.viewBtn }} onClick={() => openView(item.id)}>
                           View
                         </button>
@@ -1108,6 +1207,16 @@ const styles: Record<string, CSSProperties> = {
     borderColor: '#d7e8d9',
     color: '#1c5f35',
     background: '#f3fbf5',
+  },
+  approveBtn: {
+    borderColor: '#c4e9cf',
+    color: '#155e30',
+    background: '#f2fff5',
+  },
+  unapproveBtn: {
+    borderColor: '#f3d7bf',
+    color: '#a45a13',
+    background: '#fff8ef',
   },
   deleteBtn: {
     border: '1px solid #f3c8c8',

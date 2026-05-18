@@ -9,6 +9,29 @@ type EntrepreneurHeaderProps = {
   onLogout: () => void
 }
 
+export async function fetchEntrepreneurDisplayName(email: string, token = '') {
+  if (!email) {
+    return ''
+  }
+
+  const response = await fetch(buildApiUrl(`/entrepreneur/name-by-email/${encodeURIComponent(email)}`), {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  const payload = await response.json().catch(() => null)
+  if (!response.ok || !payload || typeof payload !== 'object') {
+    return ''
+  }
+
+  const entrepreneur = (payload as { entrepreneur?: { first_name?: unknown; last_name?: unknown } }).entrepreneur
+  const firstName = typeof entrepreneur?.first_name === 'string' ? entrepreneur.first_name.trim() : ''
+  const lastName = typeof entrepreneur?.last_name === 'string' ? entrepreneur.last_name.trim() : ''
+
+  return [firstName, lastName].filter(Boolean).join(' ').trim()
+}
+
 export default function EntrepreneurHeader({ onToggleSidebar, onLogout }: EntrepreneurHeaderProps) {
   const navigate = useNavigate()
   const session = getAuthSession()

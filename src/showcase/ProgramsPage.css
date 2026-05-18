@@ -366,3 +366,51 @@
     padding: 22px;
   }
 }
+
+/* Services Hero Styles for OurProjectsPage */
+.services-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 128px 0 82px;
+}
+
+.services-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(125deg, #01262f 0%, #023341 55%, #035067 100%),
+    repeating-linear-gradient(
+      -36deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.08) 4px,
+      transparent 4px,
+      transparent 22px
+    );
+}
+
+.services-hero-content {
+  color: #ffffff;
+  max-width: 860px;
+}
+
+.services-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #ffec00;
+  margin-bottom: 14px;
+}
+
+.services-hero-content h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.07;
+  margin-bottom: 16px;
+}
+
+.services-hero-content p {
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.75;
+}

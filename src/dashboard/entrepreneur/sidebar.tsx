@@ -49,7 +49,7 @@ const menuItems: MenuItem[] = [
     ),
   },
   {
-    label: 'Application Info',
+    label: 'Application Form',
     path: '/dashboard/entrepreneur/ApplicationInfo',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -70,7 +70,21 @@ const menuItems: MenuItem[] = [
       </svg>
     ),
   },
-  // Service Fees menu LAST
+  {
+    label: 'Book Appointment',
+    path: '/dashboard/entrepreneur/book-appointment',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M8 2v4" />
+        <path d="M16 2v4" />
+        <path d="M3 10h18" />
+        <path d="M8 14h4" />
+        <path d="M8 18h8" />
+      </svg>
+    ),
+  },
+  // Service Fees menu
   {
     label: 'Service Fees',
     path: '/dashboard/entrepreneur/service-fees',
@@ -78,6 +92,17 @@ const menuItems: MenuItem[] = [
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <path d="M12 8v4l3 3" />
+      </svg>
+    ),
+  },
+  // Payment menu LAST
+  {
+    label: 'Payment',
+    path: '/dashboard/entrepreneur/payments',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
       </svg>
     ),
   },

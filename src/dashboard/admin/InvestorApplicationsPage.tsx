@@ -197,6 +197,7 @@ export default function InvestorApplicationsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [confirmStatusUpdateId, setConfirmStatusUpdateId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [approvalFilter, setApprovalFilter] = useState<'all' | 'approved' | 'not_approved'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null)
   const [statusDraftById, setStatusDraftById] = useState<Record<number, string>>({})
@@ -219,8 +220,15 @@ export default function InvestorApplicationsPage() {
 
     const sorted = [...applications].sort((left, right) => left.id - right.id)
 
+    const approvalFiltered =
+      approvalFilter === 'all'
+        ? sorted
+        : sorted.filter((item) => {
+          const status = toText((item as Record<string, unknown>).status).trim().toLowerCase()
+          return approvalFilter === 'approved' ? status === 'approved' : status !== 'approved'
+        })
     const filtered = query
-      ? sorted.filter((item) => (
+      ? approvalFiltered.filter((item) => (
         [
           item.id,
           item.users_id,
@@ -238,7 +246,7 @@ export default function InvestorApplicationsPage() {
           .filter((value) => value !== null && value !== undefined)
           .some((value) => String(value).toLowerCase().includes(query))
       ))
-      : sorted
+      : approvalFiltered
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
     const safePage = Math.min(currentPage, totalPages)
@@ -250,7 +258,7 @@ export default function InvestorApplicationsPage() {
       totalItems: filtered.length,
       currentPage: safePage,
     }
-  }, [applications, searchQuery, currentPage])
+  }, [applications, searchQuery, currentPage, approvalFilter])
 
   async function loadApplications() {
     setLoading(true)
@@ -759,6 +767,19 @@ export default function InvestorApplicationsPage() {
             placeholder="Search by type, email, user id, budget, sectors, or risk..."
             style={styles.searchInput}
           />
+          <select
+            value={approvalFilter}
+            onChange={(event) => {
+              setApprovalFilter(event.target.value as 'all' | 'approved' | 'not_approved')
+              setCurrentPage(1)
+            }}
+            style={{ ...styles.input, width: 180 }}
+            aria-label="Filter by approval status"
+          >
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="not_approved">Not Approved</option>
+          </select>
           <span style={styles.searchHint}>
             Showing {visibleApplications.items.length} of {visibleApplications.totalItems}
           </span>

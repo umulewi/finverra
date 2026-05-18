@@ -10,11 +10,16 @@ type InvestorLayoutProps = {
 
 const navPathByLabel: Record<string, string> = {
   Dashboard: '/dashboard/investor',
+  'My Profile': '/dashboard/investor/edit-profile',
   'Edit Profile': '/dashboard/investor/edit-profile',
   'Application Form': '/dashboard/investor/application-form',
   'My Application': '/dashboard/investor/application-form',
   'Application Status': '/dashboard/investor/application-status',
+  'Book Appointment': '/dashboard/investor/book-appointment',
   'Service Fees': '/dashboard/investor/service-fees',
+  'Payment': '/dashboard/investor/payments',
+  'Project to Invest in': '/dashboard/investor/project-to-invest',
+  'Project I have applied in': '/dashboard/investor/applied-projects',
   
 }
 
@@ -80,6 +85,7 @@ export default function InvestorLayout({ children }: InvestorLayoutProps) {
       <div
         style={{
           ...styles.sidebarWrapper,
+          width: viewportWidth > 960 ? 280 : '100%',
           transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         }}
       >

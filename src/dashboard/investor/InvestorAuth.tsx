@@ -4,7 +4,6 @@ import './Investorauth.css'
 import { saveAuthSession } from '../authStorage'
 import { fetchAvailableRoles, loginWithRole, signupInvestor } from '../dashboardApi'
 import type { RoleOption } from '../roles'
-import { getRoleDefinition } from '../roles'
 
 type InvestorAuthProps = {
   mode: 'login' | 'signup'
@@ -12,7 +11,6 @@ type InvestorAuthProps = {
 
 export default function InvestorAuth({ mode }: InvestorAuthProps) {
   const navigate = useNavigate()
-  const roleDefinition = getRoleDefinition('investor')
   const basePath = '/dashboard/investor'
   const [roles, setRoles] = useState<RoleOption[]>([])
   const [isLoadingRole, setIsLoadingRole] = useState(true)
@@ -119,26 +117,31 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
           <Link to="/dashboard" className="fv-logo">
             <img src="/logo-finverra-white.png" alt="Finverra" className="fv-logo-image" />
           </Link>
-
           <div className="fv-aside-content">
-            <p className="fv-aside-eyebrow">Investor Portal</p>
-            <h1 className="fv-aside-headline">
-              Where capital<br />meets opportunity.
-            </h1>
-            <p className="fv-aside-desc">{roleDefinition.loginDescription}</p>
+           
+            <h5 className="fv-aside-eyebrow">
+              Prepare your details<br />for a faster application.
+            </h5>
+            <p className="fv-aside-desc">
+              Keep your national ID or passport, active email, residential address, phone number, and passport-size photo ready before you start.
+            </p>
 
             <div className="fv-aside-features">
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Deal sourcing & pipeline</span>
+                <span>1. Create an account</span>
               </div>
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Portfolio tracking</span>
+                <span>2. Submit your application</span>
               </div>
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Investment workflow</span>
+                <span>3. Project to Invest in</span>
+              </div>
+              <div className="fv-feature">
+                <span className="fv-feature-dot" />
+                <span>4. Approval and payment</span>
               </div>
             </div>
           </div>
@@ -333,8 +336,8 @@ export default function InvestorAuth({ mode }: InvestorAuthProps) {
 
           <div className="fv-form-footer">
             {mode === 'signup' && (
-              <Link to={`/dashboard/investor/verify-otp?email=${encodeURIComponent(email)}`} className="fv-text-link">
-                Already have a code? Verify account
+              <Link to={`/dashboard/investor/login`} className="fv-text-link">
+                Already have an account? Sign in
               </Link>
             )}
             <Link to="/" className="fv-text-link fv-text-link--muted">Back to home</Link>

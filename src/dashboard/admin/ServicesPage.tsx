@@ -8,14 +8,18 @@ type Service = {
   id: number
   title: string
   description: string
+  category: string
 }
 
 type FormState = {
   title: string
   description: string
+  category: string
 }
 
-const emptyForm: FormState = { title: '', description: '' }
+const emptyForm: FormState = { title: '', description: '', category: '' }
+
+const CATEGORY_OPTIONS = ['Investor', 'Entrepreneur']
 
 function authHeader(): HeadersInit {
   const session = getAuthSession()
@@ -33,6 +37,10 @@ export default function ServicesPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const groupedServices = {
+    Investor: services.filter(service => service.category?.toLowerCase() === 'investor'),
+    Entrepreneur: services.filter(service => service.category?.toLowerCase() === 'entrepreneur'),
+  }
 
   async function loadServices() {
     setLoading(true)
@@ -60,7 +68,7 @@ export default function ServicesPage() {
 
   function openEdit(s: Service) {
     setEditingId(s.id)
-    setForm({ title: s.title, description: s.description })
+    setForm({ title: s.title, description: s.description, category: s.category ?? '' })
     setFormError(null)
     setShowForm(true)
   }
@@ -80,11 +88,16 @@ export default function ServicesPage() {
       setFormError('Title and description are required.')
       return
     }
+    if (!form.category.trim()) {
+      setFormError('Category is required.')
+      return
+    }
     setSubmitting(true)
     try {
       const body = new FormData()
       body.append('title', form.title.trim())
       body.append('description', form.description.trim())
+      body.append('category', form.category.trim())
 
       const url = editingId
         ? buildApiUrl(`/admin/services/${editingId}`)
@@ -208,6 +221,19 @@ export default function ServicesPage() {
                 rows={4}
               />
 
+              <label style={styles.fieldLabel}>Category</label>
+              <select
+                style={styles.input}
+                value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                disabled={submitting}
+              >
+                <option value="">Select category</option>
+                {CATEGORY_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+
               <div style={styles.formActions}>
                 <button type="button" style={styles.cancelBtn} onClick={closeForm} disabled={submitting}>
                   Cancel
@@ -227,28 +253,49 @@ export default function ServicesPage() {
         : services.length === 0
           ? <p style={styles.emptyMsg}>No services yet. Click "Add Service" to create one.</p>
           : (
-            <div style={styles.grid}>
-              {services.map(s => (
-                <div key={s.id} style={styles.card}>
-                  <div style={styles.cardBody}>
-                    <p style={styles.cardTitle}>{s.title}</p>
-                    <p style={styles.cardDesc}>{s.description}</p>
-                  </div>
-                  <div style={styles.cardActions}>
-                    <button type="button" style={styles.editBtn} onClick={() => openEdit(s)}>
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      style={{ ...styles.deleteBtn, ...(deletingId === s.id ? styles.deletingBtn : {}) }}
-                      onClick={() => setConfirmDeleteId(s.id)}
-                      disabled={deletingId === s.id}
-                    >
-                      {deletingId === s.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div style={styles.categoryStack}>
+              {(['Investor', 'Entrepreneur'] as const).map(category => {
+                const items = groupedServices[category]
+
+                if (items.length === 0) return null
+
+                return (
+                  <section key={category} style={styles.categoryBlock}>
+                    <div style={styles.categoryHeader}>
+                      <div>
+                        <p style={styles.categoryEyebrow}>{category}</p>
+                        <h3 style={styles.categoryTitle}>{category} Services</h3>
+                      </div>
+                      <span style={styles.categoryCount}>{items.length} service{items.length !== 1 ? 's' : ''}</span>
+                    </div>
+
+                    <div style={styles.grid}>
+                      {items.map(s => (
+                        <div key={s.id} style={styles.card}>
+                          <div style={styles.cardBody}>
+                            <p style={styles.cardTitle}>{s.title}</p>
+                            <p style={styles.cardCategory}>{s.category}</p>
+                            <p style={styles.cardDesc}>{s.description}</p>
+                          </div>
+                          <div style={styles.cardActions}>
+                            <button type="button" style={styles.editBtn} onClick={() => openEdit(s)}>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              style={{ ...styles.deleteBtn, ...(deletingId === s.id ? styles.deletingBtn : {}) }}
+                              onClick={() => setConfirmDeleteId(s.id)}
+                              disabled={deletingId === s.id}
+                            >
+                              {deletingId === s.id ? 'Deleting…' : 'Delete'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
             </div>
           )}
     </AdminShell>
@@ -300,6 +347,45 @@ const styles: Record<string, CSSProperties> = {
     gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
     gap: 20,
   },
+  categoryStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 28,
+  },
+  categoryBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  categoryHeader: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  categoryEyebrow: {
+    margin: 0,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: '#0a8ca3',
+  },
+  categoryTitle: {
+    margin: '4px 0 0',
+    fontSize: 18,
+    fontWeight: 700,
+    color: '#0f1e35',
+  },
+  categoryCount: {
+    flexShrink: 0,
+    borderRadius: 999,
+    padding: '8px 14px',
+    background: 'rgba(26,64,128,0.08)',
+    color: '#1a4080',
+    fontSize: 13,
+    fontWeight: 700,
+  },
   card: {
     borderRadius: 20,
     border: '1px solid rgba(15,30,53,0.1)',
@@ -317,6 +403,14 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 15,
     fontWeight: 700,
     color: '#0f1e35',
+  },
+  cardCategory: {
+    margin: '4px 0 0',
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#1a4080',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
   },
   cardDesc: {
     margin: '6px 0 0',

@@ -552,6 +552,7 @@ export type AdminInvestor = {
   village: string | null
   id_type: string | null
   id_number: string | null
+  approved: string | null
   image: string | null
   created_at: string
 }
@@ -721,6 +722,52 @@ export async function deleteAdminInvestor(id: number, accessToken: string) {
   return payload
 }
 
+export async function approveAdminInvestor(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/investor/approve/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor approve server at ${buildConfiguredApiUrl(`/investor/approve/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to approve investor.'))
+  }
+
+  return payload
+}
+
+export async function unapproveAdminInvestor(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/investor/unapprove/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the investor unapprove server at ${buildConfiguredApiUrl(`/investor/unapprove/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminInvestorMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to unapprove investor.'))
+  }
+
+  return payload
+}
+
 export async function fetchAdminVerifiedProfiles(accessToken: string) {
   let response: Response
 
@@ -768,6 +815,7 @@ export type AdminEntrepreneur = {
   village: string | null
   id_type: string | null
   id_number: string | null
+  approved: string | null
   image: string | null
   created_at: string
 }
@@ -963,6 +1011,52 @@ export async function fetchAdminVerifiedEntrepreneurs(accessToken: string) {
   }
 
   return payload.verified_profiles
+}
+
+export async function approveAdminEntrepreneur(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/entrepreneur/approve/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur approve server at ${buildConfiguredApiUrl(`/entrepreneur/approve/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to approve entrepreneur.'))
+  }
+
+  return payload
+}
+
+export async function unapproveAdminEntrepreneur(id: number, accessToken: string) {
+  let response: Response
+
+  try {
+    response = await fetch(buildApiUrl(`/entrepreneur/unapprove/${id}`), {
+      method: 'PUT',
+      headers: {
+        ...buildAdminAuthHeader(accessToken),
+      },
+    })
+  } catch {
+    throw new Error(`Unable to reach the entrepreneur unapprove server at ${buildConfiguredApiUrl(`/entrepreneur/unapprove/${id}`)}. Check that the backend is running and allows requests from the frontend.`)
+  }
+
+  const payload = (await parseResponseBody(response)) as AdminEntrepreneurMutationPayload
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to unapprove entrepreneur.'))
+  }
+
+  return payload
 }
 
 // ============================================================================

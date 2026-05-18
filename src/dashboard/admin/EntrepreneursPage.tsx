@@ -7,6 +7,8 @@ import {
   fetchAdminEntrepreneurById,
   fetchAdminEntrepreneurs,
   fetchAdminVerifiedEntrepreneurs,
+  approveAdminEntrepreneur,
+  unapproveAdminEntrepreneur,
   type AdminEntrepreneur,
   updateAdminEntrepreneur,
 } from '../dashboardApi'
@@ -107,6 +109,8 @@ export default function EntrepreneursPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [togglingApprovalId, setTogglingApprovalId] = useState<number | null>(null)
+  const [pendingApprovalEntrepreneur, setPendingApprovalEntrepreneur] = useState<AdminEntrepreneur | null>(null)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
@@ -123,6 +127,7 @@ export default function EntrepreneursPage() {
   const [villages, setVillages] = useState<string[]>([])
   const [verifiedProfiles, setVerifiedProfiles] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [approvalFilter, setApprovalFilter] = useState<'all' | 'approved' | 'not_approved'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const fileRef = useRef<HTMLInputElement>(null)
   const pageSize = 10
@@ -143,8 +148,13 @@ export default function EntrepreneursPage() {
 
     const sorted = [...entrepreneurs].sort((left, right) => left.id - right.id)
 
+    const approvalFiltered =
+      approvalFilter === 'all'
+        ? sorted
+        : sorted.filter((item) => (approvalFilter === 'approved' ? (item as any).approved === 'yes' : (item as any).approved !== 'yes'))
+
     const filtered = query
-      ? sorted.filter((item) => (
+      ? approvalFiltered.filter((item) => (
         [
           item.id,
           item.users_id,
@@ -164,7 +174,7 @@ export default function EntrepreneursPage() {
           .filter((value) => value !== null && value !== undefined)
           .some((value) => String(value).toLowerCase().includes(query))
       ))
-      : sorted
+      : approvalFiltered
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
     const safePage = Math.min(currentPage, totalPages)
@@ -176,7 +186,7 @@ export default function EntrepreneursPage() {
       totalItems: filtered.length,
       currentPage: safePage,
     }
-  }, [entrepreneurs, searchQuery, currentPage])
+  }, [entrepreneurs, searchQuery, currentPage, approvalFilter])
 
   useEffect(() => {
     setProvinces(getProvinces())
@@ -362,6 +372,27 @@ export default function EntrepreneursPage() {
     }
   }
 
+  async function handleApprovalToggle(entrepreneur: AdminEntrepreneur) {
+    setTogglingApprovalId(entrepreneur.id)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const isApproved = (entrepreneur as any).approved === 'yes'
+      const payload = isApproved
+        ? await unapproveAdminEntrepreneur(entrepreneur.id, accessToken)
+        : await approveAdminEntrepreneur(entrepreneur.id, accessToken)
+
+      setSuccess(payload.message ?? (isApproved ? 'Entrepreneur unapproved successfully.' : 'Entrepreneur approved successfully.'))
+      await loadEntrepreneurs()
+    } catch (approvalError) {
+      setError(approvalError instanceof Error ? approvalError.message : 'Failed to update entrepreneur approval status.')
+    } finally {
+      setTogglingApprovalId(null)
+      setPendingApprovalEntrepreneur(null)
+    }
+  }
+
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null
     setForm((prev) => ({ ...prev, imageFile: file }))
@@ -474,6 +505,38 @@ export default function EntrepreneursPage() {
                 onClick={() => handleDelete(confirmDeleteId)}
               >
                 {deletingId === confirmDeleteId ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingApprovalEntrepreneur ? (
+        <div style={styles.overlay} onClick={() => setPendingApprovalEntrepreneur(null)}>
+          <div style={styles.confirmModal} onClick={(event) => event.stopPropagation()}>
+            <h3 style={styles.confirmTitle}>
+              {(pendingApprovalEntrepreneur as any).approved === 'yes' ? 'Unapprove Entrepreneur?' : 'Approve Entrepreneur?'}
+            </h3>
+            <p style={styles.confirmText}>
+              {(pendingApprovalEntrepreneur as any).approved === 'yes'
+                ? 'This will remove the approved status for this entrepreneur.'
+                : 'This will mark this entrepreneur as approved.'}
+            </p>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.cancelBtn} onClick={() => setPendingApprovalEntrepreneur(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={styles.primaryBtn}
+                disabled={togglingApprovalId === pendingApprovalEntrepreneur.id}
+                onClick={() => void handleApprovalToggle(pendingApprovalEntrepreneur)}
+              >
+                {togglingApprovalId === pendingApprovalEntrepreneur.id
+                  ? 'Updating...'
+                  : (pendingApprovalEntrepreneur as any).approved === 'yes'
+                    ? 'Unapprove'
+                    : 'Approve'}
               </button>
             </div>
           </div>
@@ -750,6 +813,19 @@ export default function EntrepreneursPage() {
             placeholder="Search by name, email, phone, location, or ID..."
             style={styles.searchInput}
           />
+          <select
+            value={approvalFilter}
+            onChange={(event) => {
+              setApprovalFilter(event.target.value as 'all' | 'approved' | 'not_approved')
+              setCurrentPage(1)
+            }}
+            style={{ ...styles.input, width: 180 }}
+            aria-label="Filter by approval status"
+          >
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="not_approved">Not Approved</option>
+          </select>
           <span style={styles.searchHint}>
             Showing {visibleEntrepreneurs.items.length} of {visibleEntrepreneurs.totalItems}
           </span>
@@ -771,6 +847,7 @@ export default function EntrepreneursPage() {
                   <th style={styles.th}>Email</th>
                   <th style={styles.th}>Telephone</th>
                   <th style={styles.th}>Nationality</th>
+                  <th style={styles.th}>Approved</th>
                   <th style={styles.th}>Image</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
@@ -791,6 +868,7 @@ export default function EntrepreneursPage() {
                     <td style={styles.td}>{item.email}</td>
                     <td style={styles.td}>{item.telephone}</td>
                     <td style={styles.td}>{item.nationality ?? '-'}</td>
+                    <td style={styles.td}>{(item as any).approved === 'yes' ? 'Yes' : '-'}</td>
                     <td style={styles.td}>
                       {item.image ? (
                         <img src={toImageUrl(item.image)} alt={`${item.first_name} ${item.last_name}`} style={styles.avatar} />
@@ -798,6 +876,18 @@ export default function EntrepreneursPage() {
                     </td>
                     <td style={styles.td}>
                       <div style={styles.actions}>
+                        <button
+                          type="button"
+                          style={{ ...styles.secondaryBtn, ...((item as any).approved === 'yes' ? styles.unapproveBtn : styles.approveBtn) }}
+                          onClick={() => setPendingApprovalEntrepreneur(item)}
+                          disabled={togglingApprovalId === item.id}
+                        >
+                          {togglingApprovalId === item.id
+                            ? 'Updating...'
+                            : (item as any).approved === 'yes'
+                              ? 'Unapprove'
+                              : 'Approve'}
+                        </button>
                         <button type="button" style={{ ...styles.secondaryBtn, ...styles.viewBtn }} onClick={() => openView(item.id)}>
                           View
                         </button>
@@ -1108,6 +1198,16 @@ const styles: Record<string, CSSProperties> = {
     borderColor: '#d7e8d9',
     color: '#1c5f35',
     background: '#f3fbf5',
+  },
+  approveBtn: {
+    borderColor: '#c4e9cf',
+    color: '#155e30',
+    background: '#f2fff5',
+  },
+  unapproveBtn: {
+    borderColor: '#f3d7bf',
+    color: '#a45a13',
+    background: '#fff8ef',
   },
   deleteBtn: {
     border: '1px solid #f3c8c8',

@@ -130,6 +130,27 @@
 	padding-top: 56px;
 }
 
+.team-intro-section {
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+.team-intro-header {
+	margin-bottom: 0;
+}
+
+.team-empty-state {
+	margin-top: 8px;
+	padding: 24px;
+	border: 1px dashed rgba(10, 47, 71, 0.18);
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.82);
+	color: var(--team-muted);
+	text-align: center;
+	font-weight: 600;
+	box-shadow: 0 8px 20px rgba(10, 47, 71, 0.06);
+}
+
 .team-members-grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));

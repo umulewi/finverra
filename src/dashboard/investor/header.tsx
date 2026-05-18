@@ -10,6 +10,29 @@ type InvestorHeaderProps = {
 	onLogout: () => void
 }
 
+export async function fetchInvestorDisplayName(email: string, token = '') {
+	if (!email) {
+		return ''
+	}
+
+	const response = await fetch(buildApiUrl(`/investors/name-by-email/${encodeURIComponent(email)}`), {
+		headers: {
+			...(token ? { Authorization: `Bearer ${token}` } : {}),
+		},
+	})
+
+	const payload = await response.json().catch(() => null)
+	if (!response.ok || !payload || typeof payload !== 'object') {
+		return ''
+	}
+
+	const investor = (payload as { investor?: { first_name?: unknown; last_name?: unknown } }).investor
+	const firstName = typeof investor?.first_name === 'string' ? investor.first_name.trim() : ''
+	const lastName = typeof investor?.last_name === 'string' ? investor.last_name.trim() : ''
+
+	return [firstName, lastName].filter(Boolean).join(' ').trim()
+}
+
 export default function InvestorHeader({
 	onToggleSidebar,
 	searchVal: _searchVal,
@@ -27,16 +50,14 @@ export default function InvestorHeader({
 	const email = session?.email ?? ''
 
 	function resolveToken() {
-		if (!session || typeof session.payload !== 'object' || session.payload === null) {
-			return ''
-		}
-
-		const payload = session.payload as { token?: unknown; accessToken?: unknown }
-		if (typeof payload.token === 'string') {
-			return payload.token
-		}
-		if (typeof payload.accessToken === 'string') {
-			return payload.accessToken
+		if (!session) return ''
+		if (typeof session.payload === 'string') return session.payload
+		if (typeof session.payload === 'object' && session.payload !== null) {
+			const p = session.payload as any
+			if (typeof p.token === 'string') return p.token
+			if (typeof p.accessToken === 'string') return p.accessToken
+			if (typeof p.access_token === 'string') return p.access_token
+			if (typeof p.jwt === 'string') return p.jwt
 		}
 		return ''
 	}

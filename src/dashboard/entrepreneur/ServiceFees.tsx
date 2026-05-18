@@ -1,60 +1,97 @@
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import EntrepreneurShell from './EntrepreneurShell'
+import { buildApiUrl } from '../../config/api'
+import { getAuthSession } from '../authStorage'
 
-const applicationFeeRows = [
-  ['100,000-1,000,000', '50,000frw'],
-  ['1,000,001-3,000,000', '80,000frw'],
-  ['3,000,001-5,000,000', '100,000frw'],
-  ['5,000,001-7,00,000', '120,000frw'],
-  ['7,000,001-10,000,000', '150,000frw'],
-  ['10,000,001-Above', '210,000frw'],
-]
+interface AppFee {
+  id: number
+  Investment: string
+  fees: string
+}
 
-const platformPostingRows = [
-  ['6 months', '150,000frw'],
-  ['1 year subscription', '250,000frw'],
-]
+interface DurationAmount {
+  id: number
+  duration: string
+  amount: string
+}
 
-const shortTermPostingRows = [
-  ['3 Days', '25,000frw'],
-  ['10 Days', '50,000frw'],
-  ['30 Days', '120,000frw'],
-]
+interface Internship {
+  id: number
+  details: string
+  amount: string
+  duration: string
+}
 
-const specialOccasionRows = [
-  ['Conference Linking (Depending on business size and size of conference)', '300,000Frw - 500,000Frw'],
-  ['Other occasion', '100,000Frw - 500,000Frw'],
-]
-
-const wholeBusinessManagementRows = [
-  ['5 years', '3,000,000Frw (Paid fully before)'],
-  ['10 years', '7,000,000Frw (Two Installment)'],
-]
-
-const partnerBusinessManagementRows = [
-  ['Less than 6 months', '300,000frw'],
-  ['1 years', '500,000frw'],
-  ['2 years', '800,000frw'],
-  ['Above 2 years', '1,000,000frw'],
-]
-
-const businessMentorshipRows = [
-  ['3 Months', '450,000Frw'],
-  ['6 Months', '700,000Frw'],
-]
-
-const internshipRows = [
-  ['High school students', '80,000Frw', '30 days'],
-  ['High school students', '100,000Frw', '30-60 days'],
-  ['University Students', '100,000Frw', '30 days'],
-  ['University Students', '150,000Frw', '30-60 days'],
-  ['Research Person', '120,000Frw', '30 days'],
-  ['Research Person', '180,000Frw', '30-60 days'],
-  ['Employee', '150,000Frw', '30 days'],
-  ['Employee', '200,000Frw', '30-60 days'],
-]
+interface SpecialOccasion {
+  id: number
+  details: string
+  amount: string
+}
 
 export default function ServiceFees() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [applicationFees, setApplicationFees] = useState<AppFee[]>([])
+  const [businessManagement, setBusinessManagement] = useState<DurationAmount[]>([])
+  const [businessMentorship, setBusinessMentorship] = useState<DurationAmount[]>([])
+  const [internships, setInternships] = useState<Internship[]>([])
+  const [partnerBusiness, setPartnerBusiness] = useState<DurationAmount[]>([])
+  const [postingFees, setPostingFees] = useState<DurationAmount[]>([])
+  const [specialOccasion, setSpecialOccasion] = useState<SpecialOccasion[]>([])
+
+  useEffect(() => {
+    async function fetchAll() {
+      setLoading(true)
+      setError(null)
+      const token = (getAuthSession()?.payload as { token?: string } | undefined)?.token ?? ''
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` }
+
+      try {
+        const endpoints = [
+          ['/admin/e_application_fees', 'e_application_fees'],
+          ['/admin/e_business_management_fees', 'e_business_management_fees'],
+          ['/admin/e_business_mentorship', 'e_business_mentorship'],
+          ['/admin/e_internships', 'e_internships'],
+          ['/admin/e_partner_business_management', 'e_partner_business_management'],
+          ['/admin/e_posting_fees', 'e_posting_fees'],
+          ['/admin/e_special_occusion', 'e_special_occusion'],
+        ] as const
+
+        const fetches = endpoints.map(([path]) => fetch(buildApiUrl(path), { headers }))
+        const responses = await Promise.all(fetches)
+        const bodies = await Promise.all(responses.map((r) => r.json()))
+
+        setApplicationFees(bodies[0]?.e_application_fees ?? [])
+        setBusinessManagement(bodies[1]?.e_business_management_fees ?? [])
+        setBusinessMentorship(bodies[2]?.e_business_mentorship ?? [])
+        setInternships(bodies[3]?.e_internships ?? [])
+        setPartnerBusiness(bodies[4]?.e_partner_business_management ?? [])
+        setPostingFees(bodies[5]?.e_posting_fees ?? [])
+        setSpecialOccasion(bodies[6]?.e_special_occusion ?? [])
+      } catch (err: any) {
+        setError(err?.message ?? 'Failed to fetch service fees')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void fetchAll()
+  }, [])
+
+  if (loading) return <EntrepreneurShell title="Service Fees" subtitle="Loading..."><p>Loading service fees...</p></EntrepreneurShell>
+  if (error) return <EntrepreneurShell title="Service Fees" subtitle="Error"><p style={{ color: 'red' }}>{error}</p></EntrepreneurShell>
+
+  // Transform API data to row format
+  const applicationFeeRows = applicationFees.map((f) => [f.Investment, f.fees])
+  const postingRows = postingFees.filter((p) => p.duration.toLowerCase().includes('month') || p.duration.toLowerCase().includes('year')).map((p) => [p.duration, p.amount])
+  const specialOccasionRows = specialOccasion.map((s) => [s.details, s.amount])
+  const businessMgmtRows = businessManagement.map((b) => [b.duration, b.amount])
+  const partnerBizRows = partnerBusiness.map((p) => [p.duration, p.amount])
+  const mentorshipRows = businessMentorship.map((m) => [m.duration, m.amount])
+  const internshipRows = internships.map((i) => [i.details, i.amount, i.duration])
+
   return (
     <EntrepreneurShell title="Service Fees" subtitle="Complete service fee schedule for entrepreneur services.">
       <div style={styles.page}>
@@ -63,8 +100,7 @@ export default function ServiceFees() {
         </Section>
 
         <Section number="2" title="Platform Posting/Subscription">
-          <Table headers={["Duration", "Amount"]} rows={platformPostingRows} />
-          <Table headers={["Duration", "Amount"]} rows={shortTermPostingRows} spacingTop />
+          <Table headers={["Duration", "Amount"]} rows={postingRows} />
         </Section>
 
         <Section number="3" title="Special Occasion">
@@ -73,7 +109,7 @@ export default function ServiceFees() {
 
         <Section number="4" title="Business Management Fees">
           <Subsection number="1" title="Whole Business Management" />
-          <Table headers={["Duration", "Amount"]} rows={wholeBusinessManagementRows} />
+          <Table headers={["Duration", "Amount"]} rows={businessMgmtRows} />
           <div style={styles.noteBlock}>
             <div style={styles.noteTitle}>Note:</div>
             <ol style={styles.noteList}>
@@ -83,7 +119,7 @@ export default function ServiceFees() {
           </div>
 
           <Subsection number="2" title="Partner Business Management" />
-          <Table headers={["Duration", "Amount"]} rows={partnerBusinessManagementRows} />
+          <Table headers={["Duration", "Amount"]} rows={partnerBizRows} />
           <div style={styles.noteBlock}>
             <div style={styles.noteTitle}>Note:</div>
             <ol style={styles.noteList}>
@@ -94,7 +130,7 @@ export default function ServiceFees() {
 
         <Section number="5" title="Business & Investment mentorship & Internships">
           <Subsection number="1" title="Business Mentorship" />
-          <Table headers={["Duration", "Amount"]} rows={businessMentorshipRows} />
+          <Table headers={["Duration", "Amount"]} rows={mentorshipRows} />
 
           <Subsection number="2" title="Internships" />
           <Table headers={["Details", "Amount", "Duration"]} rows={internshipRows} />
@@ -133,15 +169,23 @@ function Table({ headers, rows, spacingTop = false }: TableProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={`${row.join('-')}-${rowIndex}`}>
-              {row.map((cell) => (
-                <td key={cell} style={styles.td}>
-                  {cell}
-                </td>
-              ))}
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={headers.length} style={{ ...styles.td, textAlign: 'center' }}>
+                No data available
+              </td>
             </tr>
-          ))}
+          ) : (
+            rows.map((row, rowIndex) => (
+              <tr key={`${row.join('-')}-${rowIndex}`}>
+                {row.map((cell) => (
+                  <td key={cell} style={styles.td}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

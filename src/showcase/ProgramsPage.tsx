@@ -1,10 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Footer, Navbar } from '../App'
+import { buildApiUrl } from '../config/api'
 import './ProgramsPage.css'
 
+type APIProgram = {
+  id: number
+  title: string
+  slug: string
+  description: string
+  launch_date: string | null
+  duration: string | null
+  program_highlight: string | null
+  created_at: string
+}
+
 type Program = {
-  id: string
+  id: string | number
   name: string
   status: 'Upcoming' | 'Active' | 'Completed'
   launchDate: string
@@ -16,31 +28,65 @@ type Program = {
   highlights: string[]
 }
 
-const programs: Program[] = [
-  {
-    id: 'singirurwanda',
-    name: 'SHINGIRO INITIATIVE',
-    status: 'Upcoming',
-    launchDate: '5th May 2026',
-    competitionPeriod: '1st February - 1st November 2027',
-    duration: '9 Months',
-    category: 'Our Own Project',
-    summary: 'A structured youth-focused entrepreneurship and innovation program for university students in Rwanda.',
-    description:
-      'SHINGIRO INITIATIVE is a structured youth-focused program designed by FinVerra to empower university students across Rwanda by fostering innovation, entrepreneurship, and collaboration. It features a nationwide business competition with progressive selection stages from university level to national finals, recognizing and awarding the top three outstanding projects.',
-    highlights: [
-      'Official launch on 5th May 2026.',
-      'Main competition phase from 1st February to 1st November 2027.',
-      'Nationwide business competition from campus stages to national finals.',
-      'Mentorship, study visits, community engagement, training sessions, and networking opportunities.',
-      'Promotes saving culture, collaboration, and inclusive participation, with strong support for young women.',
-      'Addresses student challenges through guidance, advocacy, and access to FinVerra extended services.',
-    ],
-  },
-]
+function transformAPIProgram(api: APIProgram): Program {
+  const launchDate = api.launch_date ? new Date(api.launch_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'TBA'
+  
+  // Parse highlights from program_highlight (contains <br> tags)
+  const highlights = api.program_highlight
+    ? api.program_highlight.split(/<br\s*\/?>/i).filter(h => h.trim()).map(h => h.trim())
+    : []
+
+  // Determine status based on launch date
+  const status: 'Upcoming' | 'Active' | 'Completed' = api.launch_date
+    ? new Date(api.launch_date) > new Date() ? 'Upcoming' : 'Active'
+    : 'Upcoming'
+
+  return {
+    id: api.id,
+    name: api.title,
+    status,
+    launchDate,
+    competitionPeriod: `From ${launchDate}`,
+    duration: api.duration || 'Duration TBA',
+    category: 'Our Program',
+    summary: api.slug || api.description || '',
+    description: api.description || '',
+    highlights,
+  }
+}
 
 export default function ProgramsPage() {
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
+  const [programs, setPrograms] = useState<Program[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedProgramId, setSelectedProgramId] = useState<string | number | null>(null)
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(buildApiUrl('/admin/programsss'))
+        const data = await res.json().catch(() => null)
+        if (!res.ok || !data) throw new Error('Failed to load programs')
+        
+        const apiPrograms: APIProgram[] = Array.isArray(data) ? data : data.programs ?? []
+        const transformed = apiPrograms.map(transformAPIProgram)
+        setPrograms(transformed)
+        
+        // Auto-select first program
+        if (transformed.length > 0) {
+          setSelectedProgramId(transformed[0].id)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load programs')
+      } finally {
+        setLoading(false)
+      }
+    }
+    void loadPrograms()
+  }, [])
+
   const selectedProgram = programs.find(program => program.id === selectedProgramId)
 
   return (
@@ -80,34 +126,48 @@ export default function ProgramsPage() {
             </div>
           </div>
 
-          <div className="programs-catalog-grid">
-            {programs.map((program) => (
-              <button
-                className={`program-summary-card ${selectedProgramId === program.id ? 'active' : ''}`}
-                key={program.id}
-                type="button"
-                onClick={() => setSelectedProgramId(program.id)}
-                aria-pressed={selectedProgramId === program.id}
-              >
-                <div className="program-summary-top">
-                  <span className="program-tag">{program.category}</span>
-                  <span className={`program-status status-${program.status.toLowerCase()}`}>{program.status}</span>
-                </div>
-                <h3>{program.name}</h3>
-                <p>{program.summary}</p>
-                <div className="program-summary-meta">
-                  <span>Launch: {program.launchDate}</span>
-                  <span>Duration: {program.duration}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+          {loading ? (
+            <div className="programs-catalog-grid" style={{ textAlign: 'center', padding: '40px 0', color: '#7a90a8' }}>
+              Loading programs...
+            </div>
+          ) : error ? (
+            <div className="programs-catalog-grid" style={{ textAlign: 'center', padding: '40px 0', color: '#dc2626' }}>
+              {error}
+            </div>
+          ) : programs.length === 0 ? (
+            <div className="programs-catalog-grid" style={{ textAlign: 'center', padding: '40px 0', color: '#7a90a8' }}>
+              No programs available yet.
+            </div>
+          ) : (
+            <div className="programs-catalog-grid">
+              {programs.map((program) => (
+                <button
+                  className={`program-summary-card ${selectedProgramId === program.id ? 'active' : ''}`}
+                  key={program.id}
+                  type="button"
+                  onClick={() => setSelectedProgramId(program.id)}
+                  aria-pressed={selectedProgramId === program.id}
+                >
+                  <div className="program-summary-top">
+                    <span className="program-tag">{program.category}</span>
+                    <span className={`program-status status-${program.status.toLowerCase()}`}>{program.status}</span>
+                  </div>
+                  <h3>{program.name}</h3>
+                  <p>{program.summary}</p>
+                  <div className="program-summary-meta">
+                    <span>Launch: {program.launchDate}</span>
+                    <span>Duration: {program.duration}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <section className="programs-list section">
         <div className="container">
-          {selectedProgram ? (
+          {!loading && selectedProgram ? (
             <article className="program-card" id={`program-${selectedProgram.id}`}>
               <header className="program-card-header">
                 <div className="program-card-tags">
@@ -133,18 +193,20 @@ export default function ProgramsPage() {
                 </div>
               </div>
 
-              <div className="program-highlights">
-                <h3>Program Highlights</h3>
-                <ul>
-                  {selectedProgram.highlights.map((highlight) => (
-                    <li key={highlight}>{highlight}</li>
-                  ))}
-                </ul>
-              </div>
+              {selectedProgram.highlights.length > 0 && (
+                <div className="program-highlights">
+                  <h3>Program Highlights</h3>
+                  <ul>
+                    {selectedProgram.highlights.map((highlight, idx) => (
+                      <li key={idx}>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </article>
           ) : (
             <div className="program-empty-state" role="status" aria-live="polite">
-              Click on a program card above to view full details.
+              {loading ? 'Loading program details...' : 'Click on a program card above to view full details.'}
             </div>
           )}
         </div>

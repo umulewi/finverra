@@ -8,7 +8,7 @@
 /* ...your other CSS here... */
 /* ── CSS VARIABLES ── */
 :root {
-  --gold:        #FFEC00;
+  --gold:        #ffec00;
   --gold-dark:   #CCBD00;
   --gold-light:  #FFF45C;
   --gold-pale:   #FFFDE6;
@@ -37,14 +37,14 @@
   --radius-sm:   10px;
   --transition:  0.32s cubic-bezier(0.4, 0, 0.2, 1);
   --font-head: 'Sora', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-body: 'Sora', sans-serif;
 }
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; font-size: 16px; }
 body {
-  font-family: var(--font-body);
+  font-family: 'Sora', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
   line-height: 1.7;
@@ -96,7 +96,7 @@ select option { background: white; color: var(--text-primary); }
   font-family: var(--font-head);
   font-size: clamp(1.9rem, 3.5vw, 3rem);
   font-weight: 800; line-height: 1.15;
-  color: var(--text-primary); margin-bottom: 16px;
+  color: var(--gold); margin-bottom: 16px;
 }
 .section-subtitle {
   font-size: 1.05rem; color: var(--text-secondary);
@@ -106,7 +106,7 @@ select option { background: white; color: var(--text-primary); }
 .section-header .section-label { justify-content: center; }
 .section-header .section-label::before { display: none; }
 .section-header .section-subtitle { margin: 0 auto; }
-.section-header.light .section-title { color: white; }
+.section-header.light .section-title { color: var(--gold); }
 .section-header.light .section-subtitle { color: rgba(255,255,255,0.75); }
 .section-header.light .section-label { color: var(--gold-light); }
 
@@ -306,7 +306,7 @@ select option { background: white; color: var(--text-primary); }
   font-weight: 800; line-height: 0.92;
   letter-spacing: -0.035em;
   display: flex; flex-direction: column; align-items: center;
-  margin-bottom: 32px; color: #fff;
+  margin-bottom: 24px; color: var(--gold);
   gap: 6px;
 }
 .hero-title .line { display: block; animation: fadeUp 0.65s both; }
@@ -415,7 +415,7 @@ select option { background: white; color: var(--text-primary); }
 .pillar-card:hover::before { transform: scaleX(1); }
 .pillar-card:hover { border-color: var(--gold-border); box-shadow: var(--shadow-md); transform: translateY(-4px); }
 .pillar-icon { font-size: 2rem; margin-bottom: 14px; }
-.pillar-card h4 { font-family: var(--font-head); font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: var(--navy); }
+.pillar-card h4 { font-family: var(--font-head); font-weight: 700; font-size: 1rem; margin-bottom: 8px; color: var(--gold); }
 .pillar-card p { font-size: 0.87rem; color: var(--text-secondary); line-height: 1.65; }
 
 /* ── SERVICES ── */
@@ -437,7 +437,7 @@ select option { background: white; color: var(--text-primary); }
 .service-card:hover .service-hover-line { transform: scaleX(1); }
 .service-icon { font-size: 2.4rem; margin-bottom: 20px; display: block; transition: transform 0.3s; }
 .service-card:hover .service-icon { transform: scale(1.12); }
-.service-card h3 { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--navy); }
+.service-card h3 { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--gold); }
 .service-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 22px; }
 .service-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag {
@@ -548,7 +548,7 @@ select option { background: white; color: var(--text-primary); }
 .event-year { font-size: 0.7rem; color: var(--text-muted); }
 .event-info { flex: 1; }
 .event-type { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-dark); background: var(--gold-pale); border: 1px solid var(--gold-border); padding: 3px 10px; border-radius: 50px; display: inline-block; margin-bottom: 10px; }
-.event-info h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--navy); }
+.event-info h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: var(--gold); }
 .event-info p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 14px; }
 .event-register { font-size: 0.84rem; font-weight: 700; color: var(--gold-dark); display: inline-flex; align-items: center; gap: 6px; transition: gap 0.2s; }
 .event-register:hover { gap: 10px; }
@@ -566,7 +566,7 @@ select option { background: white; color: var(--text-primary); }
 .team-card:hover { border-color: var(--gold-border); transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .team-avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 1.3rem; font-weight: 800; transition: transform 0.3s; }
 .team-card:hover .team-avatar { transform: scale(1.08); }
-.team-card h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--navy); }
+.team-card h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--gold); }
 .team-role { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
 .team-card p { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 20px; }
 .team-links { display: flex; gap: 10px; justify-content: center; }
@@ -634,11 +634,11 @@ select option { background: white; color: var(--text-primary); }
 /* ── APPOINTMENT ── */
 .appointment { background: var(--bg-2); }
 .appt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
-.appt-info h3 { font-family: var(--font-head); font-size: 1.3rem; font-weight: 700; margin-bottom: 28px; color: var(--navy); }
+.appt-info h3 { font-family: var(--font-head); font-size: 1.3rem; font-weight: 700; margin-bottom: 28px; color: var(--gold); }
 .appt-type { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border); }
 .appt-type:last-of-type { border-bottom: none; }
 .appt-icon { font-size: 1.5rem; flex-shrink: 0; }
-.appt-type h4 { font-family: var(--font-head); font-weight: 700; font-size: 0.94rem; margin-bottom: 4px; color: var(--navy); }
+.appt-type h4 { font-family: var(--font-head); font-weight: 700; font-size: 0.94rem; margin-bottom: 4px; color: var(--gold); }
 .appt-type p { font-size: 0.84rem; color: var(--text-secondary); }
 .appt-formats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
 .appt-formats span { font-size: 0.8rem; font-weight: 500; padding: 7px 16px; background: var(--bg-3); border: 1.5px solid var(--border-md); border-radius: 50px; color: var(--text-secondary); }

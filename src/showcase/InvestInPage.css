@@ -13,7 +13,7 @@
     radial-gradient(circle at 90% 22%, rgba(8, 120, 160, 0.12), transparent 26%),
     var(--invest-bg);
   color: var(--invest-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Sora', sans-serif;
 }
 
 .invest-hero {

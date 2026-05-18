@@ -4,7 +4,6 @@ import '../investor/Investorauth.css'
 import { saveAuthSession } from '../authStorage'
 import { fetchAvailableRoles, loginWithRole, signupEntrepreneur } from '../dashboardApi'
 import type { RoleOption } from '../roles'
-import { getRoleDefinition } from '../roles'
 
 type EntrepreneurAuthProps = {
   mode: 'login' | 'signup'
@@ -12,7 +11,6 @@ type EntrepreneurAuthProps = {
 
 export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
   const navigate = useNavigate()
-  const roleDefinition = getRoleDefinition('entrepreneur')
   const basePath = '/dashboard/entrepreneur'
   const [roles, setRoles] = useState<RoleOption[]>([])
   const [isLoadingRole, setIsLoadingRole] = useState(true)
@@ -21,6 +19,7 @@ export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
   const [successMessage, setSuccessMessage] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [telephone, setTelephone] = useState('')
@@ -132,23 +131,25 @@ export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
 
           <div className="fv-aside-content">
             <p className="fv-aside-eyebrow">Entrepreneur Portal</p>
-            <h1 className="fv-aside-headline">
-              Where startups<br />meet capital.
+            <h1 className="fv-aside-eyebrow">
+              Where startups meet capital.
             </h1>
-            <p className="fv-aside-desc">{roleDefinition.loginDescription}</p>
+            <p className="fv-aside-desc">
+              Sign in to manage your business profile, submissions, and funding journey. Prepare your national ID or passport, active email, current address, phone number, and optional passport photo with ID copy.
+            </p>
 
             <div className="fv-aside-features">
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Startup profile</span>
+                <span>1. Create an account</span>
               </div>
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Fundraising goals</span>
+                <span>2. Submit investment profile</span>
               </div>
               <div className="fv-feature">
                 <span className="fv-feature-dot" />
-                <span>Investor matching</span>
+                <span>3. Approval and payment</span>
               </div>
             </div>
           </div>
@@ -264,13 +265,25 @@ export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
                 <input
                   id="password"
                   className="fv-input fv-input--icon-right"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
                   disabled={isLoadingRole || isSubmitting}
                 />
+
+                <button
+                  type="button"
+                  className="fv-eye-btn"
+                  onClick={() => setShowPassword((c) => !c)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  disabled={isLoadingRole || isSubmitting}
+                  tabIndex={-1}
+                >
+                  <EyeIcon open={!showPassword} />
+                </button>
               </div>
             </div>
 
@@ -311,5 +324,25 @@ export default function EntrepreneurAuth({ mode }: EntrepreneurAuthProps) {
         </div>
       </section>
     </main>
+  )
+}
+
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      {open ? (
+        <>
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      ) : (
+        <>
+          <path d="M3 3l18 18" />
+          <path d="M10.59 10.59a2 2 0 1 0 2.83 2.83" />
+          <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 10 7 10 7a18.15 18.15 0 0 1-4.23 5.48" />
+          <path d="M6.11 6.11A16.53 16.53 0 0 0 2 12s3 7 10 7a10.62 10.62 0 0 0 4.14-.83" />
+        </>
+      )}
+    </svg>
   )
 }

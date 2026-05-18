@@ -13,7 +13,7 @@
     radial-gradient(circle at 95% 28%, #fff1df 0, transparent 34%),
     var(--flow-bg);
   color: var(--flow-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Sora', sans-serif;
 }
 
 .flow-hero {
