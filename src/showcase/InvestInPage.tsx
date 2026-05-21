@@ -8,6 +8,11 @@ type Project = {
   id: number
   title: string
   description: string
+  category: string | null
+  funding_needed: string | null
+  business_stage: string | null
+  location: string | null
+  expected_roi: string | null
   image: string
 }
 
@@ -31,6 +36,10 @@ async function parseResponseBody(response: Response): Promise<ProjectsResponse |
   } catch {
     return text
   }
+}
+
+function displayValue(value: string | null) {
+  return value && value.trim() ? value : 'N/A'
 }
 
 export default function InvestInPage() {
@@ -122,8 +131,27 @@ export default function InvestInPage() {
                   />
 
                   <div className="invest-card-body">
+                    <div className="invest-card-tags">
+                      <span className="invest-card-tag">{displayValue(project.category)}</span>
+                      <span className="invest-card-tag invest-card-tag-accent">{displayValue(project.business_stage)}</span>
+                    </div>
                     <h3>{project.title}</h3>
                     <p className="invest-summary">{project.description}</p>
+
+                    <div className="invest-card-meta">
+                      <div>
+                        <span>Funding needed</span>
+                        <strong>{displayValue(project.funding_needed)}</strong>
+                      </div>
+                      <div>
+                        <span>Location</span>
+                        <strong>{displayValue(project.location)}</strong>
+                      </div>
+                      <div>
+                        <span>Expected ROI</span>
+                        <strong>{displayValue(project.expected_roi)}</strong>
+                      </div>
+                    </div>
 
                     <Link
                       to="/dashboard/investor/login"

@@ -344,6 +344,7 @@
   color: var(--fv-text);
   transition: border-color var(--fv-transition), box-shadow var(--fv-transition);
   outline: none;
+  appearance: none;
   -webkit-appearance: none;
 }
 

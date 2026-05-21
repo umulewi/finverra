@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type { ReactElement } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 type EntrepreneurSidebarProps = {

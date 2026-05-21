@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import EntrepreneurShell from './EntrepreneurShell'
+import EntrepreneurShell, { EntrepreneurShellContext } from './EntrepreneurShell'
 import { getAuthSession } from '../authStorage'
 import { fetchEntrepreneurDisplayName } from './header'
 
@@ -17,6 +17,7 @@ const quotes = [
 const AUTO_INTERVAL = 5000
 
 export default function EntrepreneurDashboard() {
+  const { sidebarOpen } = useContext(EntrepreneurShellContext)
   const [isTablet, setIsTablet] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 960 : false)
   const [isPhone, setIsPhone] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 640 : false)
   const [greetingName, setGreetingName] = useState<string>('')
@@ -115,9 +116,16 @@ export default function EntrepreneurDashboard() {
 
   return (
     <EntrepreneurShell title="Entrepreneur Dashboard" subtitle="" showHero={false}>
+      <div style={styles.dashboardLayer}>
+        <div
+          style={{
+            ...styles.dashboardContent,
+            ...(sidebarOpen ? styles.dashboardContentBlurred : styles.dashboardContentRestored),
+          }}
+        >
 
-      {/* ── GREETING BANNER ── */}
-      <section style={{ ...styles.banner, ...(isPhone ? styles.bannerPhone : {}) }}>
+        {/* ── GREETING BANNER ── */}
+        <section style={{ ...styles.banner, ...(isPhone ? styles.bannerPhone : {}) }}>
         <div style={styles.bannerLeft}>
           <div style={styles.greetingTag}>
             <span style={styles.greetingDot} />
@@ -153,10 +161,10 @@ export default function EntrepreneurDashboard() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
 
       {/* ── MOTIVATIONAL QUOTES ── */}
-      <section style={styles.quotesSection}>
+        <section style={styles.quotesSection}>
         <div style={{ ...styles.quotesProgressBar, width: `${quoteProgress}%` }} />
 
         <div style={styles.quotesTag}>
@@ -193,10 +201,10 @@ export default function EntrepreneurDashboard() {
             <button aria-label="Next quote" onClick={() => goQuote(quoteIndex + 1)} style={styles.quotesArrowBtn}>›</button>
           </div>
         </div>
-      </section>
+        </section>
 
       {/* ── APPLICATION JOURNEY ROW ── */}
-      <section style={{ ...styles.heroRow, ...(isTablet ? styles.heroRowTablet : {}) }}>
+        <section style={{ ...styles.heroRow, ...(isTablet ? styles.heroRowTablet : {}) }}>
         <article style={{ ...styles.heroCard, ...(isPhone ? styles.heroCardPhone : {}) }}>
           <span style={styles.kickerLight}>Application journey</span>
           <h3 style={styles.heroTitle}>Build a complete investor-ready application</h3>
@@ -221,20 +229,20 @@ export default function EntrepreneurDashboard() {
             process — from registration to approval and payment.
           </p>
         </article>
-      </section>
+        </section>
 
       {/* ── SECTION HEADING ── */}
-      <div style={styles.sectionHead}>
+        <div style={styles.sectionHead}>
         <span style={styles.kicker}>For Entrepreneurs</span>
         <h2 style={styles.sectionTitle}>Begin your journey with confidence</h2>
         <p style={styles.sectionCopy}>
           A structured, guided process from account creation to approval and payment — designed to ensure
           clarity, efficiency, and professionalism at every stage.
         </p>
-      </div>
+        </div>
 
       {/* ── CONTENT CARDS ── */}
-      <section style={{ ...styles.cardsGrid, ...(isTablet ? styles.cardsGridTablet : {}) }}>
+        <section style={{ ...styles.cardsGrid, ...(isTablet ? styles.cardsGridTablet : {}) }}>
 
         {/* Required Information */}
         <article style={{ ...styles.card, ...(isPhone ? styles.cardPhone : {}) }}>
@@ -315,7 +323,13 @@ export default function EntrepreneurDashboard() {
             </div>
           </div>
         </article>
-      </section>
+        </section>
+
+        </div>
+
+        {sidebarOpen ? <div style={styles.blurOverlay} aria-hidden="true" /> : null}
+
+      </div>
 
     </EntrepreneurShell>
   )
@@ -799,5 +813,36 @@ const styles: Record<string, CSSProperties> = {
     display: 'grid',
     gap: 6,
     marginTop: 6,
+  },
+  dashboardLayer: {
+    position: 'relative',
+  },
+  dashboardContent: {
+    position: 'relative',
+    zIndex: 1,
+    borderRadius: 24,
+    transition: 'filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease',
+  },
+  dashboardContentBlurred: {
+    filter: 'blur(1.5px)',
+    opacity: 0.88,
+    transform: 'scale(0.997)',
+    boxShadow: '0 20px 40px rgba(15,45,92,0.08)',
+  },
+  dashboardContentRestored: {
+    filter: 'none',
+    opacity: 1,
+    transform: 'none',
+    boxShadow: 'none',
+  },
+  blurOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(9,23,44,0.2)',
+    backdropFilter: 'blur(1.5px)',
+    WebkitBackdropFilter: 'blur(1.5px)',
+    boxShadow: '0 20px 40px rgba(15,45,92,0.08)',
+    zIndex: 99,
+    pointerEvents: 'none',
   },
 }

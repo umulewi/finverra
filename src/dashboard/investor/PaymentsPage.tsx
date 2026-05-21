@@ -35,9 +35,9 @@ type XentripayStatusResult = {
   errorText: string
 }
 
-const XENTRIPAY_URL = 'https://test.xentripay.com/api/collections/initiate'
-const XENTRIPAY_STATUS_URL = 'https://test.xentripay.com/api/collections/status'
-const XENTRIPAY_KEY = 'c41b09fbdf3c4bbf8ae70cf87ea4a710'
+const XENTRIPAY_URL = '  https://xentripay.com/api/collections/initiate'
+const XENTRIPAY_STATUS_URL = 'https://xentripay.com/api/collections/status'
+const XENTRIPAY_KEY = '31bd6b8cbb59466eaa03a20735431109'
 const XENTRIPAY_ADDHOOK_URL = buildApiUrl('/payments/addhook')
 const FIXED_CONTACT_NUMBER = '0788763046'
 const PAYMENT_STATUS_TIMEOUT_SECONDS = 240
@@ -51,6 +51,10 @@ function buildMsisdn(input: string): string {
   if (digits.startsWith('250')) return digits
   if (digits.startsWith('0')) return '250' + digits.slice(1)
   return '250' + digits
+}
+
+function keepDigits(input: string): string {
+  return input.replace(/\D+/g, '')
 }
 
 function wait(ms: number) {
@@ -99,13 +103,24 @@ export default function PaymentsPage() {
   const [investorId, setInvestorId] = useState<number | string | null>(null)
   const [isApproved, setIsApproved] = useState(false)
   const [msisdn, setMsisdn] = useState('')
-  const [amount, setAmount] = useState('100')
+  const [amount, setAmount] = useState('20000')
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [checkingPayment, setCheckingPayment] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(0)
+
+  function handleCancelPayment() {
+    if (submitting || checkingPayment) {
+      return
+    }
+
+    setShowPaymentForm(false)
+    setError(null)
+    setSuccess(null)
+
+  }
 
   useEffect(() => {
     let mounted = true
@@ -173,7 +188,7 @@ export default function PaymentsPage() {
     const payload: ChargeRequestPayload = {
       email: session?.email ?? '',
       cname: displayName,
-      amount: parseInt(amount, 10) || 100,
+      amount: parseInt(amount, 10) || 20000,
       cnumber: FIXED_CONTACT_NUMBER,
       msisdn: buildMsisdn(msisdn),
       currency: 'RWF',
@@ -374,7 +389,7 @@ export default function PaymentsPage() {
                     <input
                       style={styles.input}
                       type="number"
-                      placeholder="e.g. 100"
+                      placeholder="e.g. 20000"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       required readOnly
@@ -387,7 +402,11 @@ export default function PaymentsPage() {
                       type="text"
                       placeholder="e.g. 0781681561"
                       value={msisdn}
-                      onChange={(e) => setMsisdn(e.target.value)}
+                      onChange={(e) => setMsisdn(keepDigits(e.target.value))}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="tel"
+                      readOnly={submitting || checkingPayment}
                       required
                     />
                   </label>
@@ -398,13 +417,19 @@ export default function PaymentsPage() {
                 {checkingPayment ? (
                   <div style={styles.waitBox}>
                     <div style={styles.spinner} />
-                    <p style={styles.waitText}>Waiting for payment confirmation... {countdownSeconds}s</p>
+                    <div>
+                      <p style={styles.waitText}>Waiting for payment confirmation... {countdownSeconds}s</p>
+                      <p style={styles.waitHint}>If you do not see the OTP, check your pending transactions on *182*7*1# to confirm.</p>
+                    </div>
                   </div>
                 ) : null}
 
                 <div style={styles.actionRow}>
                   <button type="submit" style={styles.button} disabled={submitting}>
                     {submitting ? 'Processing...' : 'Pay now'}
+                  </button>
+                  <button type="button" style={styles.cancelButton} onClick={handleCancelPayment} disabled={submitting || checkingPayment}>
+                    Cancel
                   </button>
                 </div>
               </form>
@@ -613,6 +638,12 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     fontWeight: 600,
   },
+  waitHint: {
+    margin: '4px 0 0',
+    color: '#6e8086',
+    fontSize: 13,
+    lineHeight: 1.45,
+  },
   statusBox: {
     display: 'grid',
     gap: 6,
@@ -709,8 +740,8 @@ const styles: Record<string, CSSProperties> = {
 
   // Submit
   button: {
-    width: 'fit-content',
-    minWidth: 220,
+    width: 132,
+    minWidth: 132,
     height: 56,
     borderRadius: 16,
     border: 'none',
@@ -721,15 +752,28 @@ const styles: Record<string, CSSProperties> = {
     letterSpacing: '0.5px',
     fontFamily: "'DM Sans', sans-serif",
     cursor: 'pointer',
-    marginTop: 10,
-    alignSelf: 'center',
     boxShadow: '0 12px 26px rgba(239, 134, 181, 0.35)',
   },
   actionRow: {
     width: '100%',
     display: 'flex',
     justifyContent: 'center',
+    gap: 12,
     paddingTop: 4,
+  },
+  cancelButton: {
+    width: 132,
+    minWidth: 132,
+    height: 56,
+    borderRadius: 16,
+    border: '1px solid #d9dee8',
+    background: '#f9fbfd',
+    color: '#24364a',
+    fontSize: 15,
+    fontWeight: 700,
+    letterSpacing: '0.5px',
+    fontFamily: "'DM Sans', sans-serif",
+    cursor: 'pointer',
   },
   overlay: {
     position: 'fixed',

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { buildApiUrl } from '../../config/api'
 import { getAuthSession } from '../authStorage'
 import EntrepreneurShell from './EntrepreneurShell'
@@ -240,7 +239,6 @@ function SectionCard({
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ApplicationInfo() {
   const session = getAuthSession()
-  const navigate = useNavigate()
   const [form, setForm] = useState<ApplicationForm>(initialForm)
   const [existingFiles, setExistingFiles] = useState<ExistingFiles>(initialFiles)
   const [businessSnapshot, setBusinessSnapshot] = useState<BusinessSnapshot>(initialBusinessSnapshot)
@@ -250,7 +248,6 @@ export default function ApplicationInfo() {
   const [registrationCertificateFile, setRegistrationCertificateFile] = useState<File | null>(null)
   const [photoOfBusinessFile, setPhotoOfBusinessFile] = useState<File | null>(null)
   const [userId, setUserId] = useState<number | null>(null)
-  const [approvedFlag, setApprovedFlag] = useState<string | null>(null)
   const [hasExistingApplication, setHasExistingApplication] = useState<boolean | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const [isLoadingApplication, setIsLoadingApplication] = useState(false)
@@ -418,39 +415,6 @@ export default function ApplicationInfo() {
     void resolveUserId()
     return () => { mounted = false }
   }, [email])
-
-  useEffect(() => {
-    if (!userId) {
-      setApprovedFlag(null)
-      return
-    }
-
-    let mounted = true
-
-    async function fetchApproved() {
-      try {
-        const res = await fetch(buildApiUrl(`/entrepreneur/approved/${userId}`), { headers: authHeader() })
-        const payload = await parseResponseBody(res)
-
-        if (!res.ok) {
-          if (mounted) setApprovedFlag(null)
-          return
-        }
-
-        const value = payload && typeof payload === 'object' && 'approved' in payload
-          ? String((payload as any).approved ?? '')
-          : ''
-
-        if (mounted) setApprovedFlag(value)
-      } catch (err) {
-        if (mounted) setApprovedFlag(null)
-      }
-    }
-
-    void fetchApproved()
-
-    return () => { mounted = false }
-  }, [userId])
 
   useEffect(() => {
     if (!userId) return
@@ -649,34 +613,7 @@ export default function ApplicationInfo() {
         </div>
       ) : null}
 
-      {userId !== null && approvedFlag !== 'yes' ? (
-        <div style={s.errorModalBackdrop} role="presentation">
-          <div
-            style={s.errorModal}
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="payment-required-title"
-            aria-describedby="payment-required-message"
-          >
-            <div style={s.errorModalBadge}>Payment Required</div>
-            <h3 id="payment-required-title" style={s.errorModalTitle}>You must pay to access this form</h3>
-            <p id="payment-required-message" style={s.errorModalText}>
-              Please complete your payment to unlock the investment application form.
-            </p>
-            <div style={s.errorModalActions}>
-              <button
-                type="button"
-                style={s.errorModalButton}
-                onClick={() => navigate('/dashboard/entrepreneur/payments')}
-              >
-                Go to Payments
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {approvedFlag === 'yes' ? (
+      {userId !== null ? (
       <form style={s.formShell} onSubmit={handleSubmit}>
 
         {/* ── Step Navigator ─────────────────────────────────────────── */}

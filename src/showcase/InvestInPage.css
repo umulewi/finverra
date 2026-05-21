@@ -142,6 +142,32 @@
   gap: 16px;
 }
 
+.invest-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.invest-card-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(2, 51, 65, 0.08);
+  color: #023341;
+  border: 1px solid rgba(2, 51, 65, 0.12);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.invest-card-tag-accent {
+  background: rgba(255, 236, 0, 0.22);
+  color: #5c4300;
+  border-color: rgba(255, 236, 0, 0.35);
+}
+
 .invest-card-btn {
   width: fit-content;
 }
@@ -153,6 +179,40 @@
 
 .invest-summary {
   font-size: 0.98rem;
+}
+
+.invest-card-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(2, 51, 65, 0.05), rgba(255, 255, 255, 0.94));
+  border: 1px solid rgba(5, 56, 77, 0.08);
+}
+
+.invest-card-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.invest-card-meta span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--invest-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.invest-card-meta strong {
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--invest-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 1024px) {
@@ -176,6 +236,10 @@
 
   .invest-card-image {
     height: 200px;
+  }
+
+  .invest-card-meta {
+    grid-template-columns: 1fr;
   }
 
   .invest-actions {

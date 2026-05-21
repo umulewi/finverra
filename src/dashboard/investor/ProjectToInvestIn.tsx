@@ -5,7 +5,17 @@ import { buildApiUrl } from '../../config/api'
 import { getAuthSession } from '../authStorage'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-type Project = { id: number; title: string; description: string; image?: string }
+type Project = {
+  id: number
+  title: string
+  description: string
+  category?: string | null
+  funding_needed?: string | null
+  business_stage?: string | null
+  location?: string | null
+  expected_roi?: string | null
+  image?: string
+}
 type NdaOption = 'yes' | 'no' | 'custom'
 
 type InvestmentApplicationPayload = {
@@ -45,6 +55,10 @@ function resolveTokenFromPayload(payload: unknown): string {
   }
 
   return ''
+}
+
+function displayProjectField(value?: string | null) {
+  return value && value.trim() ? value : 'N/A'
 }
 function PaymentPrompt({ onClose, onGoToPayments }: { onClose: () => void; onGoToPayments: () => void }) {
   return (
@@ -1067,8 +1081,23 @@ export default function ProjectToInvestIn() {
       .then(r => r.json())
       .then((data) => {
         if (!mounted) return
-        if (Array.isArray(data)) setProjects(data)
-        else if (data?.projects && Array.isArray(data.projects)) setProjects(data.projects)
+        const sourceProjects = Array.isArray(data)
+          ? data
+          : data?.projects && Array.isArray(data.projects)
+            ? data.projects
+            : []
+
+        setProjects(sourceProjects.map((project: Project) => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          category: project.category ?? null,
+          funding_needed: project.funding_needed ?? null,
+          business_stage: project.business_stage ?? null,
+          location: project.location ?? null,
+          expected_roi: project.expected_roi ?? null,
+          image: project.image,
+        })))
       })
       .catch(() => {})
       .finally(() => { if (mounted) setLoading(false) })
@@ -1364,10 +1393,35 @@ export default function ProjectToInvestIn() {
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#0f1e35', marginBottom: 8 }}>
                     {project.title}
                   </h3>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 999, background: 'rgba(2,51,65,0.08)', color: '#023341', border: '1px solid rgba(2,51,65,0.12)', fontSize: 11, fontWeight: 700, letterSpacing: 0.08, textTransform: 'uppercase' }}>
+                      {displayProjectField(project.category)}
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 999, background: 'rgba(255,236,0,0.18)', color: '#5c4300', border: '1px solid rgba(255,236,0,0.34)', fontSize: 11, fontWeight: 700, letterSpacing: 0.08, textTransform: 'uppercase' }}>
+                      {displayProjectField(project.business_stage)}
+                    </span>
+                  </div>
                   
                   <p style={{ margin: 0, fontSize: 13, color: '#6b7a94', lineHeight: 1.5, marginBottom: 14 }}>
                     {project.description}
                   </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, padding: 12, marginBottom: 14, borderRadius: 14, background: 'linear-gradient(180deg, rgba(2,51,65,0.04), rgba(255,255,255,0.94))', border: '1px solid rgba(5,56,77,0.08)' }}>
+                    <div>
+                      <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.08, color: '#6b7a94' }}>Funding</p>
+                      <strong style={{ display: 'block', fontSize: 12, color: '#0f1e35', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayProjectField(project.funding_needed)}</strong>
+                    </div>
+                    <div>
+                      <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.08, color: '#6b7a94' }}>Location</p>
+                      <strong style={{ display: 'block', fontSize: 12, color: '#0f1e35', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayProjectField(project.location)}</strong>
+                    </div>
+                    <div>
+                      <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.08, color: '#6b7a94' }}>ROI</p>
+                      <strong style={{ display: 'block', fontSize: 12, color: '#0f1e35', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayProjectField(project.expected_roi)}</strong>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => {

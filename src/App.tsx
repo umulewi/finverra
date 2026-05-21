@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { buildApiUrl } from './config/api'
 import { getAuthSession } from './dashboard/authStorage'
-import ScrollToTop from './components/ScrollToTop'
 
 import './App.css'
 
@@ -103,6 +102,11 @@ type ProjectApiItem = {
   id: number
   title: string
   description: string
+  category?: string | null
+  funding_needed?: string | null
+  business_stage?: string | null
+  location?: string | null
+  expected_roi?: string | null
   image: string
 }
 
@@ -164,6 +168,10 @@ function resolveToken() {
   if (typeof payload.jwt === 'string') return payload.jwt
 
   return ''
+}
+
+function displayProjectField(value?: string | null) {
+  return value && value.trim() ? value : 'N/A'
 }
 
 export function Navbar() {
@@ -377,6 +385,11 @@ function InvestmentShowcase() {
             id: project.id,
             title: project.title,
             description: project.description,
+            category: project.category ?? null,
+            funding_needed: project.funding_needed ?? null,
+            business_stage: project.business_stage ?? null,
+            location: project.location ?? null,
+            expected_roi: project.expected_roi ?? null,
             image: project.image,
           }))
           .filter((project) => project.title.trim() && project.description.trim())
@@ -590,8 +603,26 @@ function InvestmentShowcase() {
                 <img src={buildApiUrl(project.image)} alt={project.title} loading="lazy" decoding="async" />
               </div>
               <div className="showcase-content">
+                <div className="showcase-tags">
+                  <span className="showcase-tag">{displayProjectField(project.category)}</span>
+                  <span className="showcase-tag showcase-tag-alt">{displayProjectField(project.business_stage)}</span>
+                </div>
                 <h3>{project.title}</h3>
                 <p>{project.description}</p>
+                <div className="showcase-meta">
+                  <div>
+                    <span>Funding</span>
+                    <strong>{displayProjectField(project.funding_needed)}</strong>
+                  </div>
+                  <div>
+                    <span>Location</span>
+                    <strong>{displayProjectField(project.location)}</strong>
+                  </div>
+                  <div>
+                    <span>ROI</span>
+                    <strong>{displayProjectField(project.expected_roi)}</strong>
+                  </div>
+                </div>
                 <div className="showcase-link">View Project →</div>
               </div>
             </Link>
@@ -1266,7 +1297,6 @@ export default function App() {
 
   return (
     <>
-      <ScrollToTop />
       <Navbar />
       <Hero />
       <InvestmentShowcase />

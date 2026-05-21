@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import App from './App'
+import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoleRoute from './dashboard/ProtectedRoleRoute'
 import SuperUserRoute from './dashboard/SuperUserRoute'
 
@@ -42,6 +43,7 @@ const Testimonials = lazy(() => import('./dashboard/admin/TestimonialsPage'))
 const StatisticsPage = lazy(() => import('./dashboard/admin/StatisticsPage'))
 const AdminUsersPage = lazy(() => import('./dashboard/admin/AdminUsersPage'))
 const AdminChangePasswordPage = lazy(() => import('./dashboard/admin/AdminChangePasswordPage'))
+const EntrepreneurPaidCollectionPage = lazy(() => import('./dashboard/admin/EntrepreneurPaidCollectionPage'))
 
 const EntrepreneurAuth = lazy(() => import('./dashboard/entrepreneur/EntrepreneurAuth'))
 const EntrepreneurForgotPassword = lazy(() => import('./dashboard/entrepreneur/EntrepreneurForgotPassword'))
@@ -87,6 +89,7 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<App />} />
           <Route
@@ -268,6 +271,14 @@ export default function AppRouter() {
             element={(
               <ProtectedRoleRoute role="admin">
                 <EntrepreneurServiceFeesAdminPage />
+              </ProtectedRoleRoute>
+            )}
+          />
+          <Route
+            path="/dashboard/admin/entrepreneur-paid-collection"
+            element={(
+              <ProtectedRoleRoute role="admin">
+                <EntrepreneurPaidCollectionPage />
               </ProtectedRoleRoute>
             )}
           />

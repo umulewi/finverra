@@ -8,12 +8,22 @@ type Project = {
   id: number
   title: string
   description: string
+  category: string | null
+  funding_needed: string | null
+  business_stage: string | null
+  location: string | null
+  expected_roi: string | null
   image: string | null
 }
 
 type FormState = {
   title: string
   description: string
+  category: string
+  funding_needed: string
+  business_stage: string
+  location: string
+  expected_roi: string
   image: File | null
   existingImage: string
 }
@@ -21,8 +31,37 @@ type FormState = {
 const emptyForm: FormState = {
   title: '',
   description: '',
+  category: '',
+  funding_needed: '',
+  business_stage: '',
+  location: '',
+  expected_roi: '',
   image: null,
   existingImage: '',
+}
+
+const projectFieldDefinitions = [
+  { key: 'category', label: 'Category' },
+  { key: 'funding_needed', label: 'Funding Needed' },
+  { key: 'business_stage', label: 'Business Stage' },
+  { key: 'location', label: 'Location' },
+  { key: 'expected_roi', label: 'Expected ROI' },
+] as const
+
+function displayValue(value: unknown) {
+  if (value === null || value === undefined || value === '') {
+    return '—'
+  }
+
+  return String(value)
+}
+
+function appendOptionalField(payload: FormData, key: string, value: string) {
+  const trimmed = value.trim()
+
+  if (trimmed) {
+    payload.append(key, trimmed)
+  }
 }
 
 async function parseResponseBody(response: Response) {
@@ -97,6 +136,11 @@ export default function ProjectsPage() {
     setForm({
       title: project.title,
       description: project.description,
+      category: project.category ?? '',
+      funding_needed: project.funding_needed ?? '',
+      business_stage: project.business_stage ?? '',
+      location: project.location ?? '',
+      expected_roi: project.expected_roi ?? '',
       image: null,
       existingImage: project.image ?? '',
     })
@@ -138,16 +182,17 @@ export default function ProjectsPage() {
       return
     }
 
-    if (!editingId && !form.image) {
-      setFormError('Project image is required.')
-      return
-    }
-
     setSubmitting(true)
     try {
       const payload = new FormData()
       payload.append('title', form.title.trim())
       payload.append('description', form.description.trim())
+
+      appendOptionalField(payload, 'category', form.category)
+      appendOptionalField(payload, 'funding_needed', form.funding_needed)
+      appendOptionalField(payload, 'business_stage', form.business_stage)
+      appendOptionalField(payload, 'location', form.location)
+      appendOptionalField(payload, 'expected_roi', form.expected_roi)
 
       if (form.image) {
         payload.append('image', form.image)
@@ -277,8 +322,30 @@ export default function ProjectsPage() {
                 rows={4}
               />
 
+              <div style={styles.fieldGrid}>
+                {projectFieldDefinitions.map((field) => {
+                  const fieldName = field.key as keyof Pick<
+                    FormState,
+                    'category' | 'funding_needed' | 'business_stage' | 'location' | 'expected_roi'
+                  >
+
+                  return (
+                    <div key={field.key} style={styles.fieldBlock}>
+                      <label style={styles.fieldLabel}>{field.label}</label>
+                      <input
+                        type="text"
+                        style={styles.input}
+                        value={form[fieldName]}
+                        onChange={(event) => setForm((prev) => ({ ...prev, [fieldName]: event.target.value }))}
+                        disabled={submitting}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+
               <label style={styles.fieldLabel}>
-                Project Image {editingId ? '(leave blank to keep existing)' : ''}
+                Project Image {editingId ? '(leave blank to keep existing)' : '(optional)'}
               </label>
               <div
                 style={styles.dropZone}
@@ -340,6 +407,28 @@ export default function ProjectsPage() {
               <div style={styles.cardBody}>
                 <p style={styles.cardTitle}>{project.title}</p>
                 <p style={styles.cardDesc}>{project.description}</p>
+                <div style={styles.metaGrid}>
+                  <div style={styles.metaItem}>
+                    <span style={styles.metaLabel}>Category</span>
+                    <strong style={styles.metaValue}>{displayValue(project.category)}</strong>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <span style={styles.metaLabel}>Funding</span>
+                    <strong style={styles.metaValue}>{displayValue(project.funding_needed)}</strong>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <span style={styles.metaLabel}>Stage</span>
+                    <strong style={styles.metaValue}>{displayValue(project.business_stage)}</strong>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <span style={styles.metaLabel}>ROI</span>
+                    <strong style={styles.metaValue}>{displayValue(project.expected_roi)}</strong>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <span style={styles.metaLabel}>Location</span>
+                    <strong style={styles.metaValue}>{displayValue(project.location)}</strong>
+                  </div>
+                </div>
               </div>
               <div style={styles.cardActions}>
                 <button type="button" style={styles.editBtn} onClick={() => openEdit(project)}>
@@ -453,6 +542,37 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 13,
     color: '#516178',
     lineHeight: 1.6,
+  },
+  metaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+    marginTop: 14,
+  },
+  metaItem: {
+    background: 'rgba(247,249,252,0.95)',
+    border: '1px solid rgba(15,30,53,0.06)',
+    borderRadius: 12,
+    padding: '10px 12px',
+    minWidth: 0,
+  },
+  metaLabel: {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#7a90a8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 4,
+  },
+  metaValue: {
+    display: 'block',
+    fontSize: 13,
+    lineHeight: 1.45,
+    color: '#0f1e35',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   cardActions: {
     display: 'flex',
@@ -570,6 +690,16 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: 4,
     padding: '20px 24px 24px',
+  },
+  fieldGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+    gap: 10,
+    marginTop: 10,
+  },
+  fieldBlock: {
+    display: 'flex',
+    flexDirection: 'column',
   },
   fieldLabel: {
     marginTop: 12,

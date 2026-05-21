@@ -107,6 +107,7 @@ const entrepreneurMenu: MenuItem[] = [
       { label: 'Special Occasions', path: '/dashboard/admin/entrepreneur-service-fees?tab=special-occasion' },
     ],
   },
+    { label: 'Collections', path: '/dashboard/admin/entrepreneur-paid-collection', groupKey: 'entrepreneurs', icon: <Icons.FolderOpen /> },
 ]
 
 const investorMenu: MenuItem[] = [

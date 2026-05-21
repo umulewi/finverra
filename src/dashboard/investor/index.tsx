@@ -224,7 +224,7 @@ export default function InvestorDashboardPage() {
 						<div style={{ position: 'relative', zIndex: 1 }}>
 							<div style={s.heroEyebrow}>
 								<span style={s.heroEyebrowDot} />
-								Rwanda Investment Intelligence
+								Finance With Trust
 							</div>
 							<h1 style={{ ...s.heroH1, fontSize: isPhone ? 28 : isTablet ? 32 : 36 }}>
 								{greetingPrefix},<br />
